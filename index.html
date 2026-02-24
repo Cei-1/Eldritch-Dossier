@@ -1,0 +1,3034 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Eldritch Dossier - Compendio Enciclopédico</title>
+
+    <!-- PWA Meta Tags -->
+    <meta
+      name="description"
+      content="Compendio Enciclopédico de Criaturas Mitológicas"
+    />
+    <meta name="theme-color" content="#2dd4bf" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="Eldritch Dossier" />
+
+    <meta name="theme-color" content="#0B1120" />
+    <!-- Manifest -->
+    <link rel="manifest" href="./manifest.json" />
+
+    <!-- Cache busting for styles -->
+    <meta
+      http-equiv="Cache-Control"
+      content="no-cache, no-store, must-revalidate"
+    />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+
+    <!-- Icons -->
+    <link rel="icon" type="image/png" sizes="192x192" href="./logo.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="./logo.png" />
+    <link rel="apple-touch-icon" href="./logo.png" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      :root {
+        --bg-primary: #0a0a0a;
+        --bg-secondary: #0f0f0f;
+        --accent-emerald: #064e3b;
+        --accent-cyan: #06b6d4;
+        --text-primary: #f5f5f5;
+        --text-secondary: #a3a3a3;
+        --text-muted: #525252;
+        --glass-bg: rgba(15, 15, 15, 0.4);
+        --glass-border: rgba(255, 255, 255, 0.05);
+        --danger-low: #22c55e;
+        --danger-medium: #fbbf24;
+        --danger-high: #f97316;
+        --danger-extreme: #ef4444;
+        --danger-very-high: #a855f7;
+        --danger-absolute: #000000;
+      }
+
+      body {
+        font-family: "Crimson Text", serif;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        overflow-x: hidden;
+      }
+
+      #particle-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        pointer-events: none;
+      }
+
+      /* Fluid Layout - No Rigid Containers */
+      .app-container {
+        position: relative;
+        z-index: 1;
+        min-height: 100vh;
+        padding: 0;
+      }
+
+      /* Hero Section with Fluid Typography */
+      header {
+        text-align: center;
+        padding: clamp(20px, 3vh, 40px) 5vw;
+        margin-bottom: clamp(10px, 2vh, 20px);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .header-parallax-layer {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+        opacity: 0.3;
+      }
+
+      .mystical-orb {
+        position: absolute;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle,
+          rgba(6, 182, 212, 0.15),
+          transparent
+        );
+        filter: blur(60px);
+        animation: floatOrb 8s ease-in-out infinite;
+      }
+
+      .mystical-orb:nth-child(1) {
+        width: 200px;
+        height: 200px;
+        top: 5%;
+        left: 5%;
+        animation-delay: 0s;
+      }
+
+      .mystical-orb:nth-child(2) {
+        width: 300px;
+        height: 300px;
+        top: 50%;
+        right: 10%;
+        animation-delay: 3s;
+      }
+
+      .mystical-orb:nth-child(3) {
+        width: 150px;
+        height: 150px;
+        bottom: 10%;
+        left: 50%;
+        animation-delay: 6s;
+      }
+
+      @keyframes floatOrb {
+        0%,
+        100% {
+          transform: translate(0, 0);
+          opacity: 0.3;
+        }
+        50% {
+          transform: translate(20px, -30px);
+          opacity: 0.5;
+        }
+      }
+
+      .header-content {
+        position: relative;
+        z-index: 2;
+      }
+
+      .logo {
+        width: clamp(80px, 15vw, 150px);
+        height: auto;
+        margin: 0 auto clamp(20px, 4vh, 40px);
+        display: block;
+        filter: drop-shadow(0 0 30px rgba(6, 182, 212, 0.3));
+        transition: filter 0.4s ease;
+      }
+
+      .logo:hover {
+        filter: drop-shadow(0 0 50px rgba(6, 182, 212, 0.6));
+      }
+
+      /* Hero Title with Animated Gradient */
+      h1 {
+        font-family: "Cinzel", serif;
+        font-size: clamp(2.5rem, 8vw, 7rem);
+        font-weight: 600;
+        margin: 0;
+        line-height: 1.1;
+        letter-spacing: 0.05em;
+        background: linear-gradient(
+          90deg,
+          var(--accent-emerald) 0%,
+          var(--accent-cyan) 50%,
+          var(--accent-emerald) 100%
+        );
+        background-size: 200% auto;
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: gradientShift 8s ease-in-out infinite;
+      }
+
+      @keyframes gradientShift {
+        0%,
+        100% {
+          background-position: 0% center;
+        }
+        50% {
+          background-position: 100% center;
+        }
+      }
+
+      .subtitle {
+        font-size: 1.2rem;
+        color: var(--text-secondary);
+        font-style: italic;
+      }
+
+      .sync-status {
+        margin-top: 15px;
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .sync-indicator {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--danger-low);
+        animation: pulse 2s infinite;
+      }
+
+      .sync-indicator.syncing {
+        background: var(--accent-secondary);
+      }
+
+      .sync-indicator.error {
+        background: var(--danger-extreme);
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+
+      /* Settings Gear Button - Glassmorphism */
+      .settings-gear-btn {
+        position: fixed;
+        top: clamp(15px, 3vh, 25px);
+        right: clamp(15px, 3vw, 25px);
+        width: clamp(45px, 6vw, 55px);
+        height: clamp(45px, 6vw, 55px);
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 50%;
+        cursor: pointer;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: clamp(1.2rem, 2vw, 1.5rem);
+        color: var(--accent-cyan);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        backdrop-filter: blur(15px);
+        box-shadow: 0 5px 20px rgba(6, 182, 212, 0.15);
+      }
+
+      .settings-gear-btn:hover {
+        transform: rotate(90deg) scale(1.15);
+        box-shadow: 0 10px 40px rgba(6, 182, 212, 0.3);
+        border-color: rgba(6, 182, 212, 0.4);
+        background: rgba(6, 182, 212, 0.1);
+      }
+
+      .settings-gear-btn:active {
+        transform: rotate(90deg) scale(1);
+      }
+
+      /* Scroll Reveal Animation */
+      .creature-card.revealed {
+        animation: revealCard 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)
+          forwards;
+      }
+
+      @keyframes revealCard {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      /* Glassmorphism Navigation */
+      nav {
+        display: flex;
+        justify-content: center;
+        gap: clamp(15px, 3vw, 30px);
+        margin: 0 auto clamp(30px, 5vh, 50px);
+        padding: 0 5vw;
+        flex-wrap: wrap;
+      }
+
+      .nav-btn {
+        padding: clamp(12px, 2vh, 16px) clamp(25px, 4vw, 40px);
+        font-family: "Cinzel", serif;
+        font-size: clamp(0.9rem, 1.5vw, 1.1rem);
+        background: var(--glass-bg);
+        color: var(--text-primary);
+        border: 1px solid var(--glass-border);
+        border-radius: 50px;
+        cursor: pointer;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        backdrop-filter: blur(15px);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .nav-btn::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(6, 182, 212, 0.1);
+        transform: translate(-50%, -50%);
+        transition:
+          width 0.6s ease,
+          height 0.6s ease;
+      }
+
+      .nav-btn:hover::before {
+        width: 300px;
+        height: 300px;
+      }
+
+      .nav-btn span {
+        position: relative;
+        z-index: 1;
+      }
+
+      .nav-btn:hover {
+        transform: translateY(-3px);
+        border-color: rgba(6, 182, 212, 0.3);
+        box-shadow: 0 10px 30px rgba(6, 182, 212, 0.15);
+      }
+
+      .nav-btn.active {
+        background: rgba(6, 182, 212, 0.1);
+        border-color: rgba(6, 182, 212, 0.4);
+        box-shadow: 0 5px 20px rgba(6, 182, 212, 0.2);
+      }
+      .view {
+        display: none;
+        animation: fadeIn 0.5s ease;
+      }
+
+      .view.active {
+        display: block;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Explorer View */
+      .search-filter-bar {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+        backdrop-filter: blur(10px);
+        background: var(--bg-card);
+        padding: 20px;
+        border-radius: 10px;
+        border: 1px solid var(--border-color);
+      }
+
+      .search-input,
+      .filter-select {
+        flex: 1;
+        min-width: 200px;
+        padding: 12px 15px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        font-family: "Crimson Text", serif;
+        font-size: 1rem;
+        border-radius: 5px;
+        transition: all 0.3s ease;
+      }
+
+      .search-input:focus,
+      .filter-select:focus {
+        outline: none;
+        border-color: var(--accent-primary);
+        box-shadow: 0 0 15px rgba(45, 212, 191, 0.2);
+      }
+      /* Glassmorphism Creature Cards */
+      .creatures-grid {
+        display: grid;
+        grid-template-columns: repeat(
+          auto-fill,
+          minmax(clamp(250px, 30vw, 350px), 1fr)
+        );
+        gap: clamp(20px, 4vw, 40px);
+        padding: 0 5vw clamp(40px, 8vh, 80px);
+        opacity: 1;
+      }
+
+      .creature-card {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        padding: 0;
+        cursor: pointer;
+        transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        backdrop-filter: blur(15px);
+        overflow: hidden;
+        position: relative;
+      }
+
+      .creature-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+          135deg,
+          rgba(6, 182, 212, 0.05),
+          transparent
+        );
+        opacity: 0;
+        transition: opacity 0.5s ease;
+      }
+
+      .creature-card:hover::before {
+        opacity: 1;
+      }
+
+      .creature-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 60px rgba(6, 182, 212, 0.2);
+        border-color: rgba(6, 182, 212, 0.3);
+      }
+
+      .creature-image {
+        width: 100%;
+        height: 250px;
+        object-fit: cover;
+        border-radius: 20px 20px 0 0;
+        background: var(--bg-secondary);
+      }
+
+      .creature-card > *:not(.creature-image) {
+        padding: 0 25px;
+      }
+
+      .creature-card > *:last-child {
+        padding-bottom: 25px;
+      }
+
+      .creature-name {
+        font-family: "Cinzel", serif;
+        font-size: clamp(1.2rem, 2vw, 1.5rem);
+        color: var(--text-primary);
+        margin: 20px 0 10px;
+      }
+
+      .creature-origin {
+        color: var(--text-secondary);
+        font-size: clamp(0.85rem, 1.2vw, 0.95rem);
+        margin-bottom: 15px;
+      }
+
+      .danger-badge {
+        display: inline-block;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-top: 15px;
+        color: white;
+        text-align: center;
+      }
+
+      .creature-card .danger-badge {
+        margin-top: 15px;
+        margin-bottom: 5px;
+      }
+
+      .danger-Bajo {
+        background: var(--danger-low);
+      }
+      .danger-Medio {
+        background: var(--danger-medium);
+      }
+      .danger-Alto {
+        background: var(--danger-high);
+      }
+      .danger-Extremo {
+        background: var(--danger-extreme);
+      }
+      .danger-Muy-Alto {
+        background: var(--danger-very-high);
+      }
+      .danger-Absoluto {
+        background: var(--danger-absolute);
+        color: white;
+      }
+
+      /* Editor View */
+      .editor-form {
+        max-width: 800px;
+        margin: 0 auto;
+        background: var(--bg-card);
+        backdrop-filter: blur(10px);
+        padding: 40px;
+        border-radius: 10px;
+        border: 1px solid var(--border-color);
+      }
+
+      .form-title {
+        font-family: "Cinzel", serif;
+        font-size: 2rem;
+        color: var(--accent-primary);
+        margin-bottom: 30px;
+        text-align: center;
+      }
+
+      .form-group {
+        margin-bottom: 25px;
+      }
+
+      .form-label {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--text-primary);
+        font-weight: 600;
+        font-size: 1.1rem;
+      }
+
+      .form-input,
+      .form-textarea,
+      .form-select {
+        width: 100%;
+        padding: 12px 15px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        font-family: "Crimson Text", serif;
+        font-size: 1rem;
+        border-radius: 5px;
+        transition: all 0.3s ease;
+      }
+
+      .form-textarea {
+        min-height: 120px;
+        resize: vertical;
+      }
+
+      .form-input:focus,
+      .form-textarea:focus,
+      .form-select:focus {
+        outline: none;
+        border-color: var(--accent-primary);
+        box-shadow: 0 0 15px rgba(45, 212, 191, 0.2);
+      }
+
+      .origin-group {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+      }
+
+      .tags-input-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 10px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 5px;
+        min-height: 50px;
+        align-items: center;
+      }
+
+      .input-wrapper {
+        display: flex;
+        gap: 8px;
+        flex: 1;
+        min-width: 200px;
+        align-items: center;
+      }
+
+      .tag-item,
+      .ability-item {
+        background: var(--accent-primary);
+        color: var(--bg-primary);
+        padding: 5px 12px;
+        border-radius: 15px;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .tag-remove,
+      .ability-remove {
+        cursor: pointer;
+        font-weight: bold;
+        opacity: 0.7;
+        transition: opacity 0.2s;
+      }
+
+      .tag-remove:hover,
+      .ability-remove:hover {
+        opacity: 1;
+      }
+
+      .add-item-input {
+        flex: 1;
+        min-width: 150px;
+        border: none;
+        background: transparent;
+        color: var(--text-primary);
+        outline: none;
+        font-family: "Crimson Text", serif;
+        font-size: 1rem;
+      }
+
+      .add-item-btn {
+        background: var(--accent-primary);
+        color: var(--bg-primary);
+        border: none;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 1.2rem;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        flex-shrink: 0;
+      }
+
+      .add-item-btn:hover {
+        background: #1db9a4;
+        transform: scale(1.1);
+        box-shadow: 0 3px 10px rgba(45, 212, 191, 0.4);
+      }
+
+      .add-item-btn:active {
+        transform: scale(0.95);
+      }
+
+      .btn {
+        padding: 12px 30px;
+        font-family: "Cinzel", serif;
+        font-size: 1rem;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .btn-primary {
+        background: var(--accent-cyan);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: var(--accent-emerald);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(6, 182, 212, 0.4);
+      }
+
+      .btn-secondary {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        border: 1px solid var(--border-color);
+      }
+
+      .btn-secondary:hover {
+        background: rgba(45, 212, 191, 0.1);
+        border-color: var(--accent-primary);
+      }
+
+      .form-actions {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-top: 30px;
+      }
+
+      /* Settings View */
+      .settings-container {
+        max-width: 700px;
+        margin: 0 auto;
+        background: var(--bg-card);
+        backdrop-filter: blur(10px);
+        padding: 40px;
+        border-radius: 10px;
+        border: 1px solid var(--border-color);
+      }
+
+      .settings-title {
+        font-family: "Cinzel", serif;
+        font-size: 2rem;
+        color: var(--accent-primary);
+        margin-bottom: 30px;
+        text-align: center;
+      }
+
+      .sync-actions {
+        display: flex;
+        gap: 15px;
+        margin-top: 20px;
+        flex-wrap: wrap;
+      }
+
+      .sync-actions .btn {
+        flex: 1;
+        min-width: 150px;
+      }
+
+      .last-sync-info {
+        margin-top: 20px;
+        padding: 15px;
+        background: var(--bg-secondary);
+        border-radius: 5px;
+        border-left: 3px solid var(--accent-primary);
+        color: var(--text-secondary);
+      }
+
+      /* Ability and Tag Items (Chips) */
+      .ability-item,
+      .tag-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        margin: 5px;
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        color: var(--text-primary);
+        font-size: 0.9rem;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+      }
+
+      .ability-item:hover,
+      .tag-item:hover {
+        background: rgba(6, 182, 212, 0.1);
+        border-color: var(--accent-cyan);
+        transform: translateY(-2px);
+      }
+
+      .ability-remove,
+      .tag-remove {
+        cursor: pointer;
+        color: var(--text-secondary);
+        font-weight: bold;
+        font-size: 1.1rem;
+        line-height: 1;
+        transition: all 0.3s ease;
+        padding: 2px 5px;
+        border-radius: 50%;
+      }
+
+      .ability-remove:hover,
+      .tag-remove:hover {
+        color: #ef4444;
+        background: rgba(239, 68, 68, 0.2);
+      }
+
+      .input-wrapper {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+        width: 100%;
+      }
+
+      .add-item-input {
+        flex: 1;
+        padding: 10px 15px;
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 8px;
+        color: var(--text-primary);
+        font-size: 0.95rem;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+      }
+
+      .add-item-input:focus {
+        outline: none;
+        border-color: var(--accent-cyan);
+        box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
+      }
+
+      .add-item-btn {
+        padding: 10px 20px;
+        background: var(--accent-cyan);
+        border: none;
+        border-radius: 8px;
+        color: white;
+        font-size: 1.2rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .add-item-btn:hover {
+        background: var(--accent-emerald);
+        transform: scale(1.05);
+      }
+
+      /* Modal - Enhanced */
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.85);
+        z-index: 1000;
+        backdrop-filter: blur(8px);
+        overflow-y: auto;
+        padding: 20px;
+        animation: fadeIn 0.3s ease;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      .modal.active {
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding-top: 40px;
+        padding-bottom: 40px;
+      }
+
+      .modal-content {
+        background: linear-gradient(
+          135deg,
+          rgba(27, 38, 59, 0.98),
+          rgba(13, 27, 42, 0.98)
+        );
+        border: 2px solid var(--border-color);
+        border-radius: 10px;
+        max-width: 800px;
+        width: 100%;
+        padding: 40px;
+        position: relative;
+        animation: slideIn 0.4s ease;
+        margin: auto 0;
+        max-height: calc(100vh - 80px);
+        overflow-y: auto;
+      }
+
+      @keyframes slideIn {
+        from {
+          transform: translateY(-50px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      .modal-close {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: var(--text-secondary);
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 50%;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        z-index: 10;
+      }
+
+      .modal-close:hover {
+        color: white;
+        background: rgba(239, 68, 68, 0.2);
+        border-color: rgba(239, 68, 68, 0.4);
+        transform: rotate(90deg) scale(1.1);
+        box-shadow: 0 5px 20px rgba(239, 68, 68, 0.3);
+      }
+
+      .modal-image {
+        width: 100%;
+        height: auto;
+        object-fit: contain;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        background: #1a2332;
+        opacity: 1;
+      }
+
+      .modal-title {
+        font-family: "Cinzel", serif;
+        font-size: 2.5rem;
+        color: var(--accent-primary);
+        margin-bottom: 15px;
+      }
+
+      .modal-section {
+        margin-bottom: 25px;
+      }
+
+      .modal-section-title {
+        font-family: "Cinzel", serif;
+        font-size: 1.3rem;
+        color: var(--accent-secondary);
+        margin-bottom: 10px;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 5px;
+      }
+
+      .abilities-list,
+      .tags-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .ability-tag,
+      .tag-badge {
+        background: rgba(45, 212, 191, 0.2);
+        border: 1px solid var(--accent-primary);
+        color: var(--accent-primary);
+        padding: 5px 12px;
+        border-radius: 15px;
+        font-size: 0.9rem;
+      }
+
+      /* Loading and Status */
+      .loading {
+        text-align: center;
+        padding: 40px;
+        color: var(--text-secondary);
+        font-style: italic;
+      }
+
+      .status-message {
+        padding: 15px 20px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        text-align: center;
+        font-weight: 600;
+      }
+
+      .status-success {
+        background: rgba(34, 197, 94, 0.2);
+        border: 1px solid var(--danger-low);
+        color: var(--danger-low);
+      }
+
+      .status-error {
+        background: rgba(239, 68, 68, 0.2);
+        border: 1px solid var(--danger-extreme);
+        color: var(--danger-extreme);
+      }
+
+      .status-info {
+        background: rgba(45, 212, 191, 0.2);
+        border: 1px solid var(--accent-primary);
+        color: var(--accent-primary);
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-muted);
+        grid-column: 1 / -1;
+        width: 100%;
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      .empty-state-icon {
+        font-size: 4rem;
+        margin-bottom: 20px;
+        opacity: 0.5;
+      }
+
+      /* Criaturas Detalles mobile */
+      .creature-detail-view {
+        padding: 0 4vw 40px;
+        margin-top: -250px; /* Bring content closer to nav */
+      }
+
+      .creature-detail-content {
+        max-width: 800px;
+        margin: 0 auto;
+        background: linear-gradient(
+          135deg,
+          rgba(27, 38, 59, 0.98),
+          rgba(13, 27, 42, 0.98)
+        );
+        border: 2px solid var(--glass-border);
+        border-radius: 10px;
+        padding: 40px;
+      }
+
+      /* Fix image display on mobile creature detail view */
+      #creature-detail .modal-image {
+        opacity: 1 !important;
+        background: none !important;
+        display: block;
+      }
+
+      /* Mobile Responsive */
+      @media (max-width: 768px) {
+        header {
+          padding: clamp(20px, 4vh, 40px) 5vw;
+        }
+
+        .creatures-grid {
+          grid-template-columns: 1fr;
+          padding: 0 4vw clamp(30px, 6vh, 60px);
+        }
+
+        .search-filter-bar {
+          flex-direction: column;
+          gap: 15px;
+          padding: 0 4vw;
+          margin-bottom: 30px;
+        }
+
+        .search-input,
+        .filter-select {
+          width: 100%;
+        }
+
+        .editor-form,
+        .modal-content {
+          padding: 25px;
+        }
+
+        .origin-group {
+          grid-template-columns: 1fr;
+        }
+
+        nav {
+          gap: 10px;
+          padding: 0 4vw;
+        }
+
+        .nav-btn {
+          font-size: 0.9rem;
+          padding: 10px 20px;
+        }
+
+        /* Hide creature modal on mobile - use detail view instead */
+        #creature-modal {
+          display: none !important;
+        }
+
+        .creature-detail-content {
+          padding: 20px;
+        }
+
+        /* Reduce spacing in creature detail view */
+        .creature-detail-view {
+          padding: 0 4vw 30px;
+        }
+      }
+
+      /* Touch device optimizations */
+      @media (hover: none) and (pointer: coarse) {
+        .creature-card:hover {
+          transform: none;
+        }
+
+        .creature-card:active {
+          transform: scale(0.98);
+        }
+
+        .nav-btn:hover::before {
+          width: 0;
+          height: 0;
+        }
+
+        .nav-btn:active {
+          transform: scale(0.95);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="particle-canvas"></canvas>
+
+    <!-- Settings Gear Button -->
+    <button
+      class="settings-gear-btn"
+      id="settings-gear-btn"
+      title="Configuración"
+    >
+      ⚙️
+    </button>
+
+    <div class="app-container">
+      <header>
+        <div class="header-parallax-layer">
+          <div class="mystical-orb"></div>
+          <div class="mystical-orb"></div>
+          <div class="mystical-orb"></div>
+        </div>
+        <div class="header-content">
+          <img src="./logo.png" alt="Eldritch Dossier Logo" class="logo" />
+          <h1>Eldritch Dossier</h1>
+          <p class="subtitle">
+            Compendio Enciclopédico de Criaturas Mitológicas
+          </p>
+          <div class="sync-status">
+            <div class="sync-indicator" id="sync-indicator"></div>
+            <span id="sync-status-text">Inicializando...</span>
+          </div>
+        </div>
+      </header>
+
+      <nav>
+        <button class="nav-btn active" data-view="explorer">
+          <span>📖 Explorador</span>
+        </button>
+        <button class="nav-btn" data-view="editor">
+          <span>✍️ Nueva Investigación</span>
+        </button>
+      </nav>
+
+      <!-- Explorer View -->
+      <div id="explorer" class="view active">
+        <div class="search-filter-bar">
+          <input
+            type="text"
+            class="search-input"
+            id="search-input"
+            placeholder="🔍 Buscar criatura por nombre..."
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+            name="search-creatures"
+            data-form-type="other"
+          />
+          <select class="filter-select" id="filter-mythology">
+            <option value="">Todas las mitologías</option>
+          </select>
+          <select class="filter-select" id="filter-danger">
+            <option value="">Todos los niveles de peligro</option>
+            <option value="Bajo">Bajo</option>
+            <option value="Medio">Medio</option>
+            <option value="Alto">Alto</option>
+            <option value="Extremo">Extremo</option>
+            <option value="Muy Alto">Muy Alto</option>
+            <option value="Absoluto">Absoluto</option>
+          </select>
+        </div>
+        <div id="creatures-container" class="creatures-grid"></div>
+      </div>
+
+      <!-- Editor View -->
+      <div id="editor" class="view">
+        <form class="editor-form" id="creature-form">
+          <h2 class="form-title">Nueva Investigación</h2>
+
+          <div class="form-group">
+            <label class="form-label">Nombre de la Criatura *</label>
+            <input type="text" class="form-input" id="input-nombre" required />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">URL de Imagen (GitHub Raw) *</label>
+            <input
+              type="url"
+              class="form-input"
+              id="input-imagen"
+              placeholder="https://raw.githubusercontent.com/..."
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Origen</label>
+            <div class="origin-group">
+              <div>
+                <label class="form-label" style="font-size: 0.9rem"
+                  >Cultura</label
+                >
+                <input type="text" class="form-input" id="input-cultura" />
+              </div>
+              <div>
+                <label class="form-label" style="font-size: 0.9rem"
+                  >Mitología</label
+                >
+                <input type="text" class="form-input" id="input-mitologia" />
+              </div>
+              <div>
+                <label class="form-label" style="font-size: 0.9rem"
+                  >Período</label
+                >
+                <input type="text" class="form-input" id="input-periodo" />
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Historia</label>
+            <textarea
+              class="form-textarea"
+              id="input-historia"
+              placeholder="Narra la historia y orígenes de esta criatura..."
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Descripción Física</label>
+            <textarea
+              class="form-textarea"
+              id="input-descripcion"
+              placeholder="Describe la apariencia física de la criatura..."
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Habilidades</label>
+            <div class="tags-input-container" id="abilities-container">
+              <div class="input-wrapper">
+                <input
+                  type="text"
+                  class="add-item-input"
+                  id="input-habilidad"
+                  placeholder="Escribe y presiona + o Enter..."
+                />
+                <button
+                  type="button"
+                  class="add-item-btn"
+                  id="add-ability-btn"
+                  title="Agregar habilidad"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Nivel de Peligro *</label>
+            <select class="form-select" id="input-peligro" required>
+              <option value="">Seleccionar...</option>
+              <option value="Bajo">Bajo</option>
+              <option value="Medio">Medio</option>
+              <option value="Alto">Alto</option>
+              <option value="Extremo">Extremo</option>
+              <option value="Muy Alto">Muy Alto</option>
+              <option value="Absoluto">Absoluto</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Etiquetas</label>
+            <div class="tags-input-container" id="tags-container">
+              <div class="input-wrapper">
+                <input
+                  type="text"
+                  class="add-item-input"
+                  id="input-tag"
+                  placeholder="Escribe y presiona + o Enter..."
+                />
+                <button
+                  type="button"
+                  class="add-item-btn"
+                  id="add-tag-btn"
+                  title="Agregar etiqueta"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+              💾 Guardar Investigación
+            </button>
+            <button type="reset" class="btn btn-secondary">
+              🔄 Limpiar Formulario
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Creature Detail View (Mobile) -->
+    <div id="creature-detail" class="view">
+      <div class="creature-detail-view">
+        <div id="creature-detail-body" class="creature-detail-content"></div>
+      </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settings-modal">
+      <div class="modal-content">
+        <span class="modal-close" id="settings-modal-close">&times;</span>
+        <h2 class="settings-title">Configuración de Sincronización</h2>
+
+        <div class="form-group">
+          <label class="form-label">GitHub Token</label>
+          <input
+            type="password"
+            class="form-input"
+            id="config-token"
+            placeholder="ghp_..."
+            autocomplete="new-password"
+            data-form-type="other"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Gist ID</label>
+          <input
+            type="text"
+            class="form-input"
+            id="config-gist-id"
+            placeholder="Gist ID del archivo de datos"
+            autocomplete="off"
+            data-form-type="other"
+          />
+        </div>
+
+        <div class="sync-actions">
+          <button class="btn btn-primary" id="btn-save-config">
+            💾 Guardar Configuración
+          </button>
+          <button class="btn btn-secondary" id="btn-pull">
+            ⬇️ Pull (Descargar)
+          </button>
+          <button class="btn btn-secondary" id="btn-push">
+            ⬆️ Push (Subir)
+          </button>
+        </div>
+
+        <div class="last-sync-info" id="last-sync-info">
+          <strong>Última Sincronización:</strong> Nunca
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal for Creature Details -->
+    <div class="modal" id="creature-modal">
+      <div class="modal-content">
+        <span class="modal-close" id="modal-close">&times;</span>
+        <div id="modal-body"></div>
+      </div>
+    </div>
+
+    <script>
+      // ========================================
+      // GLOBAL STATE & CONFIGURATION
+      // ========================================
+      const CONFIG = {
+        dbName: "EldritchArchiveDB",
+        storeName: "creatures",
+        defaultFilename: "eldritch_archive_data.json",
+      };
+
+      let db = null;
+      let currentAbilities = [];
+      let currentTags = [];
+      let isEditMode = false;
+      let editingCreatureId = null;
+
+      // ========================================
+      // INDEXEDDB INITIALIZATION
+      // ========================================
+      async function initDB() {
+        return new Promise((resolve, reject) => {
+          const request = indexedDB.open(CONFIG.dbName, 1);
+
+          request.onerror = () => reject(request.error);
+          request.onsuccess = () => {
+            db = request.result;
+            resolve(db);
+          };
+
+          request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains(CONFIG.storeName)) {
+              const objectStore = db.createObjectStore(CONFIG.storeName, {
+                keyPath: "id",
+              });
+              objectStore.createIndex("nombre", "nombre", { unique: false });
+              objectStore.createIndex("mitologia", "origen.mitologia", {
+                unique: false,
+              });
+              objectStore.createIndex("nivel_peligro", "nivel_peligro", {
+                unique: false,
+              });
+            }
+          };
+        });
+      }
+
+      // ========================================
+      // INDEXEDDB CRUD OPERATIONS
+      // ========================================
+      async function addCreature(creature) {
+        return new Promise((resolve, reject) => {
+          // Add metadata if not present
+          const now = new Date().toISOString();
+          if (!creature.created_at) creature.created_at = now;
+          if (!creature.updated_at) creature.updated_at = now;
+          if (!creature.status) creature.status = "active";
+
+          const transaction = db.transaction([CONFIG.storeName], "readwrite");
+          const store = transaction.objectStore(CONFIG.storeName);
+          // Use put() instead of add() to allow re-adding during sync without errors
+          const request = store.put(creature);
+          request.onsuccess = () => resolve(creature);
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      async function getAllCreatures(includeDeleted = false) {
+        return new Promise((resolve, reject) => {
+          const transaction = db.transaction([CONFIG.storeName], "readonly");
+          const store = transaction.objectStore(CONFIG.storeName);
+          const request = store.getAll();
+          request.onsuccess = () => {
+            let creatures = request.result;
+            // Filter out deleted creatures unless explicitly requested
+            if (!includeDeleted) {
+              creatures = creatures.filter(c => c.status !== "deleted");
+            }
+            resolve(creatures);
+          };
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      async function getCreatureById(id) {
+        return new Promise((resolve, reject) => {
+          const transaction = db.transaction([CONFIG.storeName], "readonly");
+          const store = transaction.objectStore(CONFIG.storeName);
+          const request = store.get(id);
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      async function updateCreature(creature) {
+        return new Promise((resolve, reject) => {
+          // Update the updated_at timestamp
+          creature.updated_at = new Date().toISOString();
+
+          const transaction = db.transaction([CONFIG.storeName], "readwrite");
+          const store = transaction.objectStore(CONFIG.storeName);
+          const request = store.put(creature);
+          request.onsuccess = () => resolve(creature);
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      async function deleteCreature(id) {
+        // Soft delete: mark as deleted instead of removing
+        return new Promise(async (resolve, reject) => {
+          try {
+            const creature = await getCreatureById(id);
+            if (!creature) {
+              reject(new Error("Creature not found"));
+              return;
+            }
+            
+            // Mark as deleted and update timestamp
+            creature.status = "deleted";
+            creature.updated_at = new Date().toISOString();
+            
+            const transaction = db.transaction([CONFIG.storeName], "readwrite");
+            const store = transaction.objectStore(CONFIG.storeName);
+            const request = store.put(creature);
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(request.error);
+          } catch (error) {
+            reject(error);
+          }
+        });
+      }
+
+      async function clearAllCreatures() {
+        return new Promise((resolve, reject) => {
+          const transaction = db.transaction([CONFIG.storeName], "readwrite");
+          const store = transaction.objectStore(CONFIG.storeName);
+          const request = store.clear();
+          request.onsuccess = () => resolve();
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      // ========================================
+      // GITHUB GIST SYNCHRONIZATION
+      // ========================================
+      function getGistConfig() {
+        return {
+          token: localStorage.getItem("gist_token") || "",
+          gistId: localStorage.getItem("gist_id") || "",
+          filename:
+            localStorage.getItem("gist_filename") || CONFIG.defaultFilename,
+        };
+      }
+
+      function saveGistConfig(token, gistId, filename) {
+        localStorage.setItem("gist_token", token);
+        localStorage.setItem("gist_id", gistId);
+        localStorage.setItem("gist_filename", filename);
+      }
+
+      function updateSyncStatus(status, message, isError = false) {
+        const indicator = document.getElementById("sync-indicator");
+        const statusText = document.getElementById("sync-status-text");
+
+        indicator.className = "sync-indicator";
+        if (status === "syncing") {
+          indicator.classList.add("syncing");
+        } else if (isError) {
+          indicator.classList.add("error");
+        }
+
+        statusText.textContent = message;
+      }
+
+      async function mergeCreatures(localCreatures, remoteCreatures) {
+        // Create a map of creatures by ID for efficient lookup
+        const creaturesMap = new Map();
+
+        // Helper function to migrate old creatures without metadata
+        const migrateCreature = (creature) => {
+          const now = new Date().toISOString();
+          if (!creature.created_at) creature.created_at = now;
+          if (!creature.updated_at) creature.updated_at = now;
+          if (!creature.status) creature.status = "active";
+          return creature;
+        };
+
+        // Add all local creatures to the map
+        localCreatures.forEach((creature) => {
+          creaturesMap.set(creature.id, migrateCreature(creature));
+        });
+
+        // Merge remote creatures using timestamp comparison
+        remoteCreatures.forEach((remoteCreature) => {
+          migrateCreature(remoteCreature);
+          
+          if (creaturesMap.has(remoteCreature.id)) {
+            const localCreature = creaturesMap.get(remoteCreature.id);
+            
+            // Compare timestamps - keep the most recently updated version
+            const localTime = new Date(localCreature.updated_at).getTime();
+            const remoteTime = new Date(remoteCreature.updated_at).getTime();
+            
+            if (remoteTime > localTime) {
+              // Remote is newer, use it
+              creaturesMap.set(remoteCreature.id, remoteCreature);
+            }
+            // else: local is newer or equal, keep it
+          } else {
+            // New creature from remote, add it
+            creaturesMap.set(remoteCreature.id, remoteCreature);
+          }
+        });
+
+        // Convert map back to array
+        return Array.from(creaturesMap.values());
+      }
+
+      async function pullFromGist() {
+        const config = getGistConfig();
+
+        // Check if configuration is complete
+        if (!config.token || !config.gistId) {
+          updateSyncStatus(
+            "error",
+            "Configuración incompleta: ingresa Token y Gist ID",
+            true,
+          );
+          return 0;
+        }
+
+        updateSyncStatus(
+          "syncing",
+          "Descargando y fusionando desde GitHub Gist...",
+        );
+
+        try {
+          const response = await fetch(
+            `https://api.github.com/gists/${config.gistId}`,
+            {
+              headers: {
+                Authorization: `token ${config.token}`,
+                Accept: "application/vnd.github.v3+json",
+              },
+            },
+          );
+
+          if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+          }
+
+          const gist = await response.json();
+          const fileContent = gist.files[config.filename]?.content;
+
+          if (!fileContent) {
+            throw new Error(
+              `Archivo ${config.filename} no encontrado en el Gist`,
+            );
+          }
+
+          const remoteCreatures = JSON.parse(fileContent);
+          // Include deleted creatures in local data for proper merging
+          const localCreatures = await getAllCreatures(true);
+
+          // MERGE: Combine local and remote data
+          const mergedCreatures = await mergeCreatures(
+            localCreatures,
+            remoteCreatures,
+          );
+
+          // Clear and save merged data
+          await clearAllCreatures();
+          for (const creature of mergedCreatures) {
+            await addCreature(creature);
+          }
+
+          const now = new Date().toLocaleString("es-ES");
+          localStorage.setItem("last_sync", now);
+          updateLastSyncDisplay(now);
+          
+          // Count only active creatures for display
+          const activeCount = mergedCreatures.filter(c => c.status !== "deleted").length;
+          const activeLocal = localCreatures.filter(c => c.status !== "deleted").length;
+          const activeRemote = remoteCreatures.filter(c => c.status !== "deleted").length;
+          
+          updateSyncStatus(
+            "success",
+            `✅ Sincronizado: ${activeCount} criaturas activas (${activeLocal} local + ${activeRemote} remoto)`,
+          );
+
+          // Refresh display if in explorer view
+          if (
+            document.getElementById("explorer").classList.contains("active")
+          ) {
+            await displayCreatures();
+          }
+
+          return activeCount; // Return only active creatures count
+        } catch (error) {
+          console.error("Pull error:", error);
+          updateSyncStatus(
+            "error",
+            `Error al descargar: ${error.message}`,
+            true,
+          );
+          throw error;
+        }
+      }
+
+      async function pushToGist() {
+        const config = getGistConfig();
+
+        // Check if configuration is complete
+        if (!config.token || !config.gistId) {
+          updateSyncStatus(
+            "error",
+            "Configuración incompleta: ingresa Token y Gist ID",
+            true,
+          );
+          return 0;
+        }
+
+        updateSyncStatus("syncing", "Sincronizando con GitHub Gist...");
+
+        try {
+          // STEP 1: Pull and merge first to get latest remote data
+          let remoteCreatures = [];
+          try {
+            const response = await fetch(
+              `https://api.github.com/gists/${config.gistId}`,
+              {
+                headers: {
+                  Authorization: `token ${config.token}`,
+                  Accept: "application/vnd.github.v3+json",
+                },
+              },
+            );
+
+            if (response.ok) {
+              const gist = await response.json();
+              const fileContent = gist.files[config.filename]?.content;
+              if (fileContent) {
+                remoteCreatures = JSON.parse(fileContent);
+              }
+            }
+          } catch (pullError) {
+            console.warn(
+              "Could not pull before push, pushing local only:",
+              pullError,
+            );
+          }
+
+          // STEP 2: Merge local with remote (timestamp-based conflict resolution)
+          // Include deleted creatures in local data for proper merging
+          const localCreatures = await getAllCreatures(true);
+          const mergedCreatures = await mergeCreatures(
+            remoteCreatures,
+            localCreatures,
+          );
+
+          // STEP 3: Save merged data locally
+          await clearAllCreatures();
+          for (const creature of mergedCreatures) {
+            await addCreature(creature);
+          }
+
+          // STEP 4: Push merged data to Gist
+          const content = JSON.stringify(mergedCreatures, null, 2);
+
+          const response = await fetch(
+            `https://api.github.com/gists/${config.gistId}`,
+            {
+              method: "PATCH",
+              headers: {
+                Authorization: `token ${config.token}`,
+                Accept: "application/vnd.github.v3+json",
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                files: {
+                  [config.filename]: {
+                    content: content,
+                  },
+                },
+              }),
+            },
+          );
+
+          if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+          }
+
+          const now = new Date().toLocaleString("es-ES");
+          localStorage.setItem("last_sync", now);
+          updateLastSyncDisplay(now);
+          
+          // Count only active creatures for display
+          const activeCount = mergedCreatures.filter(c => c.status !== "deleted").length;
+          
+          updateSyncStatus(
+            "success",
+            `✅ ${activeCount} criaturas activas sincronizadas y subidas`,
+          );
+
+          return activeCount; // Return only active creatures count
+        } catch (error) {
+          console.error("Push error:", error);
+          updateSyncStatus("error", `Error al subir: ${error.message}`, true);
+          throw error;
+        }
+      }
+
+      // Push local state directly to Gist without merging (for delete operations)
+      async function pushLocalToGist() {
+        const config = getGistConfig();
+
+        if (!config.token || !config.gistId) {
+          updateSyncStatus(
+            "error",
+            "Configuración incompleta: ingresa Token y Gist ID",
+            true,
+          );
+          return 0;
+        }
+
+        updateSyncStatus("syncing", "Sincronizando con GitHub Gist...");
+
+        try {
+          // Get current local state (including deleted for sync)
+          const localCreatures = await getAllCreatures(true);
+          const content = JSON.stringify(localCreatures, null, 2);
+
+          // Push directly to Gist
+          const response = await fetch(
+            `https://api.github.com/gists/${config.gistId}`,
+            {
+              method: "PATCH",
+              headers: {
+                Authorization: `token ${config.token}`,
+                Accept: "application/vnd.github.v3+json",
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                files: {
+                  [config.filename]: {
+                    content: content,
+                  },
+                },
+              }),
+            },
+          );
+
+          if (!response.ok) {
+            throw new Error(`GitHub API error: ${response.status}`);
+          }
+
+          const now = new Date().toLocaleString("es-ES");
+          localStorage.setItem("last_sync", now);
+          updateLastSyncDisplay(now);
+          updateSyncStatus(
+            "success",
+            `✅ Sincronizado: ${localCreatures.length} criaturas`,
+          );
+
+          return localCreatures.length;
+        } catch (error) {
+          console.error("Push error:", error);
+          updateSyncStatus("error", `Error al subir: ${error.message}`, true);
+          throw error;
+        }
+      }
+
+      // Push local state directly to Gist without merging (for delete operations)
+      async function pushLocalToGist() {
+        const config = getGistConfig();
+
+        if (!config.token || !config.gistId) {
+          updateSyncStatus(
+            "error",
+            "Configuración incompleta: ingresa Token y Gist ID",
+            true,
+          );
+          return 0;
+        }
+
+        updateSyncStatus("syncing", "Sincronizando con GitHub Gist...");
+
+        try {
+          // Get current local state
+          const localCreatures = await getAllCreatures();
+          const content = JSON.stringify(localCreatures, null, 2);
+
+          // Push directly to Gist
+          const response = await fetch(
+            `https://api.github.com/gists/${config.gistId}`,
+            {
+              method: "PATCH",
+              headers: {
+                Authorization: `token ${config.token}`,
+                Accept: "application/vnd.github.v3+json",
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                files: {
+                  [config.filename]: {
+                    content: content,
+                  },
+                },
+              }),
+            },
+          );
+
+          if (!response.ok) {
+            throw new Error(`GitHub API error: ${response.status}`);
+          }
+
+          const now = new Date().toLocaleString("es-ES");
+          localStorage.setItem("last_sync", now);
+          updateLastSyncDisplay(now);
+          updateSyncStatus(
+            "success",
+            `✅ Sincronizado: ${localCreatures.length} criaturas`,
+          );
+
+          return localCreatures.length;
+        } catch (error) {
+          console.error("Push error:", error);
+          updateSyncStatus("error", `Error al subir: ${error.message}`, true);
+          throw error;
+        }
+      }
+
+      function updateLastSyncDisplay(timestamp) {
+        const lastSyncInfo = document.getElementById("last-sync-info");
+        lastSyncInfo.innerHTML = `<strong>Última Sincronización:</strong> ${timestamp || "Nunca"}`;
+      }
+
+      // ========================================
+      // UI - NAVIGATION
+      // ========================================
+      function initNavigation() {
+        const navButtons = document.querySelectorAll(".nav-btn");
+        const views = document.querySelectorAll(".view");
+
+        navButtons.forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const targetView = btn.dataset.view;
+
+            // Update active states
+            navButtons.forEach((b) => b.classList.remove("active"));
+            btn.classList.add("active");
+
+            views.forEach((v) => v.classList.remove("active"));
+            document.getElementById(targetView).classList.add("active");
+
+            // Load data if switching to explorer
+            if (targetView === "explorer") {
+              displayCreatures();
+            }
+          });
+        });
+      }
+
+      // ========================================
+      // UI - EXPLORER VIEW
+      // ========================================
+      async function displayCreatures() {
+        const container = document.getElementById("creatures-container");
+        const searchInput = document.getElementById("search-input");
+        const filterMythology = document.getElementById("filter-mythology");
+        const filterDanger = document.getElementById("filter-danger");
+
+        try {
+          let creatures = await getAllCreatures();
+
+          // Apply filters
+          const searchQuery = searchInput.value.toLowerCase();
+          const mythologyFilter = filterMythology.value;
+          const dangerFilter = filterDanger.value;
+
+          creatures = creatures.filter((creature) => {
+            const matchesSearch = creature.nombre
+              .toLowerCase()
+              .includes(searchQuery);
+            const matchesMythology =
+              !mythologyFilter ||
+              creature.origen?.mitologia === mythologyFilter;
+            const matchesDanger =
+              !dangerFilter || creature.nivel_peligro === dangerFilter;
+            return matchesSearch && matchesMythology && matchesDanger;
+          });
+
+          if (creatures.length === 0) {
+            container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📜</div>
+                            <h3>No se encontraron criaturas</h3>
+                            <p>Comienza una nueva investigación usando el editor.</p>
+                        </div>
+                    `;
+            return;
+          }
+
+          container.innerHTML = creatures
+            .map(
+              (creature) => `
+                    <div class="creature-card" data-id="${creature.id}">
+                        <img src="${creature.imagen_url}" alt="${creature.nombre}" class="creature-image" 
+                             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 300 200%22%3E%3Crect fill=%22%23111%22 width=%22300%22 height=%22200%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%23666%22 font-size=%2220%22%3EImagen no disponible%3C/text%3E%3C/svg%3E'">
+                        <h3 class="creature-name">${creature.nombre}</h3>
+                        <p class="creature-origin">${creature.origen?.cultura || "Cultura desconocida"} - ${creature.origen?.mitologia || "Mitología desconocida"}</p>
+                    </div>
+                `,
+            )
+            .join("");
+
+          // Add click handlers
+          container.querySelectorAll(".creature-card").forEach((card) => {
+            card.addEventListener("click", async () => {
+              const id = card.dataset.id;
+              await showCreatureModal(id);
+            });
+          });
+
+          // Update mythology filter options
+          updateMythologyFilter(creatures);
+        } catch (error) {
+          console.error("Error displaying creatures:", error);
+          container.innerHTML = `<div class="empty-state status-error">Error al cargar las criaturas</div>`;
+        }
+      }
+
+      function updateMythologyFilter(creatures) {
+        const filterMythology = document.getElementById("filter-mythology");
+        const mythologies = [
+          ...new Set(creatures.map((c) => c.origen?.mitologia).filter(Boolean)),
+        ];
+
+        // Keep current selection
+        const currentValue = filterMythology.value;
+
+        filterMythology.innerHTML =
+          '<option value="">Todas las mitologías</option>' +
+          mythologies.map((m) => `<option value="${m}">${m}</option>`).join("");
+
+        filterMythology.value = currentValue;
+      }
+
+      async function showCreatureModal(id) {
+        // Check if mobile device
+        const isMobile = window.innerWidth <= 768;
+
+        if (isMobile) {
+          // Use detail view on mobile
+          await showCreatureDetailView(id);
+          return;
+        }
+
+        // Desktop: use modal
+        const creature = await getCreatureById(id);
+        if (!creature) return;
+
+        const modalBody = document.getElementById("modal-body");
+        modalBody.innerHTML = `
+                <img src="${creature.imagen_url}" alt="${creature.nombre}" class="modal-image"
+                     onerror="this.style.display='none'">
+                <h2 class="modal-title">${creature.nombre}</h2>
+                <span class="danger-badge danger-${creature.nivel_peligro.replace(/ /g, '-')}">${creature.nivel_peligro}</span>
+
+                <div class="modal-section">
+                    <h3 class="modal-section-title">Origen</h3>
+                    <p><strong>Cultura:</strong> ${creature.origen?.cultura || "No especificada"}</p>
+                    <p><strong>Mitología:</strong> ${creature.origen?.mitologia || "No especificada"}</p>
+                    <p><strong>Período:</strong> ${creature.origen?.periodo || "No especificado"}</p>
+                </div>
+
+                ${
+                  creature.historia
+                    ? `
+                <div class="modal-section">
+                    <h3 class="modal-section-title">Historia</h3>
+                    <p>${creature.historia}</p>
+                </div>
+                `
+                    : ""
+                }
+
+                ${
+                  creature.descripcion_fisica
+                    ? `
+                <div class="modal-section">
+                    <h3 class="modal-section-title">Descripción Física</h3>
+                    <p>${creature.descripcion_fisica}</p>
+                </div>
+                `
+                    : ""
+                }
+
+                ${
+                  creature.habilidades && creature.habilidades.length > 0
+                    ? `
+                <div class="modal-section">
+                    <h3 class="modal-section-title">Habilidades</h3>
+                    <div class="abilities-list">
+                        ${creature.habilidades.map((h) => `<span class="ability-tag">${h}</span>`).join("")}
+                    </div>
+                </div>
+                `
+                    : ""
+                }
+
+                ${
+                  creature.tags && creature.tags.length > 0
+                    ? `
+                <div class="modal-section">
+                    <h3 class="modal-section-title">Etiquetas</h3>
+                    <div class="tags-list">
+                        ${creature.tags.map((t) => `<span class="tag-badge">${t}</span>`).join("")}
+                    </div>
+                </div>
+                `
+                    : ""
+                }
+                
+                <div class="modal-actions" style="margin-top: 30px; display: flex; gap: 15px; justify-content: center;">
+                    <button class="btn btn-primary" onclick="editCreature('${creature.id}')" style="padding: 12px 30px;">
+                        ✏️ Editar
+                    </button>
+                    <button class="btn btn-secondary" onclick="deleteCreatureConfirm('${creature.id}')" 
+                            style="padding: 12px 30px; background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #ef4444;">
+                        🗑️ Eliminar
+                    </button>
+                </div>
+            `;
+
+        document.getElementById("creature-modal").classList.add("active");
+      }
+
+      // ========================================
+      // CREATURE DETAIL VIEW (MOBILE)
+      // ========================================
+      async function showCreatureDetailView(id) {
+        const creature = await getCreatureById(id);
+        if (!creature) return;
+
+        // Switch to creature detail view
+        const views = document.querySelectorAll(".view");
+        views.forEach((v) => v.classList.remove("active"));
+        document.getElementById("creature-detail").classList.add("active");
+
+        // Update navigation buttons
+        const navButtons = document.querySelectorAll(".nav-btn");
+        navButtons.forEach((btn) => btn.classList.remove("active"));
+
+        // Populate detail view
+        const detailBody = document.getElementById("creature-detail-body");
+        detailBody.innerHTML = `
+                <img src="${creature.imagen_url}" alt="${creature.nombre}" class="modal-image"
+                     onerror="this.style.display='none'">
+                <h2 class="modal-title">${creature.nombre}</h2>
+                <span class="danger-badge danger-${creature.nivel_peligro.replace(/ /g, '-')}">${creature.nivel_peligro}</span>
+
+                <div class="modal-section">
+                    <h3 class="modal-section-title">Origen</h3>
+                    <p><strong>Cultura:</strong> ${creature.origen?.cultura || "No especificada"}</p>
+                    <p><strong>Mitología:</strong> ${creature.origen?.mitologia || "No especificada"}</p>
+                    <p><strong>Período:</strong> ${creature.origen?.periodo || "No especificado"}</p>
+                </div>
+
+                ${
+                  creature.historia
+                    ? `
+                <div class="modal-section">
+                    <h3 class="modal-section-title">Historia</h3>
+                    <p>${creature.historia}</p>
+                </div>
+                `
+                    : ""
+                }
+
+                ${
+                  creature.descripcion_fisica
+                    ? `
+                <div class="modal-section">
+                    <h3 class="modal-section-title">Descripción Física</h3>
+                    <p>${creature.descripcion_fisica}</p>
+                </div>
+                `
+                    : ""
+                }
+
+                ${
+                  creature.habilidades && creature.habilidades.length > 0
+                    ? `
+                <div class="modal-section">
+                    <h3 class="modal-section-title">Habilidades</h3>
+                    <div class="abilities-list">
+                        ${creature.habilidades.map((h) => `<span class="ability-tag">${h}</span>`).join("")}
+                    </div>
+                </div>
+                `
+                    : ""
+                }
+
+                ${
+                  creature.tags && creature.tags.length > 0
+                    ? `
+                <div class="modal-section">
+                    <h3 class="modal-section-title">Etiquetas</h3>
+                    <div class="tags-list">
+                        ${creature.tags.map((t) => `<span class="tag-badge">${t}</span>`).join("")}
+                    </div>
+                </div>
+                `
+                    : ""
+                }
+                
+                <div class="modal-actions" style="margin-top: 30px; display: flex; gap: 15px; justify-content: center;">
+                    <button class="btn btn-primary" onclick="editCreature('${creature.id}')" style="padding: 12px 30px;">
+                        ✏️ Editar
+                    </button>
+                    <button class="btn btn-secondary" onclick="deleteCreatureConfirm('${creature.id}')" 
+                            style="padding: 12px 30px; background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #ef4444;">
+                        🗑️ Eliminar
+                    </button>
+                </div>
+            `;
+
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      // ========================================
+      // EDIT CREATURE FUNCTION
+      // ========================================
+      async function editCreature(id) {
+        try {
+          // Get creature data
+          const creature = await getCreatureById(id);
+          if (!creature) {
+            showNotification("❌ No se pudo cargar la criatura", "error");
+            return;
+          }
+
+          // Close modal
+          document.getElementById("creature-modal").classList.remove("active");
+
+          // Switch to editor view
+          document
+            .querySelectorAll(".nav-btn")
+            .forEach((btn) => btn.classList.remove("active"));
+          document
+            .querySelector('[data-view="editor"]')
+            .classList.add("active");
+          document
+            .querySelectorAll(".view")
+            .forEach((v) => v.classList.remove("active"));
+          document.getElementById("editor").classList.add("active");
+
+          // Set edit mode
+          isEditMode = true;
+          editingCreatureId = id;
+
+          // Update form title
+          document.querySelector(".form-title").textContent =
+            "✏️ Editar Criatura";
+
+          // Fill form fields
+          document.getElementById("input-nombre").value = creature.nombre || "";
+          document.getElementById("input-imagen").value =
+            creature.imagen_url || "";
+          document.getElementById("input-cultura").value =
+            creature.origen?.cultura || "";
+          document.getElementById("input-mitologia").value =
+            creature.origen?.mitologia || "";
+          document.getElementById("input-periodo").value =
+            creature.origen?.periodo || "";
+          document.getElementById("input-historia").value =
+            creature.historia || "";
+          document.getElementById("input-descripcion").value =
+            creature.descripcion_fisica || "";
+          document.getElementById("input-peligro").value =
+            creature.nivel_peligro || "Bajo";
+
+          // Load abilities and tags
+          currentAbilities = creature.habilidades
+            ? [...creature.habilidades]
+            : [];
+          currentTags = creature.tags ? [...creature.tags] : [];
+
+          // Wait a bit for DOM to be fully ready before rendering
+          setTimeout(() => {
+            try {
+              renderAbilities();
+              renderTags();
+            } catch (renderError) {
+              console.error("Error rendering abilities/tags:", renderError);
+              showNotification(
+                "⚠️ Criatura cargada, pero hubo un error al mostrar habilidades/tags",
+                "warning",
+              );
+            }
+          }, 100);
+
+          // Scroll to top
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        } catch (error) {
+          console.error("Error loading creature for edit:", error);
+          showNotification("❌ Error al cargar la criatura", "error");
+        }
+      }
+
+      // ========================================
+      // DELETE CREATURE FUNCTION
+      // ========================================
+      async function deleteCreatureConfirm(id) {
+        try {
+          // Get creature name for confirmation
+          const creature = await getCreatureById(id);
+          if (!creature) {
+            showNotification("❌ No se pudo encontrar la criatura", "error");
+            return;
+          }
+
+          // Confirm deletion
+          const confirmDelete = confirm(
+            `¿Estás seguro de que deseas eliminar \"${creature.nombre}\"?\n\nLa criatura será marcada como eliminada y se sincronizará en todos tus dispositivos.`,
+          );
+
+          if (!confirmDelete) {
+            return; // User cancelled
+          }
+
+          // Close modal
+          document.getElementById("creature-modal").classList.remove("active");
+
+          // Delete from IndexedDB
+          await deleteCreature(id);
+          showNotification("✅ Criatura eliminada exitosamente", "success");
+
+          // Sync with Gist (push local state directly, no merge)
+          try {
+            await pushLocalToGist();
+          } catch (error) {
+            console.error("Auto-push failed after delete:", error);
+            showNotification(
+              "⚠️ Eliminado localmente, pero fallo al sincronizar con Gist",
+              "info",
+            );
+          }
+
+          // Reload page to show updated list
+          setTimeout(() => {
+            location.reload();
+          }, 1500);
+        } catch (error) {
+          console.error("Error deleting creature:", error);
+          showNotification("❌ Error al eliminar la criatura", "error");
+        }
+      }
+
+      // ========================================
+      // GLOBAL RENDER FUNCTIONS FOR ABILITIES AND TAGS
+      // ========================================
+      function renderAbilities() {
+        try {
+          const abilitiesContainer = document.getElementById(
+            "abilities-container",
+          );
+          if (!abilitiesContainer) {
+            console.warn("abilities-container not found, skipping render");
+            return;
+          }
+
+          const items = currentAbilities
+            .map(
+              (ability, index) => `
+                    <span class="ability-item">
+                        ${ability}
+                        <span class="ability-remove" data-index="${index}">✕</span>
+                    </span>
+                `,
+            )
+            .join("");
+
+          abilitiesContainer.innerHTML =
+            items +
+            `<div class="input-wrapper">
+                        <input type="text" class="add-item-input" id="input-habilidad" placeholder="Escribe y presiona + o Enter...">
+                        <button type="button" class="add-item-btn" id="add-ability-btn" title="Agregar habilidad">+</button>
+                    </div>`;
+
+          // Re-attach event listeners
+          const newInput = document.getElementById("input-habilidad");
+          const newBtn = document.getElementById("add-ability-btn");
+
+          if (newInput && newBtn) {
+            function addAbility() {
+              const value = newInput.value.trim();
+              if (value && !currentAbilities.includes(value)) {
+                currentAbilities.push(value);
+                renderAbilities();
+                newInput.value = "";
+              }
+            }
+
+            newInput.addEventListener("keydown", (e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                addAbility();
+              }
+            });
+
+            newBtn.addEventListener("click", (e) => {
+              e.preventDefault();
+              addAbility();
+            });
+
+            // Remove ability handlers
+            abilitiesContainer
+              .querySelectorAll(".ability-remove")
+              .forEach((btn) => {
+                btn.addEventListener("click", () => {
+                  const index = parseInt(btn.dataset.index);
+                  currentAbilities.splice(index, 1);
+                  renderAbilities();
+                });
+              });
+          }
+        } catch (error) {
+          console.error("Error rendering abilities:", error);
+        }
+      }
+
+      function renderTags() {
+        try {
+          const tagsContainer = document.getElementById("tags-container");
+          if (!tagsContainer) {
+            console.warn("tags-container not found, skipping render");
+            return;
+          }
+
+          const items = currentTags
+            .map(
+              (tag, index) => `
+                    <span class="tag-item">
+                        ${tag}
+                        <span class="tag-remove" data-index="${index}">✕</span>
+                    </span>
+                `,
+            )
+            .join("");
+
+          tagsContainer.innerHTML =
+            items +
+            `<div class="input-wrapper">
+                        <input type="text" class="add-item-input" id="input-tag" placeholder="Escribe y presiona + o Enter...">
+                        <button type="button" class="add-item-btn" id="add-tag-btn" title="Agregar etiqueta">+</button>
+                    </div>`;
+
+          // Re-attach event listeners
+          const newInput = document.getElementById("input-tag");
+          const newBtn = document.getElementById("add-tag-btn");
+
+          if (newInput && newBtn) {
+            function addTag() {
+              const value = newInput.value.trim();
+              if (value && !currentTags.includes(value)) {
+                currentTags.push(value);
+                renderTags();
+                newInput.value = "";
+              }
+            }
+
+            newInput.addEventListener("keydown", (e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                addTag();
+              }
+            });
+
+            newBtn.addEventListener("click", (e) => {
+              e.preventDefault();
+              addTag();
+            });
+
+            // Remove tag handlers
+            tagsContainer.querySelectorAll(".tag-remove").forEach((btn) => {
+              btn.addEventListener("click", () => {
+                const index = parseInt(btn.dataset.index);
+                currentTags.splice(index, 1);
+                renderTags();
+              });
+            });
+          }
+        } catch (error) {
+          console.error("Error rendering tags:", error);
+        }
+      }
+
+      // ========================================
+      // UI - EDITOR VIEW
+      // ========================================
+      function initEditor() {
+        const form = document.getElementById("creature-form");
+        const abilitiesContainer = document.getElementById(
+          "abilities-container",
+        );
+        const tagsContainer = document.getElementById("tags-container");
+        const abilityInput = document.getElementById("input-habilidad");
+        const tagInput = document.getElementById("input-tag");
+        const addAbilityBtn = document.getElementById("add-ability-btn");
+        const addTagBtn = document.getElementById("add-tag-btn");
+
+        // Function to add ability
+        function addAbility() {
+          const value = abilityInput.value.trim();
+          if (value && !currentAbilities.includes(value)) {
+            currentAbilities.push(value);
+            renderAbilities();
+            abilityInput.value = "";
+          }
+        }
+
+        // Function to add tag
+        function addTag() {
+          const value = tagInput.value.trim();
+          if (value && !currentTags.includes(value)) {
+            currentTags.push(value);
+            renderTags();
+            tagInput.value = "";
+          }
+        }
+
+        // Handle abilities input - Enter key
+        abilityInput.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            addAbility();
+          }
+        });
+
+        // Handle abilities button click
+        addAbilityBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          addAbility();
+        });
+
+        // Handle tags input - Enter key
+        tagInput.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            addTag();
+          }
+        });
+
+        // Handle tags button click
+        addTagBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          addTag();
+        });
+
+        // Initial render
+        renderAbilities();
+        renderTags();
+
+        // Form submission
+        form.addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const creature = {
+            id: isEditMode ? editingCreatureId : crypto.randomUUID(),
+            nombre: document.getElementById("input-nombre").value,
+            imagen_url: document.getElementById("input-imagen").value,
+            origen: {
+              cultura: document.getElementById("input-cultura").value,
+              mitologia: document.getElementById("input-mitologia").value,
+              periodo: document.getElementById("input-periodo").value,
+            },
+            historia: document.getElementById("input-historia").value,
+            descripcion_fisica:
+              document.getElementById("input-descripcion").value,
+            habilidades: [...currentAbilities],
+            nivel_peligro: document.getElementById("input-peligro").value,
+            tags: [...currentTags],
+          };
+
+          try {
+            if (isEditMode) {
+              // Get existing creature to preserve metadata
+              const existingCreature = await getCreatureById(editingCreatureId);
+              
+              // Preserve created_at and status from existing creature
+              if (existingCreature) {
+                creature.created_at = existingCreature.created_at;
+                creature.status = existingCreature.status;
+              }
+              
+              // Update existing creature
+              await updateCreature(creature);
+              showNotification(
+                "✅ Criatura actualizada exitosamente",
+                "success",
+              );
+
+              // Reset edit mode
+              isEditMode = false;
+              editingCreatureId = null;
+              document.querySelector(".form-title").textContent =
+                "📜 Nueva Investigación";
+            } else {
+              // Add new creature
+              await addCreature(creature);
+              showNotification(
+                "✅ Investigación guardada exitosamente",
+                "success",
+              );
+            }
+
+            // Automatically push to Gist after saving
+            try {
+              await pushToGist();
+            } catch (error) {
+              console.error("Auto-push failed:", error);
+              showNotification(
+                "⚠️ Guardado localmente, pero fallo al sincronizar con Gist",
+                "info",
+              );
+            }
+
+            // Reload page after successful save
+            setTimeout(() => {
+              location.reload();
+            }, 1500); // Wait 1.5s to show notification
+          } catch (error) {
+            console.error("Error saving creature:", error);
+            showNotification("❌ Error al guardar la investigación", "error");
+          }
+        });
+
+        // Form reset
+        form.addEventListener("reset", () => {
+          currentAbilities = [];
+          currentTags = [];
+          renderAbilities();
+          renderTags();
+        });
+      }
+
+      function showNotification(message, type = "info") {
+        const notification = document.createElement("div");
+        notification.className = `status-message status-${type}`;
+        notification.textContent = message;
+
+        const container = document.querySelector(".editor-form");
+        container.insertBefore(notification, container.firstChild);
+
+        setTimeout(() => {
+          notification.remove();
+        }, 5000);
+      }
+
+      // ========================================
+      // UI - SETTINGS VIEW
+      // ========================================
+      function initSettings() {
+        const config = getGistConfig();
+        document.getElementById("config-token").value = config.token;
+        document.getElementById("config-gist-id").value = config.gistId;
+
+        const lastSync = localStorage.getItem("last_sync");
+        updateLastSyncDisplay(lastSync);
+
+        // Save config
+        document
+          .getElementById("btn-save-config")
+          .addEventListener("click", () => {
+            const token = document.getElementById("config-token").value;
+            const gistId = document.getElementById("config-gist-id").value;
+            const filename = CONFIG.defaultFilename; // Always use default filename
+
+            saveGistConfig(token, gistId, filename);
+            updateSyncStatus("success", "Configuración guardada");
+
+            setTimeout(() => {
+              updateSyncStatus("success", "Listo para sincronizar");
+            }, 2000);
+          });
+
+        // Pull button
+        document
+          .getElementById("btn-pull")
+          .addEventListener("click", async () => {
+            try {
+              const count = await pullFromGist();
+              alert(`✅ ${count} criaturas descargadas exitosamente`);
+            } catch (error) {
+              alert(`❌ Error al descargar: ${error.message}`);
+            }
+          });
+
+        // Push button
+        document
+          .getElementById("btn-push")
+          .addEventListener("click", async () => {
+            try {
+              const count = await pushToGist();
+              alert(`✅ ${count} criaturas subidas exitosamente`);
+            } catch (error) {
+              alert(`❌ Error al subir: ${error.message}`);
+            }
+          });
+      }
+
+      // ========================================
+      // UI - MODAL
+      // ========================================
+      function initModal() {
+        const creatureModal = document.getElementById("creature-modal");
+        const creatureCloseBtn = document.getElementById("modal-close");
+        const settingsModal = document.getElementById("settings-modal");
+        const settingsCloseBtn = document.getElementById(
+          "settings-modal-close",
+        );
+        const settingsGearBtn = document.getElementById("settings-gear-btn");
+
+        // Creature modal handlers
+        creatureCloseBtn.addEventListener("click", () => {
+          creatureModal.classList.remove("active");
+        });
+
+        creatureModal.addEventListener("click", (e) => {
+          if (e.target === creatureModal) {
+            creatureModal.classList.remove("active");
+          }
+        });
+
+        // Settings modal handlers
+        settingsGearBtn.addEventListener("click", () => {
+          settingsModal.classList.add("active");
+        });
+
+        settingsCloseBtn.addEventListener("click", () => {
+          settingsModal.classList.remove("active");
+        });
+
+        settingsModal.addEventListener("click", (e) => {
+          if (e.target === settingsModal) {
+            settingsModal.classList.remove("active");
+          }
+        });
+
+        // Close modals on Escape key
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape") {
+            creatureModal.classList.remove("active");
+            settingsModal.classList.remove("active");
+          }
+        });
+      }
+
+      // ========================================
+      // UI - NAVIGATION
+      // ========================================
+      function initNavigation() {
+        const navBtns = document.querySelectorAll(".nav-btn");
+        const views = document.querySelectorAll(".view");
+
+        navBtns.forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const targetView = btn.dataset.view;
+
+            // Update active button
+            navBtns.forEach((b) => b.classList.remove("active"));
+            btn.classList.add("active");
+
+            // Update active view
+            views.forEach((v) => v.classList.remove("active"));
+            document.getElementById(targetView).classList.add("active");
+          });
+        });
+      }
+
+      // ========================================
+      // PARALLAX EFFECTS
+      // ========================================
+      function initParallaxEffects() {
+        const header = document.querySelector("header");
+        const orbs = document.querySelectorAll(".mystical-orb");
+
+        document.addEventListener("mousemove", (e) => {
+          const mouseX = e.clientX / window.innerWidth;
+          const mouseY = e.clientY / window.innerHeight;
+
+          orbs.forEach((orb, index) => {
+            const speed = (index + 1) * 10;
+            const x = (mouseX - 0.5) * speed;
+            const y = (mouseY - 0.5) * speed;
+            orb.style.transform = `translate(${x}px, ${y}px)`;
+          });
+        });
+      }
+      // ========================================
+      // UI - SEARCH & FILTERS
+      // ========================================
+      function initSearchAndFilters() {
+        const searchInput = document.getElementById("search-input");
+        const filterMythology = document.getElementById("filter-mythology");
+        const filterDanger = document.getElementById("filter-danger");
+
+        searchInput.addEventListener("input", displayCreatures);
+        filterMythology.addEventListener("change", displayCreatures);
+        filterDanger.addEventListener("change", displayCreatures);
+      }
+
+      // ========================================
+      // PARTICLE ANIMATION
+      // ========================================
+      function initParticles() {
+        const canvas = document.getElementById("particle-canvas");
+        const ctx = canvas.getContext("2d");
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const particles = [];
+        const particleCount = 80;
+
+        class Particle {
+          constructor() {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * canvas.height;
+            this.vx = (Math.random() - 0.5) * 0.5;
+            this.vy = (Math.random() - 0.5) * 0.5;
+            this.radius = Math.random() * 2 + 1;
+            this.opacity = Math.random() * 0.5 + 0.2;
+          }
+
+          update() {
+            this.x += this.vx;
+            this.y += this.vy;
+
+            if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+            if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+          }
+
+          draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(45, 212, 191, ${this.opacity})`;
+            ctx.fill();
+          }
+        }
+
+        for (let i = 0; i < particleCount; i++) {
+          particles.push(new Particle());
+        }
+
+        function animate() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          particles.forEach((particle) => {
+            particle.update();
+            particle.draw();
+          });
+
+          // Draw connections
+          particles.forEach((p1, i) => {
+            particles.slice(i + 1).forEach((p2) => {
+              const dx = p1.x - p2.x;
+              const dy = p1.y - p2.y;
+              const distance = Math.sqrt(dx * dx + dy * dy);
+
+              if (distance < 150) {
+                ctx.beginPath();
+                ctx.moveTo(p1.x, p1.y);
+                ctx.lineTo(p2.x, p2.y);
+                ctx.strokeStyle = `rgba(45, 212, 191, ${0.15 * (1 - distance / 150)})`;
+                ctx.lineWidth = 0.5;
+                ctx.stroke();
+              }
+            });
+          });
+
+          requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        window.addEventListener("resize", () => {
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+        });
+      }
+
+      // ========================================
+      // CUSTOM CURSOR
+      // ========================================
+      function initCustomCursor() {
+        const cursor = document.getElementById("custom-cursor");
+        const hoverElements = document.querySelectorAll(
+          "button, a, .creature-card, input, select, textarea",
+        );
+
+        let mouseX = 0,
+          mouseY = 0;
+        let cursorX = 0,
+          cursorY = 0;
+
+        document.addEventListener("mousemove", (e) => {
+          mouseX = e.clientX;
+          mouseY = e.clientY;
+        });
+
+        function animateCursor() {
+          const dx = mouseX - cursorX;
+          const dy = mouseY - cursorY;
+
+          cursorX += dx * 0.15;
+          cursorY += dy * 0.15;
+
+          cursor.style.left = cursorX + "px";
+          cursor.style.top = cursorY + "px";
+
+          requestAnimationFrame(animateCursor);
+        }
+        animateCursor();
+
+        // Hover effect
+        hoverElements.forEach((el) => {
+          el.addEventListener("mouseenter", () =>
+            cursor.classList.add("hover"),
+          );
+          el.addEventListener("mouseleave", () =>
+            cursor.classList.remove("hover"),
+          );
+        });
+      }
+
+      // ========================================
+      // SCROLL REVEAL ANIMATIONS
+      // ========================================
+      function initScrollReveal() {
+        const observerOptions = {
+          threshold: 0.1,
+          rootMargin: "0px 0px -50px 0px",
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach((entry, index) => {
+            if (entry.isIntersecting) {
+              setTimeout(() => {
+                entry.target.classList.add("revealed");
+              }, index * 100); // Stagger animation
+              observer.unobserve(entry.target);
+            }
+          });
+        }, observerOptions);
+
+        // Observe all creature cards
+        document.querySelectorAll(".creature-card").forEach((card) => {
+          observer.observe(card);
+        });
+      }
+
+      // ========================================
+      // APPLICATION INITIALIZATION
+      // ========================================
+      async function initApp() {
+        try {
+          // Initialize IndexedDB
+          await initDB();
+          console.log("✅ IndexedDB initialized");
+
+          // Initialize UI components
+          initNavigation();
+          initEditor();
+          initSettings();
+          initModal();
+          initSearchAndFilters();
+          initParticles();
+          initParallaxEffects();
+          // initCustomCursor(); // Disabled per user request
+
+          // Offline-first: Auto-pull on load
+          try {
+            updateSyncStatus("syncing", "Intentando sincronizar...");
+            const count = await pullFromGist();
+            console.log(`✅ Auto-pulled ${count} creatures from Gist`);
+          } catch (error) {
+            console.warn("Auto-pull failed, working offline:", error);
+            updateSyncStatus(
+              "error",
+              "Modo offline - Sin conexión a Gist",
+              true,
+            );
+          }
+
+          // Display initial data
+          await displayCreatures();
+
+          // Initialize scroll reveal after creatures are loaded
+          setTimeout(() => initScrollReveal(), 100);
+        } catch (error) {
+          console.error("Initialization error:", error);
+          updateSyncStatus("error", "Error al inicializar la aplicación", true);
+        }
+      }
+
+      // Start the application when DOM is ready
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initApp);
+      } else {
+        initApp();
+      }
+
+      // ========================================
+      // SERVICE WORKER REGISTRATION (PWA)
+      // ========================================
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("./sw.js")
+            .then((registration) => {
+              console.log("✅ Service Worker registered:", registration.scope);
+            })
+            .catch((error) => {
+              console.log("❌ Service Worker registration failed:", error);
+            });
+        });
+      }
+    </script>
+  </body>
+</html>
