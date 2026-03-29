@@ -1,11 +1,11 @@
 {
-  "name": "Eldritch Dossier",
+  "name": "Eldritch Dossier - Terminal",
   "short_name": "Eldritch",
-  "description": "Compendio Enciclopédico de Criaturas Mitológicas",
+  "description": "Terminal de Investigación de Criaturas Mitológicas",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#0a0a0a",
-  "theme_color": "#2dd4bf",
+  "background_color": "#000000",
+  "theme_color": "#000000",
   "orientation": "any",
   "icons": [
     {
@@ -37,12 +37,11 @@
     "education",
     "reference"
   ],
-  "screenshots": [],
   "shortcuts": [
     {
-      "name": "Nueva Investigación",
-      "short_name": "Nueva",
-      "description": "Añadir nueva criatura",
+      "name": "Registrar Sujeto",
+      "short_name": "Nuevo",
+      "description": "Registrar nueva criatura",
       "url": "./index.html#editor",
       "icons": [
         {
@@ -52,9 +51,9 @@
       ]
     },
     {
-      "name": "Explorador",
-      "short_name": "Buscar",
-      "description": "Buscar criaturas",
+      "name": "Explorar Archivo",
+      "short_name": "Explorar",
+      "description": "Explorar criaturas registradas",
       "url": "./index.html#explorer",
       "icons": [
         {

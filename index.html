@@ -3,3024 +3,1117 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Eldritch Dossier - Compendio Enciclopédico</title>
+    <title>Eldritch Dossier - Terminal de Investigación</title>
 
     <!-- PWA Meta Tags -->
-    <meta
-      name="description"
-      content="Compendio Enciclopédico de Criaturas Mitológicas"
-    />
-    <meta name="theme-color" content="#2dd4bf" />
+    <meta name="description" content="Terminal de Investigación de Criaturas Mitológicas" />
+    <meta name="theme-color" content="#000000" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta
-      name="apple-mobile-web-app-status-bar-style"
-      content="black-translucent"
-    />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Eldritch Dossier" />
 
-    <meta name="theme-color" content="#0B1120" />
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-<meta http-equiv="Pragma" content="no-cache" />
-<meta http-equiv="Expires" content="0" />
     <!-- Manifest -->
     <link rel="manifest" href="./manifest.json" />
-
-    <!-- Cache busting for styles -->
-    <meta
-      http-equiv="Cache-Control"
-      content="no-cache, no-store, must-revalidate"
-    />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
 
     <!-- Icons -->
     <link rel="icon" type="image/png" sizes="192x192" href="./logo.png" />
     <link rel="icon" type="image/png" sizes="512x512" href="./logo.png" />
     <link rel="apple-touch-icon" href="./logo.png" />
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap"
-      rel="stylesheet"
-    />
+    <!-- Cache busting -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+
+    <!-- Librerías base: React, ReactDOM y Babel para procesar JSX -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Tailwind CSS para el diseño -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              emerald: { 950: "#022c22" },
+            },
+          },
+        },
+      };
+    </script>
 
     <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
+      @keyframes flicker {
+        0% { opacity: 0.05; }
+        50% { opacity: 0.02; }
+        100% { opacity: 0.05; }
       }
-
-      :root {
-        --bg-primary: #0a0a0a;
-        --bg-secondary: #0f0f0f;
-        --accent-emerald: #064e3b;
-        --accent-cyan: #06b6d4;
-        --text-primary: #f5f5f5;
-        --text-secondary: #a3a3a3;
-        --text-muted: #525252;
-        --glass-bg: rgba(15, 15, 15, 0.4);
-        --glass-border: rgba(255, 255, 255, 0.05);
-        --danger-low: #22c55e;
-        --danger-medium: #fbbf24;
-        --danger-high: #f97316;
-        --danger-extreme: #ef4444;
-        --danger-very-high: #a855f7;
-        --danger-absolute: #000000;
+      @keyframes scanline {
+        0% { bottom: 100%; }
+        100% { bottom: -100px; }
       }
 
       body {
-        font-family: "Crimson Text", serif;
-        background: var(--bg-primary);
-        color: var(--text-primary);
-        overflow-x: hidden;
-      }
-
-      #particle-canvas {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 0;
-        pointer-events: none;
-      }
-
-      /* Fluid Layout - No Rigid Containers */
-      .app-container {
-        position: relative;
-        z-index: 1;
-        min-height: 100vh;
-        padding: 0;
-      }
-
-      /* Hero Section with Fluid Typography */
-      header {
-        text-align: center;
-        padding: clamp(20px, 3vh, 40px) 5vw;
-        margin-bottom: clamp(10px, 2vh, 20px);
-        position: relative;
-        overflow: hidden;
-      }
-
-      .header-parallax-layer {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        top: 0;
-        left: 0;
-        pointer-events: none;
-        opacity: 0.3;
-      }
-
-      .mystical-orb {
-        position: absolute;
-        border-radius: 50%;
-        background: radial-gradient(
-          circle,
-          rgba(6, 182, 212, 0.15),
-          transparent
-        );
-        filter: blur(60px);
-        animation: floatOrb 8s ease-in-out infinite;
-      }
-
-      .mystical-orb:nth-child(1) {
-        width: 200px;
-        height: 200px;
-        top: 5%;
-        left: 5%;
-        animation-delay: 0s;
-      }
-
-      .mystical-orb:nth-child(2) {
-        width: 300px;
-        height: 300px;
-        top: 50%;
-        right: 10%;
-        animation-delay: 3s;
-      }
-
-      .mystical-orb:nth-child(3) {
-        width: 150px;
-        height: 150px;
-        bottom: 10%;
-        left: 50%;
-        animation-delay: 6s;
-      }
-
-      @keyframes floatOrb {
-        0%,
-        100% {
-          transform: translate(0, 0);
-          opacity: 0.3;
-        }
-        50% {
-          transform: translate(20px, -30px);
-          opacity: 0.5;
-        }
-      }
-
-      .header-content {
-        position: relative;
-        z-index: 2;
-      }
-
-      .logo {
-        width: clamp(80px, 15vw, 150px);
-        height: auto;
-        margin: 0 auto clamp(20px, 4vh, 40px);
-        display: block;
-        filter: drop-shadow(0 0 30px rgba(6, 182, 212, 0.3));
-        transition: filter 0.4s ease;
-      }
-
-      .logo:hover {
-        filter: drop-shadow(0 0 50px rgba(6, 182, 212, 0.6));
-      }
-
-      /* Hero Title with Animated Gradient */
-      h1 {
-        font-family: "Cinzel", serif;
-        font-size: clamp(2.5rem, 8vw, 7rem);
-        font-weight: 600;
+        background-color: black;
         margin: 0;
-        line-height: 1.1;
-        letter-spacing: 0.05em;
-        background: linear-gradient(
-          90deg,
-          var(--accent-emerald) 0%,
-          var(--accent-cyan) 50%,
-          var(--accent-emerald) 100%
-        );
-        background-size: 200% auto;
-        background-clip: text;
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        animation: gradientShift 8s ease-in-out infinite;
+        overflow-x: hidden;
+        color: #10b981;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       }
 
-      @keyframes gradientShift {
-        0%,
-        100% {
-          background-position: 0% center;
-        }
-        50% {
-          background-position: 100% center;
-        }
-      }
+      ::-webkit-scrollbar { width: 5px; }
+      ::-webkit-scrollbar-track { background: #000; }
+      ::-webkit-scrollbar-thumb { background: #064e3b; border-radius: 10px; }
+      ::-webkit-scrollbar-thumb:hover { background: #10b981; }
 
-      .subtitle {
-        font-size: 1.2rem;
-        color: var(--text-secondary);
-        font-style: italic;
-      }
-
-      .sync-status {
-        margin-top: 15px;
-        font-size: 0.9rem;
-        color: var(--text-muted);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-      }
-
-      .sync-indicator {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: var(--danger-low);
-        animation: pulse 2s infinite;
-      }
-
-      .sync-indicator.syncing {
-        background: var(--accent-secondary);
-      }
-
-      .sync-indicator.error {
-        background: var(--danger-extreme);
-      }
-
-      @keyframes pulse {
-        0%,
-        100% {
-          opacity: 1;
-        }
-        50% {
-          opacity: 0.5;
-        }
-      }
-
-      /* Settings Gear Button - Glassmorphism */
-      .settings-gear-btn {
+      .crt-overlay {
+        pointer-events: none;
         position: fixed;
-        top: clamp(15px, 3vh, 25px);
-        right: clamp(15px, 3vw, 25px);
-        width: clamp(45px, 6vw, 55px);
-        height: clamp(45px, 6vw, 55px);
-        background: var(--glass-bg);
-        border: 1px solid var(--glass-border);
-        border-radius: 50%;
-        cursor: pointer;
-        z-index: 1000;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: clamp(1.2rem, 2vw, 1.5rem);
-        color: var(--accent-cyan);
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        backdrop-filter: blur(15px);
-        box-shadow: 0 5px 20px rgba(6, 182, 212, 0.15);
+        inset: 0;
+        z-index: 200;
+        background:
+          linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%),
+          linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+        background-size: 100% 4px, 3px 100%;
       }
 
-      .settings-gear-btn:hover {
-        transform: rotate(90deg) scale(1.15);
-        box-shadow: 0 10px 40px rgba(6, 182, 212, 0.3);
-        border-color: rgba(6, 182, 212, 0.4);
-        background: rgba(6, 182, 212, 0.1);
-      }
-
-      .settings-gear-btn:active {
-        transform: rotate(90deg) scale(1);
-      }
-
-      /* Scroll Reveal Animation */
-      .creature-card.revealed {
-        animation: revealCard 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)
-          forwards;
-      }
-
-      @keyframes revealCard {
-        from {
-          opacity: 0;
-          transform: translateY(30px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-      /* Glassmorphism Navigation */
-      nav {
-        display: flex;
-        justify-content: center;
-        gap: clamp(15px, 3vw, 30px);
-        margin: 0 auto clamp(30px, 5vh, 50px);
-        padding: 0 5vw;
-        flex-wrap: wrap;
-      }
-
-      .nav-btn {
-        padding: clamp(12px, 2vh, 16px) clamp(25px, 4vw, 40px);
-        font-family: "Cinzel", serif;
-        font-size: clamp(0.9rem, 1.5vw, 1.1rem);
-        background: var(--glass-bg);
-        color: var(--text-primary);
-        border: 1px solid var(--glass-border);
-        border-radius: 50px;
-        cursor: pointer;
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        backdrop-filter: blur(15px);
-        position: relative;
-        overflow: hidden;
-      }
-
-      .nav-btn::before {
-        content: "";
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 0;
-        height: 0;
-        border-radius: 50%;
-        background: rgba(6, 182, 212, 0.1);
-        transform: translate(-50%, -50%);
-        transition:
-          width 0.6s ease,
-          height 0.6s ease;
-      }
-
-      .nav-btn:hover::before {
-        width: 300px;
-        height: 300px;
-      }
-
-      .nav-btn span {
-        position: relative;
-        z-index: 1;
-      }
-
-      .nav-btn:hover {
-        transform: translateY(-3px);
-        border-color: rgba(6, 182, 212, 0.3);
-        box-shadow: 0 10px 30px rgba(6, 182, 212, 0.15);
-      }
-
-      .nav-btn.active {
-        background: rgba(6, 182, 212, 0.1);
-        border-color: rgba(6, 182, 212, 0.4);
-        box-shadow: 0 5px 20px rgba(6, 182, 212, 0.2);
-      }
-      .view {
-        display: none;
-        animation: fadeIn 0.5s ease;
-      }
-
-      .view.active {
-        display: block;
-      }
-
-      @keyframes fadeIn {
-        from {
-          opacity: 0;
-          transform: translateY(20px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      /* Explorer View */
-      .search-filter-bar {
-        display: flex;
-        gap: 15px;
-        margin-bottom: 30px;
-        flex-wrap: wrap;
-        backdrop-filter: blur(10px);
-        background: var(--bg-card);
-        padding: 20px;
-        border-radius: 10px;
-        border: 1px solid var(--border-color);
-      }
-
-      .search-input,
-      .filter-select {
-        flex: 1;
-        min-width: 200px;
-        padding: 12px 15px;
-        background: var(--bg-secondary);
-        border: 1px solid var(--border-color);
-        color: var(--text-primary);
-        font-family: "Crimson Text", serif;
-        font-size: 1rem;
-        border-radius: 5px;
-        transition: all 0.3s ease;
-      }
-
-      .search-input:focus,
-      .filter-select:focus {
-        outline: none;
-        border-color: var(--accent-primary);
-        box-shadow: 0 0 15px rgba(45, 212, 191, 0.2);
-      }
-      /* Glassmorphism Creature Cards */
-      .creatures-grid {
-        display: grid;
-        grid-template-columns: repeat(
-          auto-fill,
-          minmax(clamp(250px, 30vw, 350px), 1fr)
-        );
-        gap: clamp(20px, 4vw, 40px);
-        padding: 0 5vw clamp(40px, 8vh, 80px);
-        opacity: 1;
-      }
-
-      .creature-card {
-        background: var(--glass-bg);
-        border: 1px solid var(--glass-border);
-        border-radius: 20px;
-        padding: 0;
-        cursor: pointer;
-        transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        backdrop-filter: blur(15px);
-        overflow: hidden;
-        position: relative;
-      }
-
-      .creature-card::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(
-          135deg,
-          rgba(6, 182, 212, 0.05),
-          transparent
-        );
-        opacity: 0;
-        transition: opacity 0.5s ease;
-      }
-
-      .creature-card:hover::before {
-        opacity: 1;
-      }
-
-      .creature-card:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 20px 60px rgba(6, 182, 212, 0.2);
-        border-color: rgba(6, 182, 212, 0.3);
-      }
-
-      .creature-image {
+      .scanline {
         width: 100%;
-        height: 250px;
-        object-fit: cover;
-        border-radius: 20px 20px 0 0;
-        background: var(--bg-secondary);
+        height: 100px;
+        z-index: 201;
+        background: linear-gradient(0deg, rgba(0, 0, 0, 0) 0%, rgba(255, 255, 255, 0.02) 10%, rgba(0, 0, 0, 0.1) 100%);
+        opacity: 0.1;
+        position: absolute;
+        bottom: 100%;
+        animation: scanline 10s linear infinite;
       }
 
-      .creature-card > *:not(.creature-image) {
-        padding: 0 25px;
-      }
+      #root { min-height: 100vh; }
+      option { background: #000; color: #10b981; }
+      input, textarea, select { border-radius: 0 !important; }
 
-      .creature-card > *:last-child {
-        padding-bottom: 25px;
-      }
-
-      .creature-name {
-        font-family: "Cinzel", serif;
-        font-size: clamp(1.2rem, 2vw, 1.5rem);
-        color: var(--text-primary);
-        margin: 20px 0 10px;
-      }
-
-      .creature-origin {
-        color: var(--text-secondary);
-        font-size: clamp(0.85rem, 1.2vw, 0.95rem);
-        margin-bottom: 15px;
-      }
-
-      .danger-badge {
-        display: inline-block;
-        padding: 6px 14px;
-        border-radius: 20px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        margin-top: 15px;
-        color: white;
-        text-align: center;
-      }
-
-      .creature-card .danger-badge {
-        margin-top: 15px;
-        margin-bottom: 5px;
-      }
-
-      .danger-Bajo {
-        background: var(--danger-low);
-      }
-      .danger-Medio {
-        background: var(--danger-medium);
-      }
-      .danger-Alto {
-        background: var(--danger-high);
-      }
-      .danger-Extremo {
-        background: var(--danger-extreme);
-      }
-      .danger-Muy-Alto {
-        background: var(--danger-very-high);
-      }
-      .danger-Absoluto {
-        background: var(--danger-absolute);
-        color: white;
-      }
-
-      /* Editor View */
-      .editor-form {
-        max-width: 800px;
-        margin: 0 auto;
-        background: var(--bg-card);
-        backdrop-filter: blur(10px);
-        padding: 40px;
-        border-radius: 10px;
-        border: 1px solid var(--border-color);
-      }
-
-      .form-title {
-        font-family: "Cinzel", serif;
-        font-size: 2rem;
-        color: var(--accent-primary);
-        margin-bottom: 30px;
-        text-align: center;
-      }
-
-      .form-group {
-        margin-bottom: 25px;
-      }
-
-      .form-label {
-        display: block;
-        margin-bottom: 8px;
-        color: var(--text-primary);
-        font-weight: 600;
-        font-size: 1.1rem;
-      }
-
-      .form-input,
-      .form-textarea,
-      .form-select {
-        width: 100%;
-        padding: 12px 15px;
-        background: var(--bg-secondary);
-        border: 1px solid var(--border-color);
-        color: var(--text-primary);
-        font-family: "Crimson Text", serif;
-        font-size: 1rem;
-        border-radius: 5px;
-        transition: all 0.3s ease;
-      }
-
-      .form-textarea {
-        min-height: 120px;
-        resize: vertical;
-      }
-
-      .form-input:focus,
-      .form-textarea:focus,
-      .form-select:focus {
-        outline: none;
-        border-color: var(--accent-primary);
-        box-shadow: 0 0 15px rgba(45, 212, 191, 0.2);
-      }
-
-      .origin-group {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 15px;
-      }
-
-      .tags-input-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        padding: 10px;
-        background: var(--bg-secondary);
-        border: 1px solid var(--border-color);
-        border-radius: 5px;
-        min-height: 50px;
-        align-items: center;
-      }
-
-      .input-wrapper {
-        display: flex;
-        gap: 8px;
-        flex: 1;
-        min-width: 200px;
-        align-items: center;
-      }
-
-      .tag-item,
-      .ability-item {
-        background: var(--accent-primary);
-        color: var(--bg-primary);
-        padding: 5px 12px;
-        border-radius: 15px;
-        font-size: 0.9rem;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .tag-remove,
-      .ability-remove {
-        cursor: pointer;
-        font-weight: bold;
-        opacity: 0.7;
-        transition: opacity 0.2s;
-      }
-
-      .tag-remove:hover,
-      .ability-remove:hover {
-        opacity: 1;
-      }
-
-      .add-item-input {
-        flex: 1;
-        min-width: 150px;
-        border: none;
-        background: transparent;
-        color: var(--text-primary);
-        outline: none;
-        font-family: "Crimson Text", serif;
-        font-size: 1rem;
-      }
-
-      .add-item-btn {
-        background: var(--accent-primary);
-        color: var(--bg-primary);
-        border: none;
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        cursor: pointer;
-        font-size: 1.2rem;
-        font-weight: bold;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.3s ease;
-        flex-shrink: 0;
-      }
-
-      .add-item-btn:hover {
-        background: #1db9a4;
-        transform: scale(1.1);
-        box-shadow: 0 3px 10px rgba(45, 212, 191, 0.4);
-      }
-
-      .add-item-btn:active {
-        transform: scale(0.95);
-      }
-
-      .btn {
-        padding: 12px 30px;
-        font-family: "Cinzel", serif;
-        font-size: 1rem;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-      }
-
-      .btn-primary {
-        background: var(--accent-cyan);
-        color: white;
-      }
-
-      .btn-primary:hover {
-        background: var(--accent-emerald);
-        transform: translateY(-2px);
-        box-shadow: 0 5px 20px rgba(6, 182, 212, 0.4);
-      }
-
-      .btn-secondary {
-        background: var(--bg-secondary);
-        color: var(--text-primary);
-        border: 1px solid var(--border-color);
-      }
-
-      .btn-secondary:hover {
-        background: rgba(45, 212, 191, 0.1);
-        border-color: var(--accent-primary);
-      }
-
-      .form-actions {
-        display: flex;
-        gap: 15px;
-        justify-content: center;
-        margin-top: 30px;
-      }
-
-      /* Settings View */
-      .settings-container {
-        max-width: 700px;
-        margin: 0 auto;
-        background: var(--bg-card);
-        backdrop-filter: blur(10px);
-        padding: 40px;
-        border-radius: 10px;
-        border: 1px solid var(--border-color);
-      }
-
-      .settings-title {
-        font-family: "Cinzel", serif;
-        font-size: 2rem;
-        color: var(--accent-primary);
-        margin-bottom: 30px;
-        text-align: center;
-      }
-
-      .sync-actions {
-        display: flex;
-        gap: 15px;
-        margin-top: 20px;
-        flex-wrap: wrap;
-      }
-
-      .sync-actions .btn {
-        flex: 1;
-        min-width: 150px;
-      }
-
-      .last-sync-info {
-        margin-top: 20px;
-        padding: 15px;
-        background: var(--bg-secondary);
-        border-radius: 5px;
-        border-left: 3px solid var(--accent-primary);
-        color: var(--text-secondary);
-      }
-
-      /* Ability and Tag Items (Chips) */
-      .ability-item,
-      .tag-item {
+      .chip-tag {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
-        padding: 8px 12px;
-        margin: 5px;
-        background: var(--glass-bg);
-        border: 1px solid var(--glass-border);
-        border-radius: 20px;
-        color: var(--text-primary);
-        font-size: 0.9rem;
-        backdrop-filter: blur(10px);
-        transition: all 0.3s ease;
+        gap: 6px;
+        padding: 4px 10px;
+        border: 1px solid #064e3b;
+        background: rgba(6, 78, 59, 0.15);
+        font-size: 11px;
+        text-transform: uppercase;
+        font-weight: 900;
+        letter-spacing: 0.05em;
+        color: #10b981;
+        cursor: default;
+        transition: all 0.2s;
       }
-
-      .ability-item:hover,
-      .tag-item:hover {
-        background: rgba(6, 182, 212, 0.1);
-        border-color: var(--accent-cyan);
-        transform: translateY(-2px);
+      .chip-tag:hover {
+        border-color: #ef4444;
+        background: rgba(239, 68, 68, 0.1);
       }
-
-      .ability-remove,
-      .tag-remove {
+      .chip-tag .chip-remove {
         cursor: pointer;
-        color: var(--text-secondary);
-        font-weight: bold;
-        font-size: 1.1rem;
+        color: #064e3b;
+        font-size: 14px;
         line-height: 1;
-        transition: all 0.3s ease;
-        padding: 2px 5px;
-        border-radius: 50%;
+        transition: color 0.2s;
       }
-
-      .ability-remove:hover,
-      .tag-remove:hover {
+      .chip-tag:hover .chip-remove {
         color: #ef4444;
-        background: rgba(239, 68, 68, 0.2);
-      }
-
-      .input-wrapper {
-        display: flex;
-        gap: 8px;
-        margin-top: 10px;
-        width: 100%;
-      }
-
-      .add-item-input {
-        flex: 1;
-        padding: 10px 15px;
-        background: var(--glass-bg);
-        border: 1px solid var(--glass-border);
-        border-radius: 8px;
-        color: var(--text-primary);
-        font-size: 0.95rem;
-        backdrop-filter: blur(10px);
-        transition: all 0.3s ease;
-      }
-
-      .add-item-input:focus {
-        outline: none;
-        border-color: var(--accent-cyan);
-        box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
-      }
-
-      .add-item-btn {
-        padding: 10px 20px;
-        background: var(--accent-cyan);
-        border: none;
-        border-radius: 8px;
-        color: white;
-        font-size: 1.2rem;
-        font-weight: bold;
-        cursor: pointer;
-        transition: all 0.3s ease;
-      }
-
-      .add-item-btn:hover {
-        background: var(--accent-emerald);
-        transform: scale(1.05);
-      }
-
-      /* Modal - Enhanced */
-      .modal {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.85);
-        z-index: 1000;
-        backdrop-filter: blur(8px);
-        overflow-y: auto;
-        padding: 20px;
-        animation: fadeIn 0.3s ease;
-      }
-
-      @keyframes fadeIn {
-        from {
-          opacity: 0;
-        }
-        to {
-          opacity: 1;
-        }
-      }
-
-      .modal.active {
-        display: flex;
-        align-items: flex-start;
-        justify-content: center;
-        padding-top: 40px;
-        padding-bottom: 40px;
-      }
-
-      .modal-content {
-        background: linear-gradient(
-          135deg,
-          rgba(27, 38, 59, 0.98),
-          rgba(13, 27, 42, 0.98)
-        );
-        border: 2px solid var(--border-color);
-        border-radius: 10px;
-        max-width: 800px;
-        width: 100%;
-        padding: 40px;
-        position: relative;
-        animation: slideIn 0.4s ease;
-        margin: auto 0;
-        max-height: calc(100vh - 80px);
-        overflow-y: auto;
-      }
-
-      @keyframes slideIn {
-        from {
-          transform: translateY(-50px);
-          opacity: 0;
-        }
-        to {
-          transform: translateY(0);
-          opacity: 1;
-        }
-      }
-
-      .modal-close {
-        position: absolute;
-        top: 15px;
-        right: 15px;
-        width: 40px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        cursor: pointer;
-        color: var(--text-secondary);
-        background: var(--glass-bg);
-        border: 1px solid var(--glass-border);
-        border-radius: 50%;
-        backdrop-filter: blur(10px);
-        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        z-index: 10;
-      }
-
-      .modal-close:hover {
-        color: white;
-        background: rgba(239, 68, 68, 0.2);
-        border-color: rgba(239, 68, 68, 0.4);
-        transform: rotate(90deg) scale(1.1);
-        box-shadow: 0 5px 20px rgba(239, 68, 68, 0.3);
-      }
-
-      .modal-image {
-        width: 100%;
-        height: auto;
-        object-fit: contain;
-        border-radius: 5px;
-        margin-bottom: 20px;
-        background: #1a2332;
-        opacity: 1;
-      }
-
-      .modal-title {
-        font-family: "Cinzel", serif;
-        font-size: 2.5rem;
-        color: var(--accent-primary);
-        margin-bottom: 15px;
-      }
-
-      .modal-section {
-        margin-bottom: 25px;
-      }
-
-      .modal-section-title {
-        font-family: "Cinzel", serif;
-        font-size: 1.3rem;
-        color: var(--accent-secondary);
-        margin-bottom: 10px;
-        border-bottom: 1px solid var(--border-color);
-        padding-bottom: 5px;
-      }
-
-      .abilities-list,
-      .tags-list {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-top: 10px;
-      }
-
-      .ability-tag,
-      .tag-badge {
-        background: rgba(45, 212, 191, 0.2);
-        border: 1px solid var(--accent-primary);
-        color: var(--accent-primary);
-        padding: 5px 12px;
-        border-radius: 15px;
-        font-size: 0.9rem;
-      }
-
-      /* Loading and Status */
-      .loading {
-        text-align: center;
-        padding: 40px;
-        color: var(--text-secondary);
-        font-style: italic;
-      }
-
-      .status-message {
-        padding: 15px 20px;
-        border-radius: 5px;
-        margin-bottom: 20px;
-        text-align: center;
-        font-weight: 600;
-      }
-
-      .status-success {
-        background: rgba(34, 197, 94, 0.2);
-        border: 1px solid var(--danger-low);
-        color: var(--danger-low);
-      }
-
-      .status-error {
-        background: rgba(239, 68, 68, 0.2);
-        border: 1px solid var(--danger-extreme);
-        color: var(--danger-extreme);
-      }
-
-      .status-info {
-        background: rgba(45, 212, 191, 0.2);
-        border: 1px solid var(--accent-primary);
-        color: var(--accent-primary);
-      }
-
-      .empty-state {
-        text-align: center;
-        padding: 60px 20px;
-        color: var(--text-muted);
-        grid-column: 1 / -1;
-        width: 100%;
-        max-width: 600px;
-        margin: 0 auto;
-      }
-
-      .empty-state-icon {
-        font-size: 4rem;
-        margin-bottom: 20px;
-        opacity: 0.5;
-      }
-
-      /* Criaturas Detalles mobile */
-      .creature-detail-view {
-        padding: 0 4vw 40px;
-        margin-top: -250px; /* Bring content closer to nav */
-      }
-
-      .creature-detail-content {
-        max-width: 800px;
-        margin: 0 auto;
-        background: linear-gradient(
-          135deg,
-          rgba(27, 38, 59, 0.98),
-          rgba(13, 27, 42, 0.98)
-        );
-        border: 2px solid var(--glass-border);
-        border-radius: 10px;
-        padding: 40px;
-      }
-
-      /* Fix image display on mobile creature detail view */
-      #creature-detail .modal-image {
-        opacity: 1 !important;
-        background: none !important;
-        display: block;
-      }
-
-      /* Mobile Responsive */
-      @media (max-width: 768px) {
-        header {
-          padding: clamp(20px, 4vh, 40px) 5vw;
-        }
-
-        .creatures-grid {
-          grid-template-columns: 1fr;
-          padding: 0 4vw clamp(30px, 6vh, 60px);
-        }
-
-        .search-filter-bar {
-          flex-direction: column;
-          gap: 15px;
-          padding: 0 4vw;
-          margin-bottom: 30px;
-        }
-
-        .search-input,
-        .filter-select {
-          width: 100%;
-        }
-
-        .editor-form,
-        .modal-content {
-          padding: 25px;
-        }
-
-        .origin-group {
-          grid-template-columns: 1fr;
-        }
-
-        nav {
-          gap: 10px;
-          padding: 0 4vw;
-        }
-
-        .nav-btn {
-          font-size: 0.9rem;
-          padding: 10px 20px;
-        }
-
-        /* Hide creature modal on mobile - use detail view instead */
-        #creature-modal {
-          display: none !important;
-        }
-
-        .creature-detail-content {
-          padding: 20px;
-        }
-
-        /* Reduce spacing in creature detail view */
-        .creature-detail-view {
-          padding: 0 4vw 30px;
-        }
-      }
-
-      /* Touch device optimizations */
-      @media (hover: none) and (pointer: coarse) {
-        .creature-card:hover {
-          transform: none;
-        }
-
-        .creature-card:active {
-          transform: scale(0.98);
-        }
-
-        .nav-btn:hover::before {
-          width: 0;
-          height: 0;
-        }
-
-        .nav-btn:active {
-          transform: scale(0.95);
-        }
       }
     </style>
   </head>
   <body>
-    <div id="creatures-container" class="creatures-grid"><p>Cargando el compendio de criaturas mitológicas del Eldritch Dossier...</p></div>
-    <canvas id="particle-canvas"></canvas>
+    <div class="crt-overlay"></div>
+    <div class="scanline"></div>
+    <div id="root"></div>
 
-    <!-- Settings Gear Button -->
-    <button
-      class="settings-gear-btn"
-      id="settings-gear-btn"
-      title="Configuración"
-    >
-      ⚙️
-    </button>
+    <script type="text/babel">
+      const { useState, useEffect, useMemo, useCallback, useRef } = React;
 
-    <div class="app-container">
-      <header>
-        <div class="header-parallax-layer">
-          <div class="mystical-orb"></div>
-          <div class="mystical-orb"></div>
-          <div class="mystical-orb"></div>
-        </div>
-        <div class="header-content">
-          <img src="./logo.png" alt="Eldritch Dossier Logo" class="logo" />
-          <h1>Eldritch Dossier</h1>
-          <p class="subtitle">
-            Compendio Enciclopédico de Criaturas Mitológicas
-          </p>
-          <div class="sync-status">
-            <div class="sync-indicator" id="sync-indicator"></div>
-            <span id="sync-status-text">Inicializando...</span>
-          </div>
-        </div>
-      </header>
+      // --- ICONOS SVG ---
+      const Icon = ({ name, className = "w-4 h-4" }) => {
+        const icons = {
+          search: <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />,
+          plus: <path d="M12 4v16m8-8H4" />,
+          database: <path d="M4 7v10c0 1.1.9 2 2 2h12a2 2 0 002-2V7M4 7c0 1.1.9 2 2 2h12a2 2 0 002-2M4 7c0-1.1.9-2 2-2h12a2 2 0 012 2m-16 5c0 1.1.9 2 2 2h12a2 2 0 002-2m-16 5c0 1.1.9 2 2 2h12a2 2 0 002-2" />,
+          save: <path d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />,
+          trash: <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />,
+          edit: <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />,
+          refresh: <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />,
+          x: <path d="M6 18L18 6M6 6l12 12" />,
+          left: <path d="M15 19l-7-7 7-7" />,
+          right: <path d="M9 5l7 7-7 7" />,
+          settings: <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z" />,
+          book: <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.168.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5s3.168.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />,
+          eye: <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />,
+          loader: <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83" />,
+          download: <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />,
+          upload: <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />,
+        };
+        return (
+          <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            {icons[name]}
+          </svg>
+        );
+      };
 
-      <nav>
-        <button class="nav-btn active" data-view="explorer">
-          <span>📖 Explorador</span>
-        </button>
-        <button class="nav-btn" data-view="editor">
-          <span>✍️ Nueva Investigación</span>
-        </button>
-      </nav>
-
-      <!-- Explorer View -->
-      <div id="explorer" class="view active">
-        <div class="search-filter-bar">
-          <input
-            type="text"
-            class="search-input"
-            id="search-input"
-            placeholder="🔍 Buscar criatura por nombre..."
-            autocomplete="off"
-            autocorrect="off"
-            autocapitalize="off"
-            spellcheck="false"
-            name="search-creatures"
-            data-form-type="other"
-          />
-          <select class="filter-select" id="filter-mythology">
-            <option value="">Todas las mitologías</option>
-          </select>
-          <select class="filter-select" id="filter-danger">
-            <option value="">Todos los niveles de peligro</option>
-            <option value="Bajo">Bajo</option>
-            <option value="Medio">Medio</option>
-            <option value="Alto">Alto</option>
-            <option value="Extremo">Extremo</option>
-            <option value="Muy Alto">Muy Alto</option>
-            <option value="Absoluto">Absoluto</option>
-          </select>
-        </div>
-        <div id="creatures-container" class="creatures-grid"></div>
-      </div>
-
-      <!-- Editor View -->
-      <div id="editor" class="view">
-        <form class="editor-form" id="creature-form">
-          <h2 class="form-title">Nueva Investigación</h2>
-
-          <div class="form-group">
-            <label class="form-label">Nombre de la Criatura *</label>
-            <input type="text" class="form-input" id="input-nombre" required />
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">URL de Imagen (GitHub Raw) *</label>
-            <input
-              type="url"
-              class="form-input"
-              id="input-imagen"
-              placeholder="https://raw.githubusercontent.com/..."
-              required
-            />
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Origen</label>
-            <div class="origin-group">
-              <div>
-                <label class="form-label" style="font-size: 0.9rem"
-                  >Cultura</label
-                >
-                <input type="text" class="form-input" id="input-cultura" />
-              </div>
-              <div>
-                <label class="form-label" style="font-size: 0.9rem"
-                  >Mitología</label
-                >
-                <input type="text" class="form-input" id="input-mitologia" />
-              </div>
-              <div>
-                <label class="form-label" style="font-size: 0.9rem"
-                  >Período</label
-                >
-                <input type="text" class="form-input" id="input-periodo" />
-              </div>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Historia</label>
-            <textarea
-              class="form-textarea"
-              id="input-historia"
-              placeholder="Narra la historia y orígenes de esta criatura..."
-            ></textarea>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Descripción Física</label>
-            <textarea
-              class="form-textarea"
-              id="input-descripcion"
-              placeholder="Describe la apariencia física de la criatura..."
-            ></textarea>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Habilidades</label>
-            <div class="tags-input-container" id="abilities-container">
-              <div class="input-wrapper">
-                <input
-                  type="text"
-                  class="add-item-input"
-                  id="input-habilidad"
-                  placeholder="Escribe y presiona + o Enter..."
-                />
-                <button
-                  type="button"
-                  class="add-item-btn"
-                  id="add-ability-btn"
-                  title="Agregar habilidad"
-                >
-                  +
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Nivel de Peligro *</label>
-            <select class="form-select" id="input-peligro" required>
-              <option value="">Seleccionar...</option>
-              <option value="Bajo">Bajo</option>
-              <option value="Medio">Medio</option>
-              <option value="Alto">Alto</option>
-              <option value="Extremo">Extremo</option>
-              <option value="Muy Alto">Muy Alto</option>
-              <option value="Absoluto">Absoluto</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Etiquetas</label>
-            <div class="tags-input-container" id="tags-container">
-              <div class="input-wrapper">
-                <input
-                  type="text"
-                  class="add-item-input"
-                  id="input-tag"
-                  placeholder="Escribe y presiona + o Enter..."
-                />
-                <button
-                  type="button"
-                  class="add-item-btn"
-                  id="add-tag-btn"
-                  title="Agregar etiqueta"
-                >
-                  +
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div class="form-actions">
-            <button type="submit" class="btn btn-primary">
-              💾 Guardar Investigación
-            </button>
-            <button type="reset" class="btn btn-secondary">
-              🔄 Limpiar Formulario
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Creature Detail View (Mobile) -->
-    <div id="creature-detail" class="view">
-      <div class="creature-detail-view">
-        <div id="creature-detail-body" class="creature-detail-content"></div>
-      </div>
-    </div>
-
-    <!-- Settings Modal -->
-    <div class="modal" id="settings-modal">
-      <div class="modal-content">
-        <span class="modal-close" id="settings-modal-close">&times;</span>
-        <h2 class="settings-title">Configuración de Sincronización</h2>
-
-        <div class="form-group">
-          <label class="form-label">GitHub Token</label>
-          <input
-            type="password"
-            class="form-input"
-            id="config-token"
-            placeholder="ghp_..."
-            autocomplete="new-password"
-            data-form-type="other"
-          />
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Gist ID</label>
-          <input
-            type="text"
-            class="form-input"
-            id="config-gist-id"
-            placeholder="Gist ID del archivo de datos"
-            autocomplete="off"
-            data-form-type="other"
-          />
-        </div>
-
-        <div class="sync-actions">
-          <button class="btn btn-primary" id="btn-save-config">
-            💾 Guardar Configuración
-          </button>
-          <button class="btn btn-secondary" id="btn-pull">
-            ⬇️ Pull (Descargar)
-          </button>
-          <button class="btn btn-secondary" id="btn-push">
-            ⬆️ Push (Subir)
-          </button>
-        </div>
-
-        <div class="last-sync-info" id="last-sync-info">
-          <strong>Última Sincronización:</strong> Nunca
-        </div>
-      </div>
-    </div>
-
-    <!-- Modal for Creature Details -->
-    <div class="modal" id="creature-modal">
-      <div class="modal-content">
-        <span class="modal-close" id="modal-close">&times;</span>
-        <div id="modal-body"></div>
-      </div>
-    </div>
-
-    <script>
-      // ========================================
-      // GLOBAL STATE & CONFIGURATION
-      // ========================================
+      // --- CONFIGURACIÓN ---
       const CONFIG = {
         dbName: "EldritchArchiveDB",
         storeName: "creatures",
         defaultFilename: "eldritch_archive_data.json",
       };
 
-      let db = null;
-      let currentAbilities = [];
-      let currentTags = [];
-      let isEditMode = false;
-      let editingCreatureId = null;
+      // --- INDEXEDDB ---
+      let dbInstance = null;
 
-      // ========================================
-      // INDEXEDDB INITIALIZATION
-      // ========================================
       async function initDB() {
+        if (dbInstance) return dbInstance;
         return new Promise((resolve, reject) => {
           const request = indexedDB.open(CONFIG.dbName, 1);
-
           request.onerror = () => reject(request.error);
-          request.onsuccess = () => {
-            db = request.result;
-            resolve(db);
-          };
-
+          request.onsuccess = () => { dbInstance = request.result; resolve(dbInstance); };
           request.onupgradeneeded = (event) => {
             const db = event.target.result;
             if (!db.objectStoreNames.contains(CONFIG.storeName)) {
-              const objectStore = db.createObjectStore(CONFIG.storeName, {
-                keyPath: "id",
-              });
-              objectStore.createIndex("nombre", "nombre", { unique: false });
-              objectStore.createIndex("mitologia", "origen.mitologia", {
-                unique: false,
-              });
-              objectStore.createIndex("nivel_peligro", "nivel_peligro", {
-                unique: false,
-              });
+              const store = db.createObjectStore(CONFIG.storeName, { keyPath: "id" });
+              store.createIndex("nombre", "nombre", { unique: false });
+              store.createIndex("mitologia", "origen.mitologia", { unique: false });
+              store.createIndex("nivel_peligro", "nivel_peligro", { unique: false });
             }
           };
         });
       }
 
-      // ========================================
-      // INDEXEDDB CRUD OPERATIONS
-      // ========================================
-      async function addCreature(creature) {
+      async function dbPut(creature) {
+        const db = await initDB();
+        const now = new Date().toISOString();
+        if (!creature.created_at) creature.created_at = now;
+        if (!creature.updated_at) creature.updated_at = now;
+        if (!creature.status) creature.status = "active";
         return new Promise((resolve, reject) => {
-          // Add metadata if not present
+          const tx = db.transaction([CONFIG.storeName], "readwrite");
+          const store = tx.objectStore(CONFIG.storeName);
+          const req = store.put(creature);
+          req.onsuccess = () => resolve(creature);
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      async function dbGetAll(includeDeleted = false) {
+        const db = await initDB();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction([CONFIG.storeName], "readonly");
+          const store = tx.objectStore(CONFIG.storeName);
+          const req = store.getAll();
+          req.onsuccess = () => {
+            let items = req.result;
+            if (!includeDeleted) items = items.filter(c => c.status !== "deleted");
+            resolve(items);
+          };
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      async function dbGet(id) {
+        const db = await initDB();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction([CONFIG.storeName], "readonly");
+          const store = tx.objectStore(CONFIG.storeName);
+          const req = store.get(id);
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      async function dbSoftDelete(id) {
+        const creature = await dbGet(id);
+        if (!creature) throw new Error("Not found");
+        creature.status = "deleted";
+        creature.updated_at = new Date().toISOString();
+        return dbPut(creature);
+      }
+
+      async function dbClear() {
+        const db = await initDB();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction([CONFIG.storeName], "readwrite");
+          const store = tx.objectStore(CONFIG.storeName);
+          const req = store.clear();
+          req.onsuccess = () => resolve();
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      // --- MERGE ---
+      function mergeData(localArr, remoteArr) {
+        const map = new Map();
+        const migrate = (c) => {
           const now = new Date().toISOString();
-          if (!creature.created_at) creature.created_at = now;
-          if (!creature.updated_at) creature.updated_at = now;
-          if (!creature.status) creature.status = "active";
-
-          const transaction = db.transaction([CONFIG.storeName], "readwrite");
-          const store = transaction.objectStore(CONFIG.storeName);
-          // Use put() instead of add() to allow re-adding during sync without errors
-          const request = store.put(creature);
-          request.onsuccess = () => resolve(creature);
-          request.onerror = () => reject(request.error);
-        });
-      }
-
-      async function getAllCreatures(includeDeleted = false) {
-        return new Promise((resolve, reject) => {
-          const transaction = db.transaction([CONFIG.storeName], "readonly");
-          const store = transaction.objectStore(CONFIG.storeName);
-          const request = store.getAll();
-          request.onsuccess = () => {
-            let creatures = request.result;
-            // Filter out deleted creatures unless explicitly requested
-            if (!includeDeleted) {
-              creatures = creatures.filter(c => c.status !== "deleted");
+          if (!c.created_at) c.created_at = now;
+          if (!c.updated_at) c.updated_at = now;
+          if (!c.status) c.status = "active";
+          return c;
+        };
+        localArr.forEach(c => map.set(c.id, migrate(c)));
+        remoteArr.forEach(rc => {
+          migrate(rc);
+          if (map.has(rc.id)) {
+            const lc = map.get(rc.id);
+            if (new Date(rc.updated_at) > new Date(lc.updated_at)) {
+              map.set(rc.id, rc);
             }
-            resolve(creatures);
-          };
-          request.onerror = () => reject(request.error);
-        });
-      }
-
-      async function getCreatureById(id) {
-        return new Promise((resolve, reject) => {
-          const transaction = db.transaction([CONFIG.storeName], "readonly");
-          const store = transaction.objectStore(CONFIG.storeName);
-          const request = store.get(id);
-          request.onsuccess = () => resolve(request.result);
-          request.onerror = () => reject(request.error);
-        });
-      }
-
-      async function updateCreature(creature) {
-        return new Promise((resolve, reject) => {
-          // Update the updated_at timestamp
-          creature.updated_at = new Date().toISOString();
-
-          const transaction = db.transaction([CONFIG.storeName], "readwrite");
-          const store = transaction.objectStore(CONFIG.storeName);
-          const request = store.put(creature);
-          request.onsuccess = () => resolve(creature);
-          request.onerror = () => reject(request.error);
-        });
-      }
-
-      async function deleteCreature(id) {
-        // Soft delete: mark as deleted instead of removing
-        return new Promise(async (resolve, reject) => {
-          try {
-            const creature = await getCreatureById(id);
-            if (!creature) {
-              reject(new Error("Creature not found"));
-              return;
-            }
-            
-            // Mark as deleted and update timestamp
-            creature.status = "deleted";
-            creature.updated_at = new Date().toISOString();
-            
-            const transaction = db.transaction([CONFIG.storeName], "readwrite");
-            const store = transaction.objectStore(CONFIG.storeName);
-            const request = store.put(creature);
-            request.onsuccess = () => resolve();
-            request.onerror = () => reject(request.error);
-          } catch (error) {
-            reject(error);
+          } else {
+            map.set(rc.id, rc);
           }
         });
+        return Array.from(map.values());
       }
 
-      async function clearAllCreatures() {
-        return new Promise((resolve, reject) => {
-          const transaction = db.transaction([CONFIG.storeName], "readwrite");
-          const store = transaction.objectStore(CONFIG.storeName);
-          const request = store.clear();
-          request.onsuccess = () => resolve();
-          request.onerror = () => reject(request.error);
-        });
+      // --- GIST API ---
+      async function gistRequest(url, token, options = {}) {
+        const headers = {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/vnd.github.v3+json",
+          ...options.headers,
+        };
+        let lastError = null;
+        for (let i = 0; i < 3; i++) {
+          try {
+            const response = await fetch(url, { ...options, mode: "cors", headers });
+            if (!response.ok) {
+              const errBody = await response.json().catch(() => ({}));
+              throw new Error(errBody.message || `HTTP_${response.status}`);
+            }
+            return await response.json();
+          } catch (err) {
+            lastError = err;
+            if (err.message.includes("HTTP_401") || err.message.includes("HTTP_403")) break;
+            await new Promise(r => setTimeout(r, 1000 * (i + 1)));
+          }
+        }
+        throw lastError;
       }
 
-      // ========================================
-      // GITHUB GIST SYNCHRONIZATION
-      // ========================================
-      function getGistConfig() {
-        return {
+      // --- COMPONENTES ---
+      const DangerBadge = ({ level }) => {
+        const colors = {
+          Bajo: "text-green-400 border-green-900 bg-green-950/30",
+          Medio: "text-yellow-400 border-yellow-900 bg-yellow-950/30",
+          Alto: "text-orange-500 border-orange-900 bg-orange-950/30",
+          "Muy Alto": "text-purple-400 border-purple-900 bg-purple-950/30",
+          Extremo: "text-red-500 border-red-900 bg-red-950/30",
+          Absoluto: "text-red-600 border-red-900 bg-black animate-pulse shadow-[0_0_10px_rgba(220,38,38,0.5)]",
+        };
+        return (
+          <span className={`px-2 py-0.5 rounded border text-[10px] uppercase font-bold tracking-widest ${colors[level] || "text-gray-400"}`}>
+            Nivel: {level}
+          </span>
+        );
+      };
+
+      const GlitchText = ({ children, className = "" }) => (
+        <div className={`relative group inline-block ${className}`}>
+          <span className="relative z-10">{children}</span>
+          <span className="absolute top-0 left-0 -translate-x-[2px] translate-y-[1px] text-red-500 opacity-0 group-hover:opacity-70 group-hover:animate-pulse z-0">{children}</span>
+          <span className="absolute top-0 left-0 translate-x-[2px] -translate-y-[1px] text-cyan-500 opacity-0 group-hover:opacity-70 group-hover:animate-pulse z-0">{children}</span>
+        </div>
+      );
+
+      // --- TAG CHIP INPUT ---
+      const ChipInput = ({ items, onChange, placeholder, label }) => {
+        const [inputVal, setInputVal] = useState("");
+        const inputRef = useRef(null);
+
+        const addItem = () => {
+          const val = inputVal.trim();
+          if (val && !items.includes(val)) {
+            onChange([...items, val]);
+            setInputVal("");
+          }
+        };
+
+        const removeItem = (index) => {
+          onChange(items.filter((_, i) => i !== index));
+        };
+
+        const handleKeyDown = (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            addItem();
+          }
+        };
+
+        return (
+          <div>
+            <label className="text-[9px] uppercase font-black text-emerald-900 block mb-1 tracking-widest italic">{label}</label>
+            <div className="bg-emerald-950/10 border border-emerald-900 p-2 min-h-[48px] flex flex-wrap gap-2 items-center focus-within:border-emerald-500 transition-colors">
+              {items.map((item, i) => (
+                <span key={i} className="chip-tag">
+                  {item}
+                  <span className="chip-remove" onClick={() => removeItem(i)}>✕</span>
+                </span>
+              ))}
+              <div className="flex-1 min-w-[120px] flex items-center gap-1">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  className="flex-1 bg-transparent border-none outline-none text-xs text-emerald-400 placeholder:text-emerald-950 p-1"
+                  placeholder={placeholder}
+                  value={inputVal}
+                  onChange={(e) => setInputVal(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                />
+                <button
+                  type="button"
+                  onClick={addItem}
+                  className="w-6 h-6 flex items-center justify-center bg-emerald-900/30 border border-emerald-900 text-emerald-500 hover:bg-emerald-500 hover:text-black text-sm font-black transition-all flex-shrink-0"
+                >+</button>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      // --- APP PRINCIPAL ---
+      function App() {
+        const [creatures, setCreatures] = useState([]);
+        const [loading, setLoading] = useState(true);
+        const [saving, setSaving] = useState(false);
+        const [error, setError] = useState(null);
+        const [view, setView] = useState("explorer");
+        const [search, setSearch] = useState("");
+        const [selectedCreature, setSelectedCreature] = useState(null);
+        const [page, setPage] = useState(1);
+        const [showSettings, setShowSettings] = useState(false);
+        const [syncStatus, setSyncStatus] = useState("");
+
+        const [config, setConfig] = useState({
           token: localStorage.getItem("gist_token") || "",
           gistId: localStorage.getItem("gist_id") || "",
-          filename:
-            localStorage.getItem("gist_filename") || CONFIG.defaultFilename,
-        };
-      }
-
-      function saveGistConfig(token, gistId, filename) {
-        localStorage.setItem("gist_token", token);
-        localStorage.setItem("gist_id", gistId);
-        localStorage.setItem("gist_filename", filename);
-      }
-
-      function updateSyncStatus(status, message, isError = false) {
-        const indicator = document.getElementById("sync-indicator");
-        const statusText = document.getElementById("sync-status-text");
-
-        indicator.className = "sync-indicator";
-        if (status === "syncing") {
-          indicator.classList.add("syncing");
-        } else if (isError) {
-          indicator.classList.add("error");
-        }
-
-        statusText.textContent = message;
-      }
-
-      async function mergeCreatures(localCreatures, remoteCreatures) {
-        // Create a map of creatures by ID for efficient lookup
-        const creaturesMap = new Map();
-
-        // Helper function to migrate old creatures without metadata
-        const migrateCreature = (creature) => {
-          const now = new Date().toISOString();
-          if (!creature.created_at) creature.created_at = now;
-          if (!creature.updated_at) creature.updated_at = now;
-          if (!creature.status) creature.status = "active";
-          return creature;
-        };
-
-        // Add all local creatures to the map
-        localCreatures.forEach((creature) => {
-          creaturesMap.set(creature.id, migrateCreature(creature));
         });
 
-        // Merge remote creatures using timestamp comparison
-        remoteCreatures.forEach((remoteCreature) => {
-          migrateCreature(remoteCreature);
-          
-          if (creaturesMap.has(remoteCreature.id)) {
-            const localCreature = creaturesMap.get(remoteCreature.id);
-            
-            // Compare timestamps - keep the most recently updated version
-            const localTime = new Date(localCreature.updated_at).getTime();
-            const remoteTime = new Date(remoteCreature.updated_at).getTime();
-            
-            if (remoteTime > localTime) {
-              // Remote is newer, use it
-              creaturesMap.set(remoteCreature.id, remoteCreature);
-            }
-            // else: local is newer or equal, keep it
-          } else {
-            // New creature from remote, add it
-            creaturesMap.set(remoteCreature.id, remoteCreature);
-          }
+        const [isEditing, setIsEditing] = useState(false);
+        const [formData, setFormData] = useState({
+          id: "",
+          nombre: "",
+          imagen_url: "",
+          origen: { cultura: "", mitologia: "", periodo: "" },
+          historia: "",
+          descripcion_fisica: "",
+          habilidades: [],
+          nivel_peligro: "Bajo",
+          tags: [],
         });
 
-        // Convert map back to array
-        return Array.from(creaturesMap.values());
-      }
+        const itemsPerPage = 6;
 
-      async function pullFromGist() {
-        const config = getGistConfig();
-
-        // Check if configuration is complete
-        if (!config.token || !config.gistId) {
-          updateSyncStatus(
-            "error",
-            "Configuración incompleta: ingresa Token y Gist ID",
-            true,
-          );
-          return 0;
-        }
-
-        updateSyncStatus(
-          "syncing",
-          "Descargando y fusionando desde GitHub Gist...",
-        );
-
-        try {
-          const response = await fetch(
-            `https://api.github.com/gists/${config.gistId}`,
-            {
-              headers: {
-                Authorization: `token ${config.token}`,
-                Accept: "application/vnd.github.v3+json",
-              },
-            },
-          );
-
-          if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status}`);
-          }
-
-          const gist = await response.json();
-          const fileContent = gist.files[config.filename]?.content;
-
-          if (!fileContent) {
-            throw new Error(
-              `Archivo ${config.filename} no encontrado en el Gist`,
-            );
-          }
-
-          const remoteCreatures = JSON.parse(fileContent);
-          // Include deleted creatures in local data for proper merging
-          const localCreatures = await getAllCreatures(true);
-
-          // MERGE: Combine local and remote data
-          const mergedCreatures = await mergeCreatures(
-            localCreatures,
-            remoteCreatures,
-          );
-
-          // Clear and save merged data
-          await clearAllCreatures();
-          for (const creature of mergedCreatures) {
-            await addCreature(creature);
-          }
-
-          const now = new Date().toLocaleString("es-ES");
-          localStorage.setItem("last_sync", now);
-          updateLastSyncDisplay(now);
-          
-          // Count only active creatures for display
-          const activeCount = mergedCreatures.filter(c => c.status !== "deleted").length;
-          const activeLocal = localCreatures.filter(c => c.status !== "deleted").length;
-          const activeRemote = remoteCreatures.filter(c => c.status !== "deleted").length;
-          
-          updateSyncStatus(
-            "success",
-            `✅ Sincronizado: ${activeCount} criaturas activas (${activeLocal} local + ${activeRemote} remoto)`,
-          );
-
-          // Refresh display if in explorer view
-          if (
-            document.getElementById("explorer").classList.contains("active")
-          ) {
-            await displayCreatures();
-          }
-
-          return activeCount; // Return only active creatures count
-        } catch (error) {
-          console.error("Pull error:", error);
-          updateSyncStatus(
-            "error",
-            `Error al descargar: ${error.message}`,
-            true,
-          );
-          throw error;
-        }
-      }
-
-      async function pushToGist() {
-        const config = getGistConfig();
-
-        // Check if configuration is complete
-        if (!config.token || !config.gistId) {
-          updateSyncStatus(
-            "error",
-            "Configuración incompleta: ingresa Token y Gist ID",
-            true,
-          );
-          return 0;
-        }
-
-        updateSyncStatus("syncing", "Sincronizando con GitHub Gist...");
-
-        try {
-          // STEP 1: Pull and merge first to get latest remote data
-          let remoteCreatures = [];
+        // --- CARGAR DATOS (IndexedDB + Gist pull) ---
+        const loadData = useCallback(async () => {
+          setLoading(true);
+          setError(null);
           try {
-            const response = await fetch(
-              `https://api.github.com/gists/${config.gistId}`,
-              {
-                headers: {
-                  Authorization: `token ${config.token}`,
-                  Accept: "application/vnd.github.v3+json",
-                },
-              },
-            );
+            await initDB();
 
-            if (response.ok) {
-              const gist = await response.json();
-              const fileContent = gist.files[config.filename]?.content;
-              if (fileContent) {
-                remoteCreatures = JSON.parse(fileContent);
+            // Intentar pull desde Gist si hay config
+            if (config.token && config.gistId) {
+              try {
+                setSyncStatus("Sincronizando...");
+                const gist = await gistRequest(
+                  `https://api.github.com/gists/${config.gistId.trim()}`,
+                  config.token.trim()
+                );
+                if (gist.files[CONFIG.defaultFilename]) {
+                  const remoteData = JSON.parse(gist.files[CONFIG.defaultFilename].content);
+                  const localData = await dbGetAll(true);
+                  const merged = mergeData(localData, remoteData);
+
+                  await dbClear();
+                  for (const c of merged) await dbPut(c);
+                  setSyncStatus("Enlace_Fusionado_Activo");
+                }
+              } catch (pullErr) {
+                console.warn("Pull failed, working offline:", pullErr);
+                setSyncStatus("Modo_Offline");
               }
-            }
-          } catch (pullError) {
-            console.warn(
-              "Could not pull before push, pushing local only:",
-              pullError,
-            );
-          }
-
-          // STEP 2: Merge local with remote (timestamp-based conflict resolution)
-          // Include deleted creatures in local data for proper merging
-          const localCreatures = await getAllCreatures(true);
-          const mergedCreatures = await mergeCreatures(
-            remoteCreatures,
-            localCreatures,
-          );
-
-          // STEP 3: Save merged data locally
-          await clearAllCreatures();
-          for (const creature of mergedCreatures) {
-            await addCreature(creature);
-          }
-
-          // STEP 4: Push merged data to Gist
-          const content = JSON.stringify(mergedCreatures, null, 2);
-
-          const response = await fetch(
-            `https://api.github.com/gists/${config.gistId}`,
-            {
-              method: "PATCH",
-              headers: {
-                Authorization: `token ${config.token}`,
-                Accept: "application/vnd.github.v3+json",
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                files: {
-                  [config.filename]: {
-                    content: content,
-                  },
-                },
-              }),
-            },
-          );
-
-          if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status}`);
-          }
-
-          const now = new Date().toLocaleString("es-ES");
-          localStorage.setItem("last_sync", now);
-          updateLastSyncDisplay(now);
-          
-          // Count only active creatures for display
-          const activeCount = mergedCreatures.filter(c => c.status !== "deleted").length;
-          
-          updateSyncStatus(
-            "success",
-            `✅ ${activeCount} criaturas activas sincronizadas y subidas`,
-          );
-
-          return activeCount; // Return only active creatures count
-        } catch (error) {
-          console.error("Push error:", error);
-          updateSyncStatus("error", `Error al subir: ${error.message}`, true);
-          throw error;
-        }
-      }
-
-      // Push local state directly to Gist without merging (for delete operations)
-      async function pushLocalToGist() {
-        const config = getGistConfig();
-
-        if (!config.token || !config.gistId) {
-          updateSyncStatus(
-            "error",
-            "Configuración incompleta: ingresa Token y Gist ID",
-            true,
-          );
-          return 0;
-        }
-
-        updateSyncStatus("syncing", "Sincronizando con GitHub Gist...");
-
-        try {
-          // Get current local state (including deleted for sync)
-          const localCreatures = await getAllCreatures(true);
-          const content = JSON.stringify(localCreatures, null, 2);
-
-          // Push directly to Gist
-          const response = await fetch(
-            `https://api.github.com/gists/${config.gistId}`,
-            {
-              method: "PATCH",
-              headers: {
-                Authorization: `token ${config.token}`,
-                Accept: "application/vnd.github.v3+json",
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                files: {
-                  [config.filename]: {
-                    content: content,
-                  },
-                },
-              }),
-            },
-          );
-
-          if (!response.ok) {
-            throw new Error(`GitHub API error: ${response.status}`);
-          }
-
-          const now = new Date().toLocaleString("es-ES");
-          localStorage.setItem("last_sync", now);
-          updateLastSyncDisplay(now);
-          updateSyncStatus(
-            "success",
-            `✅ Sincronizado: ${localCreatures.length} criaturas`,
-          );
-
-          return localCreatures.length;
-        } catch (error) {
-          console.error("Push error:", error);
-          updateSyncStatus("error", `Error al subir: ${error.message}`, true);
-          throw error;
-        }
-      }
-
-      // Push local state directly to Gist without merging (for delete operations)
-      async function pushLocalToGist() {
-        const config = getGistConfig();
-
-        if (!config.token || !config.gistId) {
-          updateSyncStatus(
-            "error",
-            "Configuración incompleta: ingresa Token y Gist ID",
-            true,
-          );
-          return 0;
-        }
-
-        updateSyncStatus("syncing", "Sincronizando con GitHub Gist...");
-
-        try {
-          // Get current local state
-          const localCreatures = await getAllCreatures();
-          const content = JSON.stringify(localCreatures, null, 2);
-
-          // Push directly to Gist
-          const response = await fetch(
-            `https://api.github.com/gists/${config.gistId}`,
-            {
-              method: "PATCH",
-              headers: {
-                Authorization: `token ${config.token}`,
-                Accept: "application/vnd.github.v3+json",
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                files: {
-                  [config.filename]: {
-                    content: content,
-                  },
-                },
-              }),
-            },
-          );
-
-          if (!response.ok) {
-            throw new Error(`GitHub API error: ${response.status}`);
-          }
-
-          const now = new Date().toLocaleString("es-ES");
-          localStorage.setItem("last_sync", now);
-          updateLastSyncDisplay(now);
-          updateSyncStatus(
-            "success",
-            `✅ Sincronizado: ${localCreatures.length} criaturas`,
-          );
-
-          return localCreatures.length;
-        } catch (error) {
-          console.error("Push error:", error);
-          updateSyncStatus("error", `Error al subir: ${error.message}`, true);
-          throw error;
-        }
-      }
-
-      function updateLastSyncDisplay(timestamp) {
-        const lastSyncInfo = document.getElementById("last-sync-info");
-        lastSyncInfo.innerHTML = `<strong>Última Sincronización:</strong> ${timestamp || "Nunca"}`;
-      }
-
-      // ========================================
-      // UI - NAVIGATION
-      // ========================================
-      function initNavigation() {
-        const navButtons = document.querySelectorAll(".nav-btn");
-        const views = document.querySelectorAll(".view");
-
-        navButtons.forEach((btn) => {
-          btn.addEventListener("click", () => {
-            const targetView = btn.dataset.view;
-
-            // Update active states
-            navButtons.forEach((b) => b.classList.remove("active"));
-            btn.classList.add("active");
-
-            views.forEach((v) => v.classList.remove("active"));
-            document.getElementById(targetView).classList.add("active");
-
-            // Load data if switching to explorer
-            if (targetView === "explorer") {
-              displayCreatures();
-            }
-          });
-        });
-      }
-
-      // ========================================
-      // UI - EXPLORER VIEW
-      // ========================================
-      async function displayCreatures() {
-        const container = document.getElementById("creatures-container");
-        const searchInput = document.getElementById("search-input");
-        const filterMythology = document.getElementById("filter-mythology");
-        const filterDanger = document.getElementById("filter-danger");
-
-        try {
-          let creatures = await getAllCreatures();
-
-          // Apply filters
-          const searchQuery = searchInput.value.toLowerCase();
-          const mythologyFilter = filterMythology.value;
-          const dangerFilter = filterDanger.value;
-
-          creatures = creatures.filter((creature) => {
-            const matchesSearch = creature.nombre
-              .toLowerCase()
-              .includes(searchQuery);
-            const matchesMythology =
-              !mythologyFilter ||
-              creature.origen?.mitologia === mythologyFilter;
-            const matchesDanger =
-              !dangerFilter || creature.nivel_peligro === dangerFilter;
-            return matchesSearch && matchesMythology && matchesDanger;
-          });
-
-          if (creatures.length === 0) {
-            container.innerHTML = `
-                        <div class="empty-state">
-                            <div class="empty-state-icon">📜</div>
-                            <h3>No se encontraron criaturas</h3>
-                            <p>Comienza una nueva investigación usando el editor.</p>
-                        </div>
-                    `;
-            return;
-          }
-
-          container.innerHTML = creatures
-            .map(
-              (creature) => `
-                    <div class="creature-card" data-id="${creature.id}">
-                        <img src="${creature.imagen_url}" alt="${creature.nombre}" class="creature-image" 
-                             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 300 200%22%3E%3Crect fill=%22%23111%22 width=%22300%22 height=%22200%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%23666%22 font-size=%2220%22%3EImagen no disponible%3C/text%3E%3C/svg%3E'">
-                        <h3 class="creature-name">${creature.nombre}</h3>
-                        <p class="creature-origin">${creature.origen?.cultura || "Cultura desconocida"} - ${creature.origen?.mitologia || "Mitología desconocida"}</p>
-                    </div>
-                `,
-            )
-            .join("");
-
-          // Add click handlers
-          container.querySelectorAll(".creature-card").forEach((card) => {
-            card.addEventListener("click", async () => {
-              const id = card.dataset.id;
-              await showCreatureModal(id);
-            });
-          });
-
-          // Update mythology filter options
-          updateMythologyFilter(creatures);
-        } catch (error) {
-          console.error("Error displaying creatures:", error);
-          container.innerHTML = `<div class="empty-state status-error">Error al cargar las criaturas</div>`;
-        }
-      }
-
-      function updateMythologyFilter(creatures) {
-        const filterMythology = document.getElementById("filter-mythology");
-        const mythologies = [
-          ...new Set(creatures.map((c) => c.origen?.mitologia).filter(Boolean)),
-        ];
-
-        // Keep current selection
-        const currentValue = filterMythology.value;
-
-        filterMythology.innerHTML =
-          '<option value="">Todas las mitologías</option>' +
-          mythologies.map((m) => `<option value="${m}">${m}</option>`).join("");
-
-        filterMythology.value = currentValue;
-      }
-
-      async function showCreatureModal(id) {
-        // Check if mobile device
-        const isMobile = window.innerWidth <= 768;
-
-        if (isMobile) {
-          // Use detail view on mobile
-          await showCreatureDetailView(id);
-          return;
-        }
-
-        // Desktop: use modal
-        const creature = await getCreatureById(id);
-        if (!creature) return;
-
-        const modalBody = document.getElementById("modal-body");
-        modalBody.innerHTML = `
-                <img src="${creature.imagen_url}" alt="${creature.nombre}" class="modal-image"
-                     onerror="this.style.display='none'">
-                <h2 class="modal-title">${creature.nombre}</h2>
-                <span class="danger-badge danger-${creature.nivel_peligro.replace(/ /g, '-')}">${creature.nivel_peligro}</span>
-
-                <div class="modal-section">
-                    <h3 class="modal-section-title">Origen</h3>
-                    <p><strong>Cultura:</strong> ${creature.origen?.cultura || "No especificada"}</p>
-                    <p><strong>Mitología:</strong> ${creature.origen?.mitologia || "No especificada"}</p>
-                    <p><strong>Período:</strong> ${creature.origen?.periodo || "No especificado"}</p>
-                </div>
-
-                ${
-                  creature.historia
-                    ? `
-                <div class="modal-section">
-                    <h3 class="modal-section-title">Historia</h3>
-                    <p>${creature.historia}</p>
-                </div>
-                `
-                    : ""
-                }
-
-                ${
-                  creature.descripcion_fisica
-                    ? `
-                <div class="modal-section">
-                    <h3 class="modal-section-title">Descripción Física</h3>
-                    <p>${creature.descripcion_fisica}</p>
-                </div>
-                `
-                    : ""
-                }
-
-                ${
-                  creature.habilidades && creature.habilidades.length > 0
-                    ? `
-                <div class="modal-section">
-                    <h3 class="modal-section-title">Habilidades</h3>
-                    <div class="abilities-list">
-                        ${creature.habilidades.map((h) => `<span class="ability-tag">${h}</span>`).join("")}
-                    </div>
-                </div>
-                `
-                    : ""
-                }
-
-                ${
-                  creature.tags && creature.tags.length > 0
-                    ? `
-                <div class="modal-section">
-                    <h3 class="modal-section-title">Etiquetas</h3>
-                    <div class="tags-list">
-                        ${creature.tags.map((t) => `<span class="tag-badge">${t}</span>`).join("")}
-                    </div>
-                </div>
-                `
-                    : ""
-                }
-                
-                <div class="modal-actions" style="margin-top: 30px; display: flex; gap: 15px; justify-content: center;">
-                    <button class="btn btn-primary" onclick="editCreature('${creature.id}')" style="padding: 12px 30px;">
-                        ✏️ Editar
-                    </button>
-                    <button class="btn btn-secondary" onclick="deleteCreatureConfirm('${creature.id}')" 
-                            style="padding: 12px 30px; background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #ef4444;">
-                        🗑️ Eliminar
-                    </button>
-                </div>
-            `;
-
-        document.getElementById("creature-modal").classList.add("active");
-      }
-
-      // ========================================
-      // CREATURE DETAIL VIEW (MOBILE)
-      // ========================================
-      async function showCreatureDetailView(id) {
-        const creature = await getCreatureById(id);
-        if (!creature) return;
-
-        // Switch to creature detail view
-        const views = document.querySelectorAll(".view");
-        views.forEach((v) => v.classList.remove("active"));
-        document.getElementById("creature-detail").classList.add("active");
-
-        // Update navigation buttons
-        const navButtons = document.querySelectorAll(".nav-btn");
-        navButtons.forEach((btn) => btn.classList.remove("active"));
-
-        // Populate detail view
-        const detailBody = document.getElementById("creature-detail-body");
-        detailBody.innerHTML = `
-                <img src="${creature.imagen_url}" alt="${creature.nombre}" class="modal-image"
-                     onerror="this.style.display='none'">
-                <h2 class="modal-title">${creature.nombre}</h2>
-                <span class="danger-badge danger-${creature.nivel_peligro.replace(/ /g, '-')}">${creature.nivel_peligro}</span>
-
-                <div class="modal-section">
-                    <h3 class="modal-section-title">Origen</h3>
-                    <p><strong>Cultura:</strong> ${creature.origen?.cultura || "No especificada"}</p>
-                    <p><strong>Mitología:</strong> ${creature.origen?.mitologia || "No especificada"}</p>
-                    <p><strong>Período:</strong> ${creature.origen?.periodo || "No especificado"}</p>
-                </div>
-
-                ${
-                  creature.historia
-                    ? `
-                <div class="modal-section">
-                    <h3 class="modal-section-title">Historia</h3>
-                    <p>${creature.historia}</p>
-                </div>
-                `
-                    : ""
-                }
-
-                ${
-                  creature.descripcion_fisica
-                    ? `
-                <div class="modal-section">
-                    <h3 class="modal-section-title">Descripción Física</h3>
-                    <p>${creature.descripcion_fisica}</p>
-                </div>
-                `
-                    : ""
-                }
-
-                ${
-                  creature.habilidades && creature.habilidades.length > 0
-                    ? `
-                <div class="modal-section">
-                    <h3 class="modal-section-title">Habilidades</h3>
-                    <div class="abilities-list">
-                        ${creature.habilidades.map((h) => `<span class="ability-tag">${h}</span>`).join("")}
-                    </div>
-                </div>
-                `
-                    : ""
-                }
-
-                ${
-                  creature.tags && creature.tags.length > 0
-                    ? `
-                <div class="modal-section">
-                    <h3 class="modal-section-title">Etiquetas</h3>
-                    <div class="tags-list">
-                        ${creature.tags.map((t) => `<span class="tag-badge">${t}</span>`).join("")}
-                    </div>
-                </div>
-                `
-                    : ""
-                }
-                
-                <div class="modal-actions" style="margin-top: 30px; display: flex; gap: 15px; justify-content: center;">
-                    <button class="btn btn-primary" onclick="editCreature('${creature.id}')" style="padding: 12px 30px;">
-                        ✏️ Editar
-                    </button>
-                    <button class="btn btn-secondary" onclick="deleteCreatureConfirm('${creature.id}')" 
-                            style="padding: 12px 30px; background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #ef4444;">
-                        🗑️ Eliminar
-                    </button>
-                </div>
-            `;
-
-        // Scroll to top
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }
-
-      // ========================================
-      // EDIT CREATURE FUNCTION
-      // ========================================
-      async function editCreature(id) {
-        try {
-          // Get creature data
-          const creature = await getCreatureById(id);
-          if (!creature) {
-            showNotification("❌ No se pudo cargar la criatura", "error");
-            return;
-          }
-
-          // Close modal
-          document.getElementById("creature-modal").classList.remove("active");
-
-          // Switch to editor view
-          document
-            .querySelectorAll(".nav-btn")
-            .forEach((btn) => btn.classList.remove("active"));
-          document
-            .querySelector('[data-view="editor"]')
-            .classList.add("active");
-          document
-            .querySelectorAll(".view")
-            .forEach((v) => v.classList.remove("active"));
-          document.getElementById("editor").classList.add("active");
-
-          // Set edit mode
-          isEditMode = true;
-          editingCreatureId = id;
-
-          // Update form title
-          document.querySelector(".form-title").textContent =
-            "✏️ Editar Criatura";
-
-          // Fill form fields
-          document.getElementById("input-nombre").value = creature.nombre || "";
-          document.getElementById("input-imagen").value =
-            creature.imagen_url || "";
-          document.getElementById("input-cultura").value =
-            creature.origen?.cultura || "";
-          document.getElementById("input-mitologia").value =
-            creature.origen?.mitologia || "";
-          document.getElementById("input-periodo").value =
-            creature.origen?.periodo || "";
-          document.getElementById("input-historia").value =
-            creature.historia || "";
-          document.getElementById("input-descripcion").value =
-            creature.descripcion_fisica || "";
-          document.getElementById("input-peligro").value =
-            creature.nivel_peligro || "Bajo";
-
-          // Load abilities and tags
-          currentAbilities = creature.habilidades
-            ? [...creature.habilidades]
-            : [];
-          currentTags = creature.tags ? [...creature.tags] : [];
-
-          // Wait a bit for DOM to be fully ready before rendering
-          setTimeout(() => {
-            try {
-              renderAbilities();
-              renderTags();
-            } catch (renderError) {
-              console.error("Error rendering abilities/tags:", renderError);
-              showNotification(
-                "⚠️ Criatura cargada, pero hubo un error al mostrar habilidades/tags",
-                "warning",
-              );
-            }
-          }, 100);
-
-          // Scroll to top
-          window.scrollTo({ top: 0, behavior: "smooth" });
-        } catch (error) {
-          console.error("Error loading creature for edit:", error);
-          showNotification("❌ Error al cargar la criatura", "error");
-        }
-      }
-
-      // ========================================
-      // DELETE CREATURE FUNCTION
-      // ========================================
-      async function deleteCreatureConfirm(id) {
-        try {
-          // Get creature name for confirmation
-          const creature = await getCreatureById(id);
-          if (!creature) {
-            showNotification("❌ No se pudo encontrar la criatura", "error");
-            return;
-          }
-
-          // Confirm deletion
-          const confirmDelete = confirm(
-            `¿Estás seguro de que deseas eliminar \"${creature.nombre}\"?\n\nLa criatura será marcada como eliminada y se sincronizará en todos tus dispositivos.`,
-          );
-
-          if (!confirmDelete) {
-            return; // User cancelled
-          }
-
-          // Close modal
-          document.getElementById("creature-modal").classList.remove("active");
-
-          // Delete from IndexedDB
-          await deleteCreature(id);
-          showNotification("✅ Criatura eliminada exitosamente", "success");
-
-          // Sync with Gist (push local state directly, no merge)
-          try {
-            await pushLocalToGist();
-          } catch (error) {
-            console.error("Auto-push failed after delete:", error);
-            showNotification(
-              "⚠️ Eliminado localmente, pero fallo al sincronizar con Gist",
-              "info",
-            );
-          }
-
-          // Reload page to show updated list
-          setTimeout(() => {
-            location.reload();
-          }, 1500);
-        } catch (error) {
-          console.error("Error deleting creature:", error);
-          showNotification("❌ Error al eliminar la criatura", "error");
-        }
-      }
-
-      // ========================================
-      // GLOBAL RENDER FUNCTIONS FOR ABILITIES AND TAGS
-      // ========================================
-      function renderAbilities() {
-        try {
-          const abilitiesContainer = document.getElementById(
-            "abilities-container",
-          );
-          if (!abilitiesContainer) {
-            console.warn("abilities-container not found, skipping render");
-            return;
-          }
-
-          const items = currentAbilities
-            .map(
-              (ability, index) => `
-                    <span class="ability-item">
-                        ${ability}
-                        <span class="ability-remove" data-index="${index}">✕</span>
-                    </span>
-                `,
-            )
-            .join("");
-
-          abilitiesContainer.innerHTML =
-            items +
-            `<div class="input-wrapper">
-                        <input type="text" class="add-item-input" id="input-habilidad" placeholder="Escribe y presiona + o Enter...">
-                        <button type="button" class="add-item-btn" id="add-ability-btn" title="Agregar habilidad">+</button>
-                    </div>`;
-
-          // Re-attach event listeners
-          const newInput = document.getElementById("input-habilidad");
-          const newBtn = document.getElementById("add-ability-btn");
-
-          if (newInput && newBtn) {
-            function addAbility() {
-              const value = newInput.value.trim();
-              if (value && !currentAbilities.includes(value)) {
-                currentAbilities.push(value);
-                renderAbilities();
-                newInput.value = "";
-              }
-            }
-
-            newInput.addEventListener("keydown", (e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                addAbility();
-              }
-            });
-
-            newBtn.addEventListener("click", (e) => {
-              e.preventDefault();
-              addAbility();
-            });
-
-            // Remove ability handlers
-            abilitiesContainer
-              .querySelectorAll(".ability-remove")
-              .forEach((btn) => {
-                btn.addEventListener("click", () => {
-                  const index = parseInt(btn.dataset.index);
-                  currentAbilities.splice(index, 1);
-                  renderAbilities();
-                });
-              });
-          }
-        } catch (error) {
-          console.error("Error rendering abilities:", error);
-        }
-      }
-
-      function renderTags() {
-        try {
-          const tagsContainer = document.getElementById("tags-container");
-          if (!tagsContainer) {
-            console.warn("tags-container not found, skipping render");
-            return;
-          }
-
-          const items = currentTags
-            .map(
-              (tag, index) => `
-                    <span class="tag-item">
-                        ${tag}
-                        <span class="tag-remove" data-index="${index}">✕</span>
-                    </span>
-                `,
-            )
-            .join("");
-
-          tagsContainer.innerHTML =
-            items +
-            `<div class="input-wrapper">
-                        <input type="text" class="add-item-input" id="input-tag" placeholder="Escribe y presiona + o Enter...">
-                        <button type="button" class="add-item-btn" id="add-tag-btn" title="Agregar etiqueta">+</button>
-                    </div>`;
-
-          // Re-attach event listeners
-          const newInput = document.getElementById("input-tag");
-          const newBtn = document.getElementById("add-tag-btn");
-
-          if (newInput && newBtn) {
-            function addTag() {
-              const value = newInput.value.trim();
-              if (value && !currentTags.includes(value)) {
-                currentTags.push(value);
-                renderTags();
-                newInput.value = "";
-              }
-            }
-
-            newInput.addEventListener("keydown", (e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                addTag();
-              }
-            });
-
-            newBtn.addEventListener("click", (e) => {
-              e.preventDefault();
-              addTag();
-            });
-
-            // Remove tag handlers
-            tagsContainer.querySelectorAll(".tag-remove").forEach((btn) => {
-              btn.addEventListener("click", () => {
-                const index = parseInt(btn.dataset.index);
-                currentTags.splice(index, 1);
-                renderTags();
-              });
-            });
-          }
-        } catch (error) {
-          console.error("Error rendering tags:", error);
-        }
-      }
-
-      // ========================================
-      // UI - EDITOR VIEW
-      // ========================================
-      function initEditor() {
-        const form = document.getElementById("creature-form");
-        const abilitiesContainer = document.getElementById(
-          "abilities-container",
-        );
-        const tagsContainer = document.getElementById("tags-container");
-        const abilityInput = document.getElementById("input-habilidad");
-        const tagInput = document.getElementById("input-tag");
-        const addAbilityBtn = document.getElementById("add-ability-btn");
-        const addTagBtn = document.getElementById("add-tag-btn");
-
-        // Function to add ability
-        function addAbility() {
-          const value = abilityInput.value.trim();
-          if (value && !currentAbilities.includes(value)) {
-            currentAbilities.push(value);
-            renderAbilities();
-            abilityInput.value = "";
-          }
-        }
-
-        // Function to add tag
-        function addTag() {
-          const value = tagInput.value.trim();
-          if (value && !currentTags.includes(value)) {
-            currentTags.push(value);
-            renderTags();
-            tagInput.value = "";
-          }
-        }
-
-        // Handle abilities input - Enter key
-        abilityInput.addEventListener("keydown", (e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            addAbility();
-          }
-        });
-
-        // Handle abilities button click
-        addAbilityBtn.addEventListener("click", (e) => {
-          e.preventDefault();
-          addAbility();
-        });
-
-        // Handle tags input - Enter key
-        tagInput.addEventListener("keydown", (e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            addTag();
-          }
-        });
-
-        // Handle tags button click
-        addTagBtn.addEventListener("click", (e) => {
-          e.preventDefault();
-          addTag();
-        });
-
-        // Initial render
-        renderAbilities();
-        renderTags();
-
-        // Form submission
-        form.addEventListener("submit", async (e) => {
-          e.preventDefault();
-
-          const creature = {
-            id: isEditMode ? editingCreatureId : crypto.randomUUID(),
-            nombre: document.getElementById("input-nombre").value,
-            imagen_url: document.getElementById("input-imagen").value,
-            origen: {
-              cultura: document.getElementById("input-cultura").value,
-              mitologia: document.getElementById("input-mitologia").value,
-              periodo: document.getElementById("input-periodo").value,
-            },
-            historia: document.getElementById("input-historia").value,
-            descripcion_fisica:
-              document.getElementById("input-descripcion").value,
-            habilidades: [...currentAbilities],
-            nivel_peligro: document.getElementById("input-peligro").value,
-            tags: [...currentTags],
-          };
-
-          try {
-            if (isEditMode) {
-              // Get existing creature to preserve metadata
-              const existingCreature = await getCreatureById(editingCreatureId);
-              
-              // Preserve created_at and status from existing creature
-              if (existingCreature) {
-                creature.created_at = existingCreature.created_at;
-                creature.status = existingCreature.status;
-              }
-              
-              // Update existing creature
-              await updateCreature(creature);
-              showNotification(
-                "✅ Criatura actualizada exitosamente",
-                "success",
-              );
-
-              // Reset edit mode
-              isEditMode = false;
-              editingCreatureId = null;
-              document.querySelector(".form-title").textContent =
-                "📜 Nueva Investigación";
             } else {
-              // Add new creature
-              await addCreature(creature);
-              showNotification(
-                "✅ Investigación guardada exitosamente",
-                "success",
-              );
+              setSyncStatus("Esperando_Acreditación");
             }
 
-            // Automatically push to Gist after saving
-            try {
-              await pushToGist();
-            } catch (error) {
-              console.error("Auto-push failed:", error);
-              showNotification(
-                "⚠️ Guardado localmente, pero fallo al sincronizar con Gist",
-                "info",
-              );
+            // Cargar desde IndexedDB
+            const data = await dbGetAll();
+            setCreatures(data);
+
+            if (!config.token || !config.gistId) {
+              setShowSettings(true);
             }
-
-            // Reload page after successful save
-            setTimeout(() => {
-              location.reload();
-            }, 1500); // Wait 1.5s to show notification
-          } catch (error) {
-            console.error("Error saving creature:", error);
-            showNotification("❌ Error al guardar la investigación", "error");
+          } catch (err) {
+            setError(`SISTEMA_OFFLINE: ${err.message}`);
+          } finally {
+            setLoading(false);
           }
-        });
+        }, [config]);
 
-        // Form reset
-        form.addEventListener("reset", () => {
-          currentAbilities = [];
-          currentTags = [];
-          renderAbilities();
-          renderTags();
-        });
-      }
+        useEffect(() => { loadData(); }, [loadData]);
 
-      function showNotification(message, type = "info") {
-        const notification = document.createElement("div");
-        notification.className = `status-message status-${type}`;
-        notification.textContent = message;
-
-        const container = document.querySelector(".editor-form");
-        container.insertBefore(notification, container.firstChild);
-
-        setTimeout(() => {
-          notification.remove();
-        }, 5000);
-      }
-
-      // ========================================
-      // UI - SETTINGS VIEW
-      // ========================================
-      function initSettings() {
-        const config = getGistConfig();
-        document.getElementById("config-token").value = config.token;
-        document.getElementById("config-gist-id").value = config.gistId;
-
-        const lastSync = localStorage.getItem("last_sync");
-        updateLastSyncDisplay(lastSync);
-
-        // Save config
-        document
-          .getElementById("btn-save-config")
-          .addEventListener("click", () => {
-            const token = document.getElementById("config-token").value;
-            const gistId = document.getElementById("config-gist-id").value;
-            const filename = CONFIG.defaultFilename; // Always use default filename
-
-            saveGistConfig(token, gistId, filename);
-            updateSyncStatus("success", "Configuración guardada");
-
-            setTimeout(() => {
-              updateSyncStatus("success", "Listo para sincronizar");
-            }, 2000);
-          });
-
-        // Pull button
-        document
-          .getElementById("btn-pull")
-          .addEventListener("click", async () => {
-            try {
-              const count = await pullFromGist();
-              alert(`✅ ${count} criaturas descargadas exitosamente`);
-            } catch (error) {
-              alert(`❌ Error al descargar: ${error.message}`);
-            }
-          });
-
-        // Push button
-        document
-          .getElementById("btn-push")
-          .addEventListener("click", async () => {
-            try {
-              const count = await pushToGist();
-              alert(`✅ ${count} criaturas subidas exitosamente`);
-            } catch (error) {
-              alert(`❌ Error al subir: ${error.message}`);
-            }
-          });
-      }
-
-      // ========================================
-      // UI - MODAL
-      // ========================================
-      function initModal() {
-        const creatureModal = document.getElementById("creature-modal");
-        const creatureCloseBtn = document.getElementById("modal-close");
-        const settingsModal = document.getElementById("settings-modal");
-        const settingsCloseBtn = document.getElementById(
-          "settings-modal-close",
-        );
-        const settingsGearBtn = document.getElementById("settings-gear-btn");
-
-        // Creature modal handlers
-        creatureCloseBtn.addEventListener("click", () => {
-          creatureModal.classList.remove("active");
-        });
-
-        creatureModal.addEventListener("click", (e) => {
-          if (e.target === creatureModal) {
-            creatureModal.classList.remove("active");
-          }
-        });
-
-        // Settings modal handlers
-        settingsGearBtn.addEventListener("click", () => {
-          settingsModal.classList.add("active");
-        });
-
-        settingsCloseBtn.addEventListener("click", () => {
-          settingsModal.classList.remove("active");
-        });
-
-        settingsModal.addEventListener("click", (e) => {
-          if (e.target === settingsModal) {
-            settingsModal.classList.remove("active");
-          }
-        });
-
-        // Close modals on Escape key
-        document.addEventListener("keydown", (e) => {
-          if (e.key === "Escape") {
-            creatureModal.classList.remove("active");
-            settingsModal.classList.remove("active");
-          }
-        });
-      }
-
-      // ========================================
-      // UI - NAVIGATION
-      // ========================================
-      function initNavigation() {
-        const navBtns = document.querySelectorAll(".nav-btn");
-        const views = document.querySelectorAll(".view");
-
-        navBtns.forEach((btn) => {
-          btn.addEventListener("click", () => {
-            const targetView = btn.dataset.view;
-
-            // Update active button
-            navBtns.forEach((b) => b.classList.remove("active"));
-            btn.classList.add("active");
-
-            // Update active view
-            views.forEach((v) => v.classList.remove("active"));
-            document.getElementById(targetView).classList.add("active");
-          });
-        });
-      }
-
-      // ========================================
-      // PARALLAX EFFECTS
-      // ========================================
-      function initParallaxEffects() {
-        const header = document.querySelector("header");
-        const orbs = document.querySelectorAll(".mystical-orb");
-
-        document.addEventListener("mousemove", (e) => {
-          const mouseX = e.clientX / window.innerWidth;
-          const mouseY = e.clientY / window.innerHeight;
-
-          orbs.forEach((orb, index) => {
-            const speed = (index + 1) * 10;
-            const x = (mouseX - 0.5) * speed;
-            const y = (mouseY - 0.5) * speed;
-            orb.style.transform = `translate(${x}px, ${y}px)`;
-          });
-        });
-      }
-      // ========================================
-      // UI - SEARCH & FILTERS
-      // ========================================
-      function initSearchAndFilters() {
-        const searchInput = document.getElementById("search-input");
-        const filterMythology = document.getElementById("filter-mythology");
-        const filterDanger = document.getElementById("filter-danger");
-
-        searchInput.addEventListener("input", displayCreatures);
-        filterMythology.addEventListener("change", displayCreatures);
-        filterDanger.addEventListener("change", displayCreatures);
-      }
-
-      // ========================================
-      // PARTICLE ANIMATION
-      // ========================================
-      function initParticles() {
-        const canvas = document.getElementById("particle-canvas");
-        const ctx = canvas.getContext("2d");
-
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-
-        const particles = [];
-        const particleCount = 80;
-
-        class Particle {
-          constructor() {
-            this.x = Math.random() * canvas.width;
-            this.y = Math.random() * canvas.height;
-            this.vx = (Math.random() - 0.5) * 0.5;
-            this.vy = (Math.random() - 0.5) * 0.5;
-            this.radius = Math.random() * 2 + 1;
-            this.opacity = Math.random() * 0.5 + 0.2;
-          }
-
-          update() {
-            this.x += this.vx;
-            this.y += this.vy;
-
-            if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
-            if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
-          }
-
-          draw() {
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(45, 212, 191, ${this.opacity})`;
-            ctx.fill();
-          }
-        }
-
-        for (let i = 0; i < particleCount; i++) {
-          particles.push(new Particle());
-        }
-
-        function animate() {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-          particles.forEach((particle) => {
-            particle.update();
-            particle.draw();
-          });
-
-          // Draw connections
-          particles.forEach((p1, i) => {
-            particles.slice(i + 1).forEach((p2) => {
-              const dx = p1.x - p2.x;
-              const dy = p1.y - p2.y;
-              const distance = Math.sqrt(dx * dx + dy * dy);
-
-              if (distance < 150) {
-                ctx.beginPath();
-                ctx.moveTo(p1.x, p1.y);
-                ctx.lineTo(p2.x, p2.y);
-                ctx.strokeStyle = `rgba(45, 212, 191, ${0.15 * (1 - distance / 150)})`;
-                ctx.lineWidth = 0.5;
-                ctx.stroke();
-              }
-            });
-          });
-
-          requestAnimationFrame(animate);
-        }
-
-        animate();
-
-        window.addEventListener("resize", () => {
-          canvas.width = window.innerWidth;
-          canvas.height = window.innerHeight;
-        });
-      }
-
-      // ========================================
-      // CUSTOM CURSOR
-      // ========================================
-      function initCustomCursor() {
-        const cursor = document.getElementById("custom-cursor");
-        const hoverElements = document.querySelectorAll(
-          "button, a, .creature-card, input, select, textarea",
-        );
-
-        let mouseX = 0,
-          mouseY = 0;
-        let cursorX = 0,
-          cursorY = 0;
-
-        document.addEventListener("mousemove", (e) => {
-          mouseX = e.clientX;
-          mouseY = e.clientY;
-        });
-
-        function animateCursor() {
-          const dx = mouseX - cursorX;
-          const dy = mouseY - cursorY;
-
-          cursorX += dx * 0.15;
-          cursorY += dy * 0.15;
-
-          cursor.style.left = cursorX + "px";
-          cursor.style.top = cursorY + "px";
-
-          requestAnimationFrame(animateCursor);
-        }
-        animateCursor();
-
-        // Hover effect
-        hoverElements.forEach((el) => {
-          el.addEventListener("mouseenter", () =>
-            cursor.classList.add("hover"),
-          );
-          el.addEventListener("mouseleave", () =>
-            cursor.classList.remove("hover"),
-          );
-        });
-      }
-
-      // ========================================
-      // SCROLL REVEAL ANIMATIONS
-      // ========================================
-      function initScrollReveal() {
-        const observerOptions = {
-          threshold: 0.1,
-          rootMargin: "0px 0px -50px 0px",
+        // --- GUARDAR CONFIG ---
+        const saveSettings = (e) => {
+          e.preventDefault();
+          const token = e.target.token.value.trim();
+          const id = e.target.gistId.value.trim();
+          if (!token || !id) return;
+          localStorage.setItem("gist_token", token);
+          localStorage.setItem("gist_id", id);
+          setConfig({ token, gistId: id });
+          setShowSettings(false);
         };
 
-        const observer = new IntersectionObserver((entries) => {
-          entries.forEach((entry, index) => {
-            if (entry.isIntersecting) {
-              setTimeout(() => {
-                entry.target.classList.add("revealed");
-              }, index * 100); // Stagger animation
-              observer.unobserve(entry.target);
-            }
-          });
-        }, observerOptions);
-
-        // Observe all creature cards
-        document.querySelectorAll(".creature-card").forEach((card) => {
-          observer.observe(card);
-        });
-      }
-
-      // ========================================
-      // APPLICATION INITIALIZATION
-      // ========================================
-      async function initApp() {
-        try {
-          // Initialize IndexedDB
-          await initDB();
-          console.log("✅ IndexedDB initialized");
-
-          // Initialize UI components
-          initNavigation();
-          initEditor();
-          initSettings();
-          initModal();
-          initSearchAndFilters();
-          initParticles();
-          initParallaxEffects();
-          // initCustomCursor(); // Disabled per user request
-
-          // Offline-first: Auto-pull on load
+        // --- SYNC AND PUSH ---
+        const syncAndPush = async (localChanges) => {
+          setSaving(true);
           try {
-            updateSyncStatus("syncing", "Intentando sincronizar...");
-            const count = await pullFromGist();
-            console.log(`✅ Auto-pulled ${count} creatures from Gist`);
-          } catch (error) {
-            console.warn("Auto-pull failed, working offline:", error);
-            updateSyncStatus(
-              "error",
-              "Modo offline - Sin conexión a Gist",
-              true,
+            // Guardar en IndexedDB
+            await dbClear();
+            for (const c of localChanges) await dbPut(c);
+
+            // Si hay config de Gist, sincronizar
+            if (config.token && config.gistId) {
+              // Pull remoto para merge
+              let remoteData = [];
+              try {
+                const gist = await gistRequest(
+                  `https://api.github.com/gists/${config.gistId.trim()}`,
+                  config.token.trim()
+                );
+                if (gist.files[CONFIG.defaultFilename]) {
+                  remoteData = JSON.parse(gist.files[CONFIG.defaultFilename].content);
+                }
+              } catch (e) { console.warn("Pull before push failed:", e); }
+
+              // Merge
+              const allLocal = await dbGetAll(true);
+              const merged = mergeData(remoteData, allLocal);
+
+              // Push
+              await gistRequest(
+                `https://api.github.com/gists/${config.gistId.trim()}`,
+                config.token.trim(),
+                {
+                  method: "PATCH",
+                  body: JSON.stringify({
+                    files: {
+                      [CONFIG.defaultFilename]: { content: JSON.stringify(merged, null, 2) },
+                    },
+                  }),
+                }
+              );
+
+              // Guardar merged en IndexedDB
+              await dbClear();
+              for (const c of merged) await dbPut(c);
+
+              const active = merged.filter(c => c.status !== "deleted");
+              setCreatures(active);
+              setSyncStatus("Enlace_Fusionado_Activo");
+            } else {
+              const active = localChanges.filter(c => c.status !== "deleted");
+              setCreatures(active);
+            }
+
+            setSaving(false);
+            return true;
+          } catch (err) {
+            alert(`ERROR_DE_SINCRONIZACIÓN: ${err.message}`);
+            setSaving(false);
+            return false;
+          }
+        };
+
+        // --- GUARDAR CRIATURA ---
+        const handleSave = async (e) => {
+          e.preventDefault();
+          const nowIso = new Date().toISOString();
+          let allCreatures = await dbGetAll(true);
+
+          if (isEditing) {
+            allCreatures = allCreatures.map(c =>
+              c.id === formData.id ? { ...formData, updated_at: nowIso, status: c.status || "active", created_at: c.created_at } : c
             );
+          } else {
+            const now = new Date();
+            const datePart = `${String(now.getDate()).padStart(2, "0")}${String(now.getMonth() + 1).padStart(2, "0")}${now.getFullYear()}`;
+            const count = allCreatures.length + 1;
+            const id = `ED-${datePart}-${String(count).padStart(3, "0")}`;
+            const newItem = {
+              ...formData,
+              id,
+              created_at: nowIso,
+              updated_at: nowIso,
+              status: "active",
+            };
+            allCreatures = [...allCreatures, newItem];
           }
 
-          // Display initial data
-          await displayCreatures();
+          if (await syncAndPush(allCreatures)) {
+            setView("explorer");
+            setIsEditing(false);
+          }
+        };
 
-          // Initialize scroll reveal after creatures are loaded
-          setTimeout(() => initScrollReveal(), 100);
-        } catch (error) {
-          console.error("Initialization error:", error);
-          updateSyncStatus("error", "Error al inicializar la aplicación", true);
+        // --- ELIMINAR ---
+        const handleDelete = async (id) => {
+          if (!confirm("¿ESTÁ SEGURO DE MARCAR ESTE REGISTRO COMO 'ELIMINADO'?")) return;
+          
+          let allCreatures = await dbGetAll(true);
+          const updated = allCreatures.map(c =>
+            c.id === id ? { ...c, status: "deleted", updated_at: new Date().toISOString() } : c
+          );
+          
+          const success = await syncAndPush(updated);
+          if (success) setSelectedCreature(null);
+        };
+
+        // --- ABRIR EDITOR ---
+        const openEditor = (creature = null) => {
+          if (creature) {
+            setFormData({
+              ...creature,
+              origen: { cultura: "", mitologia: "", periodo: "", ...creature.origen },
+              habilidades: creature.habilidades || [],
+              tags: creature.tags || [],
+            });
+            setIsEditing(true);
+          } else {
+            setFormData({
+              nombre: "",
+              imagen_url: "",
+              origen: { cultura: "", mitologia: "", periodo: "" },
+              historia: "",
+              descripcion_fisica: "",
+              habilidades: [],
+              nivel_peligro: "Bajo",
+              tags: [],
+            });
+            setIsEditing(false);
+          }
+          setView("editor");
+          setSelectedCreature(null);
+        };
+
+        // --- PULL / PUSH MANUALES ---
+        const manualPull = async () => {
+          setSaving(true);
+          setSyncStatus("Descargando...");
+          try {
+            const gist = await gistRequest(
+              `https://api.github.com/gists/${config.gistId.trim()}`,
+              config.token.trim()
+            );
+            if (!gist.files[CONFIG.defaultFilename]) throw new Error("FILE_NOT_FOUND");
+            const remoteData = JSON.parse(gist.files[CONFIG.defaultFilename].content);
+            const localData = await dbGetAll(true);
+            const merged = mergeData(localData, remoteData);
+            await dbClear();
+            for (const c of merged) await dbPut(c);
+            const active = merged.filter(c => c.status !== "deleted");
+            setCreatures(active);
+            setSyncStatus("Enlace_Fusionado_Activo");
+            alert(`✅ ${active.length} criaturas activas sincronizadas`);
+          } catch (err) {
+            alert(`Error: ${err.message}`);
+            setSyncStatus("Error_Sync");
+          } finally {
+            setSaving(false);
+          }
+        };
+
+        const manualPush = async () => {
+          setSaving(true);
+          setSyncStatus("Subiendo...");
+          try {
+            const allLocal = await dbGetAll(true);
+            // Pull first
+            let remoteData = [];
+            try {
+              const gist = await gistRequest(
+                `https://api.github.com/gists/${config.gistId.trim()}`,
+                config.token.trim()
+              );
+              if (gist.files[CONFIG.defaultFilename]) {
+                remoteData = JSON.parse(gist.files[CONFIG.defaultFilename].content);
+              }
+            } catch (e) {}
+            const merged = mergeData(remoteData, allLocal);
+            await gistRequest(
+              `https://api.github.com/gists/${config.gistId.trim()}`,
+              config.token.trim(),
+              {
+                method: "PATCH",
+                body: JSON.stringify({
+                  files: {
+                    [CONFIG.defaultFilename]: { content: JSON.stringify(merged, null, 2) },
+                  },
+                }),
+              }
+            );
+            await dbClear();
+            for (const c of merged) await dbPut(c);
+            const active = merged.filter(c => c.status !== "deleted");
+            setCreatures(active);
+            setSyncStatus("Enlace_Fusionado_Activo");
+            alert(`✅ ${active.length} criaturas subidas`);
+          } catch (err) {
+            alert(`Error: ${err.message}`);
+            setSyncStatus("Error_Sync");
+          } finally {
+            setSaving(false);
+          }
+        };
+
+        // --- FILTRO ---
+        const filtered = useMemo(() =>
+          creatures.filter(c =>
+            c.status !== "deleted" &&
+            ((c.nombre || "").toLowerCase().includes(search.toLowerCase()) ||
+             (c.id || "").toLowerCase().includes(search.toLowerCase()))
+          ),
+          [creatures, search]
+        );
+
+        const currentItems = filtered.slice((page - 1) * itemsPerPage, page * itemsPerPage);
+        const totalPages = Math.ceil(filtered.length / itemsPerPage);
+
+        // --- LOADING SCREEN ---
+        if (loading)
+          return (
+            <div className="min-h-screen bg-black flex flex-col items-center justify-center text-emerald-500 relative z-50">
+              <Icon name="loader" className="w-12 h-12 animate-spin mb-4" />
+              <div className="text-xl font-black animate-pulse tracking-[0.3em] uppercase italic">
+                Cargando_Sistemas
+              </div>
+              <div className="mt-2 text-[10px] text-emerald-900 uppercase">
+                Eldritch_Dossier_CEI // Cifrado_Activo
+              </div>
+            </div>
+          );
+
+        // --- RENDER ---
+        return (
+          <div className="min-h-screen relative overflow-hidden pb-20">
+            <header className="relative z-10 pt-10 pb-6 border-b border-emerald-900/40 px-6 bg-black/60 backdrop-blur-md">
+              <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+                <div onClick={() => setView("explorer")} className="cursor-pointer text-center md:text-left">
+                  <h1 className="text-4xl md:text-5xl font-black tracking-tighter uppercase italic leading-none">
+                    <GlitchText>ELDRITCH DOSSIER</GlitchText>
+                  </h1>
+                  <p className="text-[9px] text-emerald-800 mt-2 tracking-[0.4em] font-black uppercase leading-none">
+                    Terminal_Eldritch_Dossier_CEI
+                  </p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <button onClick={() => setView("explorer")}
+                    className={`px-4 py-2 border text-[10px] font-bold uppercase flex items-center gap-2 transition-all ${view === "explorer" ? "bg-emerald-500 text-black border-emerald-500" : "border-emerald-900 text-emerald-900 hover:text-emerald-500"}`}>
+                    <Icon name="database" /> Explorar
+                  </button>
+                  <button onClick={() => openEditor()}
+                    className={`px-4 py-2 border text-[10px] font-bold uppercase flex items-center gap-2 transition-all ${view === "editor" ? "bg-emerald-500 text-black border-emerald-500" : "border-emerald-900 text-emerald-900 hover:text-emerald-500"}`}>
+                    <Icon name="plus" /> Registrar
+                  </button>
+                  <button onClick={() => setShowSettings(true)}
+                    className="p-2 border border-emerald-900 text-emerald-900 hover:text-emerald-500 hover:border-emerald-500 transition-colors">
+                    <Icon name="settings" />
+                  </button>
+                </div>
+              </div>
+            </header>
+
+            {error && (
+              <div className="relative z-20 bg-red-950/20 border-b border-red-900/50 p-4 text-center text-[10px] font-bold text-red-500 animate-pulse uppercase tracking-widest">
+                [ ADVERTENCIA_CRÍTICA ] : {error}
+              </div>
+            )}
+
+            {/* === EXPLORER === */}
+            {view === "explorer" ? (
+              <main className="relative z-10 max-w-6xl mx-auto p-8 animate-in fade-in duration-500">
+                <div className="flex flex-col md:flex-row justify-between md:items-center gap-3 mb-10 border-l-2 border-emerald-500 pl-6 py-3 pr-6 bg-emerald-950/10 uppercase font-bold text-[10px]">
+                  <div className="text-emerald-600 tracking-widest text-xs shrink-0">
+                    Registros: {filtered.length}
+                  </div>
+                  <div className="flex gap-3 items-center">
+                    <div className="relative flex-1 md:w-48 group">
+                      <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-emerald-900 group-focus-within:text-emerald-500" />
+                      <input type="text" placeholder="BUSCAR..."
+                        className="w-full bg-black border border-emerald-900/30 py-2 pl-10 pr-4 text-[10px] focus:border-emerald-500 outline-none placeholder:text-emerald-950 uppercase"
+                        value={search}
+                        onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                      />
+                    </div>
+                    <button onClick={loadData} disabled={saving}
+                      className="text-emerald-900 hover:text-emerald-500 flex items-center transition-colors disabled:opacity-30 shrink-0">
+                      <Icon name="refresh" />
+                    </button>
+                  </div>
+                </div>
+
+                {filtered.length === 0 ? (
+                  <div className="text-center py-24 opacity-30 uppercase font-black tracking-[0.5em] italic">
+                    No hay registros recuperados
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {currentItems.map((c) => (
+                      <div key={c.id} onClick={() => setSelectedCreature(c)}
+                        className="group cursor-pointer bg-black border border-emerald-950 hover:border-emerald-500/40 transition-all p-1 shadow-lg overflow-hidden">
+                        <div className="relative h-48 overflow-hidden border border-emerald-950 bg-emerald-950/5">
+                          <img src={c.imagen_url}
+                            className="w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
+                            onError={(e) => (e.target.src = "https://placehold.co/400x300/000/080?text=S/N_FOTOGRAFICA")}
+                          />
+                          <div className="absolute top-2 right-2">
+                            <DangerBadge level={c.nivel_peligro} />
+                          </div>
+                          <div className="absolute bottom-0 left-0 right-0 bg-black/80 p-4 border-t border-emerald-950/50 backdrop-blur-sm">
+                            <div className="text-[8px] text-emerald-900 mb-1 font-black tracking-widest">{c.id}</div>
+                            <h3 className="text-xl font-black text-emerald-500 uppercase italic tracking-tighter group-hover:text-white transition-colors leading-none">
+                              {c.nombre}
+                            </h3>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {totalPages > 1 && (
+                  <div className="mt-16 flex justify-center items-center gap-8 text-[10px] font-black uppercase text-emerald-900">
+                    <button disabled={page === 1} onClick={() => setPage(p => p - 1)}
+                      className="p-3 border border-emerald-950 hover:border-emerald-500 disabled:opacity-20 transition-all">
+                      <Icon name="left" />
+                    </button>
+                    <span className="tracking-[0.4em]">Sector {page} / {totalPages}</span>
+                    <button disabled={page === totalPages} onClick={() => setPage(p => p + 1)}
+                      className="p-3 border border-emerald-950 hover:border-emerald-500 disabled:opacity-20 transition-all">
+                      <Icon name="right" />
+                    </button>
+                  </div>
+                )}
+              </main>
+            ) : (
+              /* === EDITOR === */
+              <main className="relative z-10 max-w-4xl mx-auto p-8 animate-in slide-in-from-bottom-4 duration-500">
+                <form onSubmit={handleSave}
+                  className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-black border border-emerald-900/40 p-10 shadow-2xl relative overflow-hidden">
+                  <div className="space-y-6">
+                    <div>
+                      <label className="text-[9px] uppercase font-black text-emerald-900 block mb-1 tracking-widest italic">Identidad</label>
+                      <input required className="w-full bg-emerald-950/10 border border-emerald-900 p-3 text-xs text-emerald-400 outline-none focus:border-emerald-500"
+                        value={formData.nombre}
+                        onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[9px] uppercase font-black text-emerald-900 block mb-1 tracking-widest italic">Captura Visual (URL)</label>
+                      <input required className="w-full bg-emerald-950/10 border border-emerald-900 p-3 text-xs text-emerald-400 outline-none focus:border-emerald-500"
+                        value={formData.imagen_url}
+                        onChange={(e) => setFormData({ ...formData, imagen_url: e.target.value })}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-[9px] uppercase font-black text-emerald-900 block mb-1">Cultura</label>
+                        <input className="w-full bg-emerald-950/10 border border-emerald-900 p-3 text-xs text-emerald-400 outline-none focus:border-emerald-500"
+                          value={formData.origen.cultura}
+                          onChange={(e) => setFormData({ ...formData, origen: { ...formData.origen, cultura: e.target.value } })}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[9px] uppercase font-black text-emerald-900 block mb-1">Mitología</label>
+                        <input className="w-full bg-emerald-950/10 border border-emerald-900 p-3 text-xs text-emerald-400 outline-none focus:border-emerald-500"
+                          value={formData.origen.mitologia}
+                          onChange={(e) => setFormData({ ...formData, origen: { ...formData.origen, mitologia: e.target.value } })}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-[9px] uppercase font-black text-emerald-900 block mb-1 tracking-widest italic">Período de Avistamiento</label>
+                      <input className="w-full bg-emerald-950/10 border border-emerald-900 p-3 text-xs text-emerald-400 outline-none focus:border-emerald-500"
+                        value={formData.origen.periodo}
+                        onChange={(e) => setFormData({ ...formData, origen: { ...formData.origen, periodo: e.target.value } })}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[9px] uppercase font-black text-emerald-900 block mb-1 tracking-widest italic">Nivel de Amenaza</label>
+                      <select className="w-full bg-emerald-950/20 border border-emerald-900 p-3 text-xs text-emerald-400 outline-none cursor-pointer"
+                        value={formData.nivel_peligro}
+                        onChange={(e) => setFormData({ ...formData, nivel_peligro: e.target.value })}>
+                        {["Bajo", "Medio", "Alto", "Muy Alto", "Extremo", "Absoluto"].map(lvl =>
+                          <option key={lvl} value={lvl}>{lvl}</option>
+                        )}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="space-y-6">
+                    <div>
+                      <label className="text-[9px] uppercase font-black text-emerald-900 block mb-1 tracking-widest italic">Trasfondo (HTML)</label>
+                      <textarea className="w-full h-24 bg-emerald-950/10 border border-emerald-900 p-3 text-xs text-emerald-400 outline-none resize-none focus:border-emerald-500"
+                        value={formData.historia}
+                        onChange={(e) => setFormData({ ...formData, historia: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[9px] uppercase font-black text-emerald-900 block mb-1 tracking-widest italic">Morfología (HTML)</label>
+                      <textarea className="w-full h-24 bg-emerald-950/10 border border-emerald-900 p-3 text-xs text-emerald-400 outline-none resize-none focus:border-emerald-500"
+                        value={formData.descripcion_fisica}
+                        onChange={(e) => setFormData({ ...formData, descripcion_fisica: e.target.value })}
+                      />
+                    </div>
+                    {/* CHIP INPUTS */}
+                    <ChipInput
+                      items={formData.habilidades}
+                      onChange={(items) => setFormData({ ...formData, habilidades: items })}
+                      placeholder="Agregar habilidad..."
+                      label="Atributos (Habilidades)"
+                    />
+                    <ChipInput
+                      items={formData.tags}
+                      onChange={(items) => setFormData({ ...formData, tags: items })}
+                      placeholder="Agregar etiqueta..."
+                      label="Etiquetas (Tags)"
+                    />
+                  </div>
+                  <div className="md:col-span-2 pt-6 border-t border-emerald-900 flex justify-end gap-4 font-black uppercase text-[10px]">
+                    <button type="button" onClick={() => setView("explorer")}
+                      className="px-8 py-3 text-emerald-900 hover:text-red-500 transition-colors">Abortar</button>
+                    <button type="submit" disabled={saving}
+                      className="px-10 py-3 bg-emerald-900/20 border border-emerald-500 flex items-center gap-3 hover:bg-emerald-500 hover:text-black transition-all">
+                      {saving ? <Icon name="loader" className="animate-spin" /> : <Icon name="save" />}
+                      {isEditing ? "Sincronizar" : "Fijar"}
+                    </button>
+                  </div>
+                </form>
+              </main>
+            )}
+
+            {/* === MODAL DETALLE === */}
+            {selectedCreature && (
+              <div className="fixed inset-0 z-[150] flex items-center justify-center p-0 md:p-8 animate-in zoom-in-95 duration-200">
+                <div className="absolute inset-0 bg-black/95 backdrop-blur-sm" onClick={() => setSelectedCreature(null)}></div>
+                <div className="relative w-full max-w-5xl bg-black border-0 md:border border-emerald-500/30 shadow-2xl flex flex-col md:flex-row max-h-[100vh] md:max-h-[90vh] overflow-y-auto md:overflow-hidden">
+                  {/* X button - on mobile: over the image top-right; on desktop: hidden (shown in text panel) */}
+                  <button onClick={() => setSelectedCreature(null)}
+                    className="md:hidden absolute top-3 right-3 z-30 p-2 bg-black/70 border border-emerald-900 text-emerald-500 hover:text-red-500 hover:border-red-500 transition-colors backdrop-blur-sm">
+                    <Icon name="x" className="w-6 h-6" />
+                  </button>
+                  <div className="w-full md:w-1/2 relative bg-black flex items-center justify-center border-b md:border-b-0 md:border-r border-emerald-900/30 h-[55vh] md:h-auto shrink-0">
+                    <img src={selectedCreature.imagen_url}
+                      className="w-full h-full object-cover opacity-90 transition-opacity" />
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.8)_100%)]"></div>
+                    <div className="absolute bottom-6 left-6 border-l-4 border-emerald-700 pl-4 bg-black/40 p-4 backdrop-blur-md">
+                      <div className="text-xs text-emerald-500 font-mono tracking-widest uppercase font-black">{selectedCreature.id}</div>
+                    </div>
+                  </div>
+                  <div className="w-full md:w-1/2 p-8 md:p-12 md:overflow-y-auto bg-[#030303] flex flex-col gap-6 scrollbar-thin">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h2 className="text-3xl md:text-4xl font-black italic text-white uppercase mb-2 tracking-tighter leading-none">
+                          {selectedCreature.nombre}
+                        </h2>
+                        <DangerBadge level={selectedCreature.nivel_peligro} />
+                      </div>
+                      {/* X button - desktop only */}
+                      <button onClick={() => setSelectedCreature(null)}
+                        className="hidden md:block p-2 text-emerald-900 hover:text-red-500 transition-colors">
+                        <Icon name="x" className="w-8 h-8" />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-3 gap-6 border-y border-emerald-900/30 py-6 text-[9px] uppercase font-black tracking-widest leading-tight">
+                      <div>
+                        <div className="text-emerald-900 mb-1 italic opacity-50">Cultura</div>
+                        <div className="text-emerald-400">{selectedCreature.origen?.cultura || "---"}</div>
+                      </div>
+                      <div>
+                        <div className="text-emerald-900 mb-1 italic opacity-50">Mitología</div>
+                        <div className="text-emerald-400">{selectedCreature.origen?.mitología || selectedCreature.origen?.mitologia || "---"}</div>
+                      </div>
+                      <div>
+                        <div className="text-emerald-900 mb-1 italic opacity-50">Período</div>
+                        <div className="text-emerald-400">{selectedCreature.origen?.periodo || "---"}</div>
+                      </div>
+                    </div>
+                    <div className="space-y-8">
+                      <div className="space-y-2">
+                        <h4 className="text-[10px] text-emerald-500 font-black uppercase flex items-center gap-2 border-b border-emerald-900 pb-1 tracking-widest">
+                          <Icon name="book" /> Bitácora de Origen
+                        </h4>
+                        <p className="text-xs text-emerald-600 leading-relaxed italic font-serif text-justify"
+                          dangerouslySetInnerHTML={{ __html: selectedCreature.historia || "S/N" }} />
+                      </div>
+                      <div className="space-y-2">
+                        <h4 className="text-[10px] text-emerald-500 font-black uppercase flex items-center gap-2 border-b border-emerald-900 pb-1 tracking-widest">
+                          <Icon name="eye" /> Análisis Morfológico
+                        </h4>
+                        <p className="text-xs text-emerald-600 leading-relaxed italic font-serif text-justify"
+                          dangerouslySetInnerHTML={{ __html: selectedCreature.descripcion_fisica || "S/N" }} />
+                      </div>
+                    </div>
+                    <div className="space-y-4 pt-6 border-t border-emerald-900/30">
+                      <div className="flex flex-wrap gap-2">
+                        {selectedCreature.habilidades?.map((h) => (
+                          <span key={h} className="text-[9px] border border-emerald-900 px-3 py-1 uppercase font-black text-emerald-500 bg-emerald-950/20">{h}</span>
+                        ))}
+                      </div>
+                      <div className="flex flex-wrap gap-2 opacity-50">
+                        {selectedCreature.tags?.map((t) => (
+                          <span key={t} className="text-[8px] text-emerald-800 font-black italic tracking-widest uppercase">#{t}</span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="pt-10 grid grid-cols-2 gap-4 pb-4">
+                      <button onClick={() => openEditor(selectedCreature)}
+                        className="flex items-center justify-center gap-2 py-4 bg-emerald-900/10 border border-emerald-800 text-[10px] font-black uppercase hover:bg-emerald-500 hover:text-black transition-all tracking-[0.2em]">
+                        <Icon name="edit" /> Modificar
+                      </button>
+                      <button onClick={() => handleDelete(selectedCreature.id)}
+                        className="flex items-center justify-center gap-2 py-4 bg-red-900/10 border border-red-900 text-[10px] font-black uppercase hover:bg-red-600 hover:text-white transition-all tracking-[0.2em]">
+                        <Icon name="trash" /> Eliminar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* === MODAL SETTINGS === */}
+            {showSettings && (
+              <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 animate-in fade-in duration-300">
+                <div className="absolute inset-0 bg-black/95 backdrop-blur-md"
+                  onClick={() => creatures.length > 0 && setShowSettings(false)}></div>
+                <form onSubmit={saveSettings}
+                  className="relative w-full max-w-md bg-black border-2 border-emerald-500 p-10 shadow-[0_0_120px_rgba(16,185,129,0.2)]">
+                  <h3 className="text-xl font-black uppercase mb-8 flex items-center gap-3 tracking-tighter italic border-b border-emerald-900 pb-4">
+                    <Icon name="settings" className="w-6 h-6" /> Protocolo de Acceso
+                  </h3>
+                  <div className="space-y-6">
+                    <div>
+                      <label className="text-[10px] uppercase font-black text-emerald-900 block mb-2 tracking-widest italic text-center">
+                        GitHub Secret Token
+                      </label>
+                      <input name="token" type="password" required defaultValue={config.token}
+                        className="w-full bg-emerald-950/10 border border-emerald-900 p-4 text-xs text-emerald-400 outline-none focus:border-emerald-500 placeholder:opacity-20"
+                        placeholder="ghp_xxxxxxxxxxxx" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] uppercase font-black text-emerald-900 block mb-2 tracking-widest italic text-center">
+                        Target Archive ID (Gist ID)
+                      </label>
+                      <input name="gistId" required defaultValue={config.gistId}
+                        className="w-full bg-emerald-950/10 border border-emerald-900 p-4 text-xs text-emerald-400 outline-none focus:border-emerald-500 placeholder:opacity-20"
+                        placeholder="ID del registro..." />
+                    </div>
+                  </div>
+
+                  {/* Botones Pull / Push */}
+                  {config.token && config.gistId && (
+                    <div className="mt-6 grid grid-cols-2 gap-3 font-black uppercase text-[10px]">
+                      <button type="button" onClick={manualPull} disabled={saving}
+                        className="py-3 border border-emerald-900 text-emerald-600 hover:bg-emerald-900/20 transition-all flex items-center justify-center gap-2 disabled:opacity-30">
+                        <Icon name="download" /> Pull
+                      </button>
+                      <button type="button" onClick={manualPush} disabled={saving}
+                        className="py-3 border border-emerald-900 text-emerald-600 hover:bg-emerald-900/20 transition-all flex items-center justify-center gap-2 disabled:opacity-30">
+                        <Icon name="upload" /> Push
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="mt-10 flex gap-4 font-black uppercase text-[10px]">
+                    <button type="button" onClick={() => creatures.length > 0 && setShowSettings(false)}
+                      className="flex-1 py-4 border border-emerald-900 text-emerald-900 hover:text-red-500 transition-colors uppercase">
+                      Abortar
+                    </button>
+                    <button type="submit"
+                      className="flex-1 py-4 bg-emerald-500 text-black hover:bg-white transition-all tracking-[0.2em] font-black uppercase">
+                      Vincular Terminal
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            <footer className="fixed bottom-0 left-0 right-0 p-5 border-t border-emerald-950 bg-black/90 flex justify-between items-center px-10 text-[9px] font-black text-emerald-950 tracking-[0.3em] uppercase backdrop-blur-md z-[120]">
+              <div className="hidden sm:block italic opacity-60">
+                Eldritch_Dossier_CEI // V4.0_29032026
+              </div>
+              <div className="animate-pulse flex items-center gap-3">
+                <div className={`w-1.5 h-1.5 rounded-full shadow-[0_0_5px_#10b981] ${creatures.length > 0 ? "bg-emerald-500" : "bg-red-600 animate-ping"}`}></div>
+                {syncStatus || (creatures.length > 0 ? "Enlace_Fusionado_Activo" : "Esperando_Acreditación")}
+              </div>
+            </footer>
+          </div>
+        );
+      }
+
+      const container = document.getElementById("root");
+      const root = ReactDOM.createRoot(container);
+      root.render(<App />);
+    </script>
+
+    <!-- Distortion Click Sound -->
+    <script>
+      (function() {
+        let audioCtx = null;
+        function getAudioCtx() {
+          if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          return audioCtx;
         }
-      }
+        function playDistortionClick() {
+          try {
+            const ctx = getAudioCtx();
+            const duration = 0.06;
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            const distortion = ctx.createWaveShaper();
 
-      // Start the application when DOM is ready
-      if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", initApp);
-      } else {
-        initApp();
-      }
+            // Distortion curve
+            const samples = 256;
+            const curve = new Float32Array(samples);
+            for (let i = 0; i < samples; i++) {
+              const x = (i * 2) / samples - 1;
+              curve[i] = (Math.PI + 200) * x / (Math.PI + 200 * Math.abs(x));
+            }
+            distortion.curve = curve;
+            distortion.oversample = '4x';
 
-      // ========================================
-      // SERVICE WORKER REGISTRATION (PWA)
-      // ========================================
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(180 + Math.random() * 80, ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + duration);
+
+            gain.gain.setValueAtTime(0.08, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+
+            osc.connect(distortion);
+            distortion.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + duration);
+          } catch(e) {}
+        }
+
+        document.addEventListener('click', function(e) {
+          const el = e.target.closest('button, a, .cursor-pointer, [onclick]');
+          if (el) playDistortionClick();
+        }, true);
+      })();
+    </script>
+
+    <!-- Service Worker Registration -->
+    <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
           navigator.serviceWorker
@@ -3036,4 +1129,3 @@
     </script>
   </body>
 </html>
-
