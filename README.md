@@ -4,7 +4,7 @@
 
 **Eldritch Dossier** es una Aplicación Web Progresiva (PWA) de vanguardia diseñada para investigadores de lo oculto y entusiastas de la mitología. Permite catalogar y gestionar descubrimientos sobre criaturas ancestrales mediante una interfaz inmersiva que fusiona la estética de manuscritos antiguos con tecnología web de última generación.
 
-![Texto ALT de la imagen que utilices para mostrar el proyecto]([https://raw.githubusercontent.com/AguirreBrian/Eldritch-Dossier/refs/heads/main/assets/bestias/ED.png](https://raw.githubusercontent.com/Cei-1/Eldritch-Dossier/refs/heads/main/assets/img/Eldritch-Dossier-logo.jpg))
+![Texto ALT de la imagen que utilices para mostrar el proyecto]((https://raw.githubusercontent.com/Cei-1/Eldritch-Dossier/refs/heads/main/assets/img/Eldritch-Dossier-logo.jpg))
 
 ## ✨ Características Principales
 
