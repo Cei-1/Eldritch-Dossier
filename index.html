@@ -445,6 +445,43 @@
               setSyncStatus("Esperando_Acreditación");
             }
 
+            // === PURGA AUTOMÁTICA DE IDs INVÁLIDOS (TEMPORAL) ===
+            // Elimina registros cuyo ID no sigue la nomenclatura ED-DDMMYYYY-XXX
+            // + IDs específicos a eliminar
+            const allData = await dbGetAll(true);
+            const validIdPattern = /^ED-\d{8}-\d+$/;
+            const blacklistedIds = ["ED-29032026-032", "ED-29032026-033"];
+            const clean = allData.filter(c => validIdPattern.test(c.id) && !blacklistedIds.includes(c.id));
+            const removed = allData.length - clean.length;
+
+            if (removed > 0) {
+              console.log(`[PURGA] Eliminando ${removed} registros con ID inválido`);
+              await dbClear();
+              for (const c of clean) await dbPut(c);
+
+              // También limpiar el Gist si hay config
+              if (config.token && config.gistId) {
+                try {
+                  await gistRequest(
+                    `https://api.github.com/gists/${config.gistId.trim()}`,
+                    config.token.trim(),
+                    {
+                      method: "PATCH",
+                      body: JSON.stringify({
+                        files: {
+                          [CONFIG.defaultFilename]: { content: JSON.stringify(clean, null, 2) },
+                        },
+                      }),
+                    }
+                  );
+                  console.log(`[PURGA] Gist limpiado. ${clean.length} registros válidos conservados.`);
+                } catch (pushErr) {
+                  console.warn("[PURGA] No se pudo limpiar el Gist:", pushErr);
+                }
+              }
+            }
+            // === FIN PURGA AUTOMÁTICA ===
+
             // Cargar desde IndexedDB
             const data = await dbGetAll();
             setCreatures(data);
