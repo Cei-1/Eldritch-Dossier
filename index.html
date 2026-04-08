@@ -38,7 +38,15 @@
         theme: {
           extend: {
             colors: {
-              emerald: { 950: "#022c22" },
+              emerald: {
+                400: 'rgb(var(--c-e400) / <alpha-value>)',
+                500: 'rgb(var(--c-e500) / <alpha-value>)',
+                600: 'rgb(var(--c-e600) / <alpha-value>)',
+                700: 'rgb(var(--c-e700) / <alpha-value>)',
+                800: 'rgb(var(--c-e800) / <alpha-value>)',
+                900: 'rgb(var(--c-e900) / <alpha-value>)',
+                950: 'rgb(var(--c-e950) / <alpha-value>)',
+              },
             },
           },
         },
@@ -46,6 +54,22 @@
     </script>
 
     <style>
+      /* === CSS Custom Properties === */
+      :root {
+        --c-e400: 52 211 153;
+        --c-e500: 16 185 129;
+        --c-e600: 5 150 105;
+        --c-e700: 4 120 87;
+        --c-e800: 6 95 70;
+        --c-e900: 6 78 59;
+        --c-e950: 2 44 34;
+        --scanline-speed: 10s;
+        --scanline-opacity: 0.1;
+        --crt-line-size: 4px;
+      }
+
+
+
       @keyframes flicker {
         0% { opacity: 0.05; }
         50% { opacity: 0.02; }
@@ -60,14 +84,14 @@
         background-color: black;
         margin: 0;
         overflow-x: hidden;
-        color: #10b981;
+        color: rgb(var(--c-e500));
         font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       }
 
       ::-webkit-scrollbar { width: 5px; }
       ::-webkit-scrollbar-track { background: #000; }
-      ::-webkit-scrollbar-thumb { background: #064e3b; border-radius: 10px; }
-      ::-webkit-scrollbar-thumb:hover { background: #10b981; }
+      ::-webkit-scrollbar-thumb { background: rgb(var(--c-e900)); border-radius: 10px; }
+      ::-webkit-scrollbar-thumb:hover { background: rgb(var(--c-e500)); }
 
       .crt-overlay {
         pointer-events: none;
@@ -77,22 +101,26 @@
         background:
           linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%),
           linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
-        background-size: 100% 4px, 3px 100%;
+        background-size: 100% var(--crt-line-size), 3px 100%;
+        transition: all 0.8s;
       }
+
 
       .scanline {
         width: 100%;
         height: 100px;
         z-index: 201;
         background: linear-gradient(0deg, rgba(0, 0, 0, 0) 0%, rgba(255, 255, 255, 0.02) 10%, rgba(0, 0, 0, 0.1) 100%);
-        opacity: 0.1;
+        opacity: var(--scanline-opacity);
         position: absolute;
         bottom: 100%;
-        animation: scanline 10s linear infinite;
+        animation: scanline var(--scanline-speed) linear infinite;
+        transition: opacity 0.8s;
       }
 
+
       #root { min-height: 100vh; }
-      option { background: #000; color: #10b981; }
+      option { background: #000; color: rgb(var(--c-e500)); }
       input, textarea, select { border-radius: 0 !important; }
 
       .chip-tag {
@@ -100,13 +128,13 @@
         align-items: center;
         gap: 6px;
         padding: 4px 10px;
-        border: 1px solid #064e3b;
-        background: rgba(6, 78, 59, 0.15);
+        border: 1px solid rgb(var(--c-e900));
+        background: rgb(var(--c-e900) / 0.15);
         font-size: 11px;
         text-transform: uppercase;
         font-weight: 900;
         letter-spacing: 0.05em;
-        color: #10b981;
+        color: rgb(var(--c-e500));
         cursor: default;
         transition: all 0.2s;
       }
@@ -116,7 +144,7 @@
       }
       .chip-tag .chip-remove {
         cursor: pointer;
-        color: #064e3b;
+        color: rgb(var(--c-e900));
         font-size: 14px;
         line-height: 1;
         transition: color 0.2s;
@@ -124,6 +152,37 @@
       .chip-tag:hover .chip-remove {
         color: #ef4444;
       }
+
+      /* === DECLASSIFICATION ANIMATIONS === */
+      @keyframes scanReveal {
+        0% { clip-path: inset(0 0 100% 0); filter: brightness(3) saturate(0); }
+        30% { filter: brightness(2) saturate(0.3); }
+        100% { clip-path: inset(0 0 0% 0); filter: brightness(1) saturate(1); }
+      }
+      @keyframes fieldReveal {
+        0% { opacity: 0; transform: translateY(12px); filter: blur(4px); }
+        100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+      }
+      @keyframes stampSlam {
+        0% { transform: translate(-50%, -50%) scale(5) rotate(-25deg); opacity: 0; }
+        40% { transform: translate(-50%, -50%) scale(0.9) rotate(-12deg); opacity: 1; }
+        55% { transform: translate(-50%, -50%) scale(1.08) rotate(-12deg); }
+        100% { transform: translate(-50%, -50%) scale(1) rotate(-12deg); opacity: 0.55; }
+      }
+      @keyframes accessGlow {
+        0%, 100% { box-shadow: 0 0 20px rgb(var(--c-e900) / 0.3); border-color: rgb(var(--c-e900)); }
+        50% { box-shadow: 0 0 50px rgb(var(--c-e500) / 0.2); border-color: rgb(var(--c-e500)); }
+      }
+      @keyframes accessLine {
+        0% { width: 0%; }
+        100% { width: 100%; }
+      }
+      .declass-scan { animation: scanReveal 1.4s ease-out both; }
+      .declass-field { opacity: 0; animation: fieldReveal 0.5s ease-out both; }
+      .declass-stamp { animation: stampSlam 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+      .declass-access { animation: accessGlow 1.2s ease-in-out infinite; }
+      .declass-progress { animation: accessLine 1.6s ease-in-out both; }
+      .declass-stamp-fade { opacity: 0; transition: opacity 0.8s ease-out; }
     </style>
   </head>
   <body>
@@ -133,6 +192,62 @@
 
     <script type="text/babel">
       const { useState, useEffect, useMemo, useCallback, useRef } = React;
+
+      // --- SCRAMBLE TEXT HOOK ---
+      function useScrambleText(finalText, active = true, duration = 1500) {
+        const [display, setDisplay] = useState('');
+        const chars = '!@#$%^&*_+-=|;:<>?/~0123456789ABCDEF';
+        useEffect(() => {
+          if (!active || !finalText) { setDisplay(finalText || ''); return; }
+          let frame = 0;
+          const totalFrames = Math.max(1, duration / 30);
+          const interval = setInterval(() => {
+            frame++;
+            const progress = frame / totalFrames;
+            let result = '';
+            for (let i = 0; i < finalText.length; i++) {
+              if (finalText[i] === ' ') { result += ' '; }
+              else if (i / finalText.length < progress) { result += finalText[i]; }
+              else { result += chars[Math.floor(Math.random() * chars.length)]; }
+            }
+            setDisplay(result);
+            if (frame >= totalFrames) { clearInterval(interval); setDisplay(finalText); }
+          }, 30);
+          return () => clearInterval(interval);
+        }, [finalText, active]);
+        return display;
+      }
+
+      // --- DECLASSIFY ACCESS OVERLAY ---
+      const DeclassifyOverlay = ({ creatureId, onComplete }) => {
+        const line1 = useScrambleText('ACCEDIENDO_ARCHIVO_CLASIFICADO', true, 800);
+        const line2 = useScrambleText(creatureId || 'ED-000000-000', true, 1000);
+        const line3 = useScrambleText('VERIFICANDO_ACREDITACIÓN...', true, 1200);
+        const [progress, setProgress] = useState(0);
+
+        useEffect(() => {
+          const timer = setTimeout(() => onComplete(), 1800);
+          const pTimer = setInterval(() => setProgress(p => Math.min(p + 2, 100)), 30);
+          return () => { clearTimeout(timer); clearInterval(pTimer); };
+        }, []);
+
+        return (
+          <div className="absolute inset-0 z-50 bg-black flex flex-col items-center justify-center gap-4">
+            <div className="text-[10px] font-black uppercase tracking-[0.5em] text-emerald-900 animate-pulse">[ PROTOCOLO_DE_ACCESO ]</div>
+            <div className="border-2 border-emerald-900 p-8 max-w-md w-full mx-4 declass-access">
+              <div className="text-xs font-black uppercase tracking-[0.3em] text-emerald-500 mb-2">{line1}</div>
+              <div className="text-lg font-black uppercase tracking-[0.2em] text-white mb-3">{line2}</div>
+              <div className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-800 mb-4">{line3}</div>
+              <div className="w-full h-1 bg-emerald-950 overflow-hidden">
+                <div className="h-full bg-emerald-500 declass-progress"></div>
+              </div>
+              <div className="text-[8px] text-emerald-950 font-black uppercase mt-2 tracking-[0.4em]">
+                CIFRADO_ELDRITCH_CEI // NIVEL_ACCESO_4
+              </div>
+            </div>
+          </div>
+        );
+      };
 
       // --- ICONOS SVG ---
       const Icon = ({ name, className = "w-4 h-4" }) => {
@@ -153,6 +268,8 @@
           loader: <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83" />,
           download: <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />,
           upload: <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />,
+          moon: <path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />,
+          sun: <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />,
         };
         return (
           <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -379,6 +496,113 @@
           </div>
         );
       };
+      // --- IMAGE ZOOM LIGHTBOX ---
+      const ImageZoom = ({ src, onClose }) => {
+        const [scale, setScale] = useState(1);
+        const [pos, setPos] = useState({ x: 0, y: 0 });
+        const containerRef = useRef(null);
+        const dragState = useRef({ active: false, startX: 0, startY: 0, origX: 0, origY: 0 });
+
+        useEffect(() => {
+          const el = containerRef.current;
+          if (!el) return;
+          const onWheel = (e) => {
+            e.preventDefault();
+            setScale(s => Math.min(5, Math.max(0.5, s + (e.deltaY > 0 ? -0.2 : 0.2))));
+          };
+          el.addEventListener('wheel', onWheel, { passive: false });
+          return () => el.removeEventListener('wheel', onWheel);
+        }, []);
+
+        const startDrag = (clientX, clientY) => {
+          dragState.current = { active: true, startX: clientX, startY: clientY, origX: pos.x, origY: pos.y };
+        };
+        const moveDrag = (clientX, clientY) => {
+          if (!dragState.current.active) return;
+          const dx = clientX - dragState.current.startX;
+          const dy = clientY - dragState.current.startY;
+          setPos({ x: dragState.current.origX + dx, y: dragState.current.origY + dy });
+        };
+        const endDrag = () => { dragState.current.active = false; };
+
+        return (
+          <div ref={containerRef}
+            className="fixed inset-0 z-[300] bg-black/95 backdrop-blur-md flex items-center justify-center cursor-grab active:cursor-grabbing touch-none"
+            onMouseDown={(e) => { if (e.button === 0) startDrag(e.clientX, e.clientY); }}
+            onMouseMove={(e) => moveDrag(e.clientX, e.clientY)}
+            onMouseUp={endDrag}
+            onMouseLeave={endDrag}
+            onTouchStart={(e) => { const t = e.touches[0]; startDrag(t.clientX, t.clientY); }}
+            onTouchMove={(e) => { const t = e.touches[0]; moveDrag(t.clientX, t.clientY); }}
+            onTouchEnd={endDrag}>
+            <img src={src}
+              className="max-w-[90vw] max-h-[90vh] select-none pointer-events-none"
+              style={{ transform: `translate(${pos.x}px, ${pos.y}px) scale(${scale})`, transition: dragState.current.active ? 'none' : 'transform 0.1s' }}
+              draggable="false" />
+            <div className="absolute top-6 right-6 flex gap-3 z-10">
+              <button onMouseDown={(e) => e.stopPropagation()} onClick={() => { setScale(1); setPos({x:0,y:0}); }}
+                className="p-2 border border-emerald-900 text-emerald-500 hover:bg-emerald-500 hover:text-black transition-all text-xs font-black uppercase tracking-wider">
+                1:1
+              </button>
+              <button onMouseDown={(e) => e.stopPropagation()} onClick={onClose}
+                className="p-2 border border-emerald-900 text-emerald-500 hover:bg-red-500 hover:text-black hover:border-red-500 transition-all">
+                <Icon name="x" className="w-6 h-6" />
+              </button>
+            </div>
+          </div>
+        );
+      };
+
+      // --- CRIATURA DEL DÍA WIDGET ---
+      const DailyCreatureWidget = ({ creature, onOpen }) => {
+        const scrambledName = useScrambleText(creature.nombre, true, 2000);
+        const scrambledLabel = useScrambleText('SUJETO_DEL_DÍA', true, 1200);
+        const scrambledId = useScrambleText(creature.id, true, 1500);
+
+        return (
+          <div onClick={() => onOpen(creature)}
+            className="mb-10 cursor-pointer group relative overflow-hidden border border-emerald-900/40 bg-black hover:border-emerald-500/50 transition-all">
+            <div className="flex flex-col md:flex-row">
+              {/* Image */}
+              <div className="w-full md:w-48 h-40 md:h-auto relative overflow-hidden shrink-0">
+                <img src={creature.imagen_url}
+                  className="w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-80 transition-all duration-700"
+                  onError={(e) => (e.target.src = "https://placehold.co/400x300/000/080?text=S/N")} />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/90 md:block hidden"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent md:hidden"></div>
+              </div>
+              {/* Info */}
+              <div className="shrink-0 p-6 md:p-8 flex flex-col justify-center gap-3 md:w-[320px]">
+                <div className="flex items-center gap-4">
+                  <span className="text-[8px] font-black uppercase tracking-[0.5em] text-emerald-900 border border-emerald-900/40 px-3 py-1 bg-emerald-950/20">
+                    {scrambledLabel}
+                  </span>
+                  <span className="text-[8px] font-black text-emerald-950 tracking-[0.3em]">{scrambledId}</span>
+                </div>
+                <h3 className="text-2xl md:text-3xl font-black uppercase italic tracking-tighter text-emerald-500 group-hover:text-white transition-colors leading-none">
+                  {scrambledName}
+                </h3>
+                <div className="flex items-center gap-4 mt-1">
+                  <DangerBadge level={creature.nivel_peligro} />
+                  <span className="text-[9px] text-emerald-800 font-black uppercase tracking-widest">
+                    {(() => { const m = creature.origen?.mitologia; const c = creature.origen?.cultura; const val = Array.isArray(m) ? m[0] : m || (Array.isArray(c) ? c[0] : c); return val || "---"; })()}
+                  </span>
+                </div>
+                <div className="text-[9px] text-emerald-900 font-black uppercase tracking-[0.3em] mt-2 group-hover:text-emerald-600 transition-colors">
+                  [ ACCEDER_DOSSIER → ]
+                </div>
+              </div>
+              {/* Historia - right column, desktop only */}
+              {creature.historia && (
+                <div className="hidden md:flex flex-1 p-8 items-center">
+                  <p className="text-sm text-emerald-800/70 leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: creature.historia.replace(/<[^>]*>/g, '').slice(0, 500) + (creature.historia.replace(/<[^>]*>/g, '').length > 500 ? '...' : '') }} />
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      };
 
       // --- APP PRINCIPAL ---
       function App() {
@@ -388,10 +612,13 @@
         const [error, setError] = useState(null);
         const [view, setView] = useState("explorer");
         const [search, setSearch] = useState("");
+        const [filterMito, setFilterMito] = useState("");
         const [selectedCreature, setSelectedCreature] = useState(null);
         const [page, setPage] = useState(1);
         const [showSettings, setShowSettings] = useState(false);
         const [syncStatus, setSyncStatus] = useState("");
+        const [declassPhase, setDeclassPhase] = useState(-1); // -1=none, 0=accessing, 1=revealed, 2=done(stamp faded)
+        const [zoomImage, setZoomImage] = useState(null);
 
         const [config, setConfig] = useState({
           token: localStorage.getItem("gist_token") || "",
@@ -403,7 +630,7 @@
           id: "",
           nombre: "",
           imagen_url: "",
-          origen: { cultura: "", mitologia: "", periodo: "" },
+          origen: { cultura: [], mitologia: [], periodo: "" },
           historia: "",
           descripcion_fisica: "",
           habilidades: [],
@@ -412,6 +639,14 @@
         });
 
         const itemsPerPage = 12;
+
+        // --- AUTO-FADE CLASIFICADO STAMP ---
+        useEffect(() => {
+          if (declassPhase === 1) {
+            const timer = setTimeout(() => setDeclassPhase(2), 2000);
+            return () => clearTimeout(timer);
+          }
+        }, [declassPhase]);
 
         // --- CARGAR DATOS (IndexedDB + Gist pull) ---
         const loadData = useCallback(async () => {
@@ -618,9 +853,14 @@
         // --- ABRIR EDITOR ---
         const openEditor = (creature = null) => {
           if (creature) {
+            const toArr = (v) => Array.isArray(v) ? v : (v ? [v] : []);
             setFormData({
               ...creature,
-              origen: { cultura: "", mitologia: "", periodo: "", ...creature.origen },
+              origen: {
+                cultura: toArr(creature.origen?.cultura),
+                mitologia: toArr(creature.origen?.mitologia),
+                periodo: creature.origen?.periodo || "",
+              },
               habilidades: creature.habilidades || [],
               tags: creature.tags || [],
             });
@@ -629,7 +869,7 @@
             setFormData({
               nombre: "",
               imagen_url: "",
-              origen: { cultura: "", mitologia: "", periodo: "" },
+              origen: { cultura: [], mitologia: [], periodo: "" },
               historia: "",
               descripcion_fisica: "",
               habilidades: [],
@@ -712,14 +952,33 @@
           }
         };
 
+        // --- CATÁLOGO DE MITOLOGÍAS ---
+        const allMythologies = useMemo(() => {
+          const set = new Set();
+          creatures.forEach(c => {
+            if (c.status === 'deleted') return;
+            const m = c.origen?.mitologia;
+            if (Array.isArray(m)) m.forEach(v => v && set.add(v));
+            else if (m) set.add(m);
+          });
+          return [...set].sort();
+        }, [creatures]);
+
         // --- FILTRO ---
         const filtered = useMemo(() =>
-          creatures.filter(c =>
-            c.status !== "deleted" &&
-            ((c.nombre || "").toLowerCase().includes(search.toLowerCase()) ||
-             (c.id || "").toLowerCase().includes(search.toLowerCase()))
-          ),
-          [creatures, search]
+          creatures.filter(c => {
+            if (c.status === 'deleted') return false;
+            // Filter by name
+            if (search && !(c.nombre || '').toLowerCase().includes(search.toLowerCase())) return false;
+            // Filter by mythology
+            if (filterMito) {
+              const m = c.origen?.mitologia;
+              const arr = Array.isArray(m) ? m : (m ? [m] : []);
+              if (!arr.some(v => v === filterMito)) return false;
+            }
+            return true;
+          }),
+          [creatures, search, filterMito]
         );
 
         const currentItems = filtered.slice((page - 1) * itemsPerPage, page * itemsPerPage);
@@ -761,6 +1020,7 @@
                     className={`px-4 py-2 border text-[10px] font-bold uppercase flex items-center gap-2 transition-all ${view === "editor" ? "bg-emerald-500 text-black border-emerald-500" : "border-emerald-900 text-emerald-900 hover:text-emerald-500"}`}>
                     <Icon name="plus" /> Registrar
                   </button>
+
                   <button onClick={() => setShowSettings(true)}
                     className="p-2 border border-emerald-900 text-emerald-900 hover:text-emerald-500 hover:border-emerald-500 transition-colors">
                     <Icon name="settings" />
@@ -778,14 +1038,32 @@
             {/* === EXPLORER === */}
             {view === "explorer" ? (
               <main className="relative z-10 max-w-[95vw] xl:max-w-[90vw] mx-auto p-8 animate-in fade-in duration-500">
+
+                {/* === CRIATURA DEL DÍA === */}
+                {(() => {
+                  if (creatures.length === 0) return null;
+                  const today = new Date();
+                  const seed = today.getFullYear() * 10000 + (today.getMonth()+1) * 100 + today.getDate();
+                  const dailyCreature = creatures[seed % creatures.length];
+                  if (!dailyCreature) return null;
+                  return <DailyCreatureWidget creature={dailyCreature} onOpen={(c) => { setDeclassPhase(0); setSelectedCreature(c); }} />;
+                })()}
+
                 <div className="flex flex-col md:flex-row justify-between md:items-center gap-3 mb-10 border-l-2 border-emerald-500 pl-6 py-3 pr-6 bg-emerald-950/10 uppercase font-bold text-[10px]">
                   <div className="text-emerald-600 tracking-widest text-xs shrink-0">
                     Registros: {filtered.length}
                   </div>
-                  <div className="flex gap-3 items-center">
+                  <div className="flex gap-3 items-center flex-wrap">
+                    <select
+                      className="bg-black border border-emerald-900/30 py-2 px-3 text-[10px] text-emerald-500 outline-none uppercase font-bold cursor-pointer hover:border-emerald-500 transition-colors"
+                      value={filterMito}
+                      onChange={(e) => { setFilterMito(e.target.value); setPage(1); }}>
+                      <option value="">Todas las mitologías</option>
+                      {allMythologies.map(m => <option key={m} value={m}>{m}</option>)}
+                    </select>
                     <div className="relative flex-1 md:w-48 group">
                       <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-emerald-900 group-focus-within:text-emerald-500" />
-                      <input type="text" placeholder="BUSCAR..."
+                      <input type="text" placeholder="BUSCAR POR NOMBRE..."
                         className="w-full bg-black border border-emerald-900/30 py-2 pl-10 pr-4 text-[10px] focus:border-emerald-500 outline-none placeholder:text-emerald-950 uppercase"
                         value={search}
                         onChange={(e) => { setSearch(e.target.value); setPage(1); }}
@@ -804,8 +1082,8 @@
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {currentItems.map((c) => (
-                      <div key={c.id} onClick={() => setSelectedCreature(c)}
+                    {currentItems.map((c) => { const openCreature = (creature) => { setDeclassPhase(0); setSelectedCreature(creature); }; return (
+                      <div key={c.id} onClick={() => openCreature(c)}
                         className="group cursor-pointer bg-black border border-emerald-950 hover:border-emerald-500/40 transition-all p-1 shadow-lg overflow-hidden">
                         <div className="relative h-56 overflow-hidden border border-emerald-950 bg-emerald-950/5">
                           <img src={c.imagen_url}
@@ -823,7 +1101,7 @@
                           </div>
                         </div>
                       </div>
-                    ))}
+                    ); })}
                   </div>
                 )}
                 {totalPages > 1 && (
@@ -860,22 +1138,18 @@
                         onChange={(e) => setFormData({ ...formData, imagen_url: e.target.value })}
                       />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-[9px] uppercase font-black text-emerald-900 block mb-1">Cultura</label>
-                        <input className="w-full bg-emerald-950/10 border border-emerald-900 p-3 text-xs text-emerald-400 outline-none focus:border-emerald-500"
-                          value={formData.origen.cultura}
-                          onChange={(e) => setFormData({ ...formData, origen: { ...formData.origen, cultura: e.target.value } })}
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[9px] uppercase font-black text-emerald-900 block mb-1">Mitología</label>
-                        <input className="w-full bg-emerald-950/10 border border-emerald-900 p-3 text-xs text-emerald-400 outline-none focus:border-emerald-500"
-                          value={formData.origen.mitologia}
-                          onChange={(e) => setFormData({ ...formData, origen: { ...formData.origen, mitologia: e.target.value } })}
-                        />
-                      </div>
-                    </div>
+                    <ChipInput
+                      items={formData.origen.cultura}
+                      onChange={(items) => setFormData({ ...formData, origen: { ...formData.origen, cultura: items } })}
+                      placeholder="Agregar cultura..."
+                      label="Cultura(s) de Origen"
+                    />
+                    <ChipInput
+                      items={formData.origen.mitologia}
+                      onChange={(items) => setFormData({ ...formData, origen: { ...formData.origen, mitologia: items } })}
+                      placeholder="Agregar mitología..."
+                      label="Mitología(s)"
+                    />
                     <div>
                       <label className="text-[9px] uppercase font-black text-emerald-900 block mb-1 tracking-widest italic">Período de Avistamiento</label>
                       <input className="w-full bg-emerald-950/10 border border-emerald-900 p-3 text-xs text-emerald-400 outline-none focus:border-emerald-500"
@@ -938,51 +1212,79 @@
 
             {/* === MODAL DETALLE === */}
             {selectedCreature && (
-              <div className="fixed inset-0 z-[150] flex items-center justify-center p-0 md:p-8 animate-in zoom-in-95 duration-200">
-                <div className="absolute inset-0 bg-black/95 backdrop-blur-sm" onClick={() => setSelectedCreature(null)}></div>
+              <div className="fixed inset-0 z-[150] flex items-center justify-center p-0 md:p-8">
+                <div className="absolute inset-0 bg-black/95 backdrop-blur-sm" onClick={() => { setSelectedCreature(null); setDeclassPhase(-1); }}></div>
                 <div className="relative w-full max-w-5xl bg-black border-0 md:border border-emerald-500/30 shadow-2xl flex flex-col md:flex-row max-h-[100vh] md:max-h-[90vh] overflow-y-auto md:overflow-hidden">
-                  {/* X button - on mobile: over the image top-right; on desktop: hidden (shown in text panel) */}
-                  <button onClick={() => setSelectedCreature(null)}
-                    className="md:hidden absolute top-3 right-3 z-30 p-2 bg-black/70 border border-emerald-900 text-emerald-500 hover:text-red-500 hover:border-red-500 transition-colors backdrop-blur-sm">
-                    <Icon name="x" className="w-6 h-6" />
-                  </button>
-                  <div className="w-full md:w-1/2 relative bg-black flex items-center justify-center border-b md:border-b-0 md:border-r border-emerald-900/30 h-[55vh] md:h-auto shrink-0">
+
+                  {/* === DECLASSIFICATION OVERLAY === */}
+                  {declassPhase === 0 && (
+                    <DeclassifyOverlay
+                      creatureId={selectedCreature.id}
+                      onComplete={() => setDeclassPhase(1)}
+                    />
+                  )}
+
+                  {/* === CLASIFICADO STAMP === */}
+                  {(declassPhase === 1 || declassPhase === 2) && (
+                    <div className={`absolute top-1/2 left-1/2 z-40 pointer-events-none ${declassPhase === 1 ? 'declass-stamp' : 'declass-stamp-fade'}`}>
+                      <div className="border-4 border-red-600 px-6 py-3 text-red-600 font-black text-2xl md:text-4xl uppercase tracking-[0.3em] whitespace-nowrap" style={{textShadow: '0 0 10px rgba(220,38,38,0.5)'}}>
+                        CLASIFICADO
+                      </div>
+                    </div>
+                  )}
+
+                  {/* X button - mobile */}
+                  {declassPhase !== 0 && (
+                    <button onClick={() => { setSelectedCreature(null); setDeclassPhase(-1); }}
+                      className="md:hidden absolute top-3 right-3 z-30 p-2 bg-black/70 border border-emerald-900 text-emerald-500 hover:text-red-500 hover:border-red-500 transition-colors backdrop-blur-sm">
+                      <Icon name="x" className="w-6 h-6" />
+                    </button>
+                  )}
+
+                  <div onClick={() => declassPhase !== 0 && setZoomImage(selectedCreature.imagen_url)}
+                    className={`w-full md:w-1/2 relative bg-black flex items-center justify-center border-b md:border-b-0 md:border-r border-emerald-900/30 h-[55vh] md:h-auto shrink-0 ${declassPhase === 0 ? 'opacity-0' : 'cursor-zoom-in'}`}>
                     <img src={selectedCreature.imagen_url}
-                      className="w-full h-full object-cover opacity-90 transition-opacity" />
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.8)_100%)]"></div>
-                    <div className="absolute bottom-6 left-6 border-l-4 border-emerald-700 pl-4 bg-black/40 p-4 backdrop-blur-md">
+                      className={`w-full h-full object-cover md:object-contain opacity-90 transition-opacity ${declassPhase === 1 ? 'declass-scan' : ''}`} />
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.6)_100%)] pointer-events-none"></div>
+                    <div className={`absolute bottom-6 left-6 border-l-4 border-emerald-700 pl-4 bg-black/40 p-4 backdrop-blur-md ${declassPhase === 1 ? 'declass-field' : ''}`} style={declassPhase === 1 ? {animationDelay: '1.2s'} : {}}>
                       <div className="text-xs text-emerald-500 font-mono tracking-widest uppercase font-black">{selectedCreature.id}</div>
                     </div>
                   </div>
-                  <div className="w-full md:w-1/2 p-8 md:p-12 md:overflow-y-auto bg-[#030303] flex flex-col gap-6 scrollbar-thin">
+
+                  {zoomImage && <ImageZoom src={zoomImage} onClose={() => setZoomImage(null)} />}
+
+                  <div className={`w-full md:w-1/2 p-8 md:p-12 md:overflow-y-auto bg-[#030303] flex flex-col gap-6 scrollbar-thin ${declassPhase === 0 ? 'opacity-0' : ''}`}>
                     <div className="flex justify-between items-start">
-                      <div>
+                      <div className={declassPhase === 1 ? 'declass-field' : ''} style={declassPhase === 1 ? {animationDelay: '0.3s'} : {}}>
                         <h2 className="text-3xl md:text-4xl font-black italic text-white uppercase mb-2 tracking-tighter leading-none">
                           {selectedCreature.nombre}
                         </h2>
                         <DangerBadge level={selectedCreature.nivel_peligro} />
                       </div>
-                      {/* X button - desktop only */}
-                      <button onClick={() => setSelectedCreature(null)}
+                      <button onClick={() => { setSelectedCreature(null); setDeclassPhase(-1); }}
                         className="hidden md:block p-2 text-emerald-900 hover:text-red-500 transition-colors">
                         <Icon name="x" className="w-8 h-8" />
                       </button>
                     </div>
-                    <div className="grid grid-cols-3 gap-6 border-y border-emerald-900/30 py-6 text-[9px] uppercase font-black tracking-widest leading-tight">
+                    <div className={`grid grid-cols-3 gap-6 border-y border-emerald-900/30 py-6 text-[9px] uppercase font-black tracking-widest leading-tight ${declassPhase === 1 ? 'declass-field' : ''}`} style={declassPhase === 1 ? {animationDelay: '0.6s'} : {}}>
                       <div>
-                        <div className="text-emerald-900 mb-1 italic opacity-50">Cultura</div>
-                        <div className="text-emerald-400">{selectedCreature.origen?.cultura || "---"}</div>
+                        <div className="text-emerald-900 mb-2 italic opacity-50">Cultura</div>
+                        <div className="flex flex-wrap gap-1">
+                          {(() => { const c = selectedCreature.origen?.cultura; const arr = Array.isArray(c) ? c : (c ? [c] : []); return arr.length > 0 ? arr.map((t,i) => <span key={i} className="chip-tag text-[8px] py-0.5 px-1.5">{t}</span>) : <span className="text-emerald-400">---</span>; })()}
+                        </div>
                       </div>
                       <div>
-                        <div className="text-emerald-900 mb-1 italic opacity-50">Mitología</div>
-                        <div className="text-emerald-400">{selectedCreature.origen?.mitología || selectedCreature.origen?.mitologia || "---"}</div>
+                        <div className="text-emerald-900 mb-2 italic opacity-50">Mitología</div>
+                        <div className="flex flex-wrap gap-1">
+                          {(() => { const m = selectedCreature.origen?.mitologia || selectedCreature.origen?.mitología; const arr = Array.isArray(m) ? m : (m ? [m] : []); return arr.length > 0 ? arr.map((t,i) => <span key={i} className="chip-tag text-[8px] py-0.5 px-1.5">{t}</span>) : <span className="text-emerald-400">---</span>; })()}
+                        </div>
                       </div>
                       <div>
-                        <div className="text-emerald-900 mb-1 italic opacity-50">Período</div>
+                        <div className="text-emerald-900 mb-2 italic opacity-50">Período</div>
                         <div className="text-emerald-400">{selectedCreature.origen?.periodo || "---"}</div>
                       </div>
                     </div>
-                    <div className="space-y-8">
+                    <div className={`space-y-8 ${declassPhase === 1 ? 'declass-field' : ''}`} style={declassPhase === 1 ? {animationDelay: '0.9s'} : {}}>
                       <div className="space-y-2">
                         <h4 className="text-[10px] text-emerald-500 font-black uppercase flex items-center gap-2 border-b border-emerald-900 pb-1 tracking-widest">
                           <Icon name="book" /> Bitácora de Origen
@@ -998,7 +1300,7 @@
                           dangerouslySetInnerHTML={{ __html: selectedCreature.descripcion_fisica || "S/N" }} />
                       </div>
                     </div>
-                    <div className="space-y-4 pt-6 border-t border-emerald-900/30">
+                    <div className={`space-y-4 pt-6 border-t border-emerald-900/30 ${declassPhase === 1 ? 'declass-field' : ''}`} style={declassPhase === 1 ? {animationDelay: '1.2s'} : {}}>
                       <div className="flex flex-wrap gap-2">
                         {selectedCreature.habilidades?.map((h) => (
                           <span key={h} className="text-[9px] border border-emerald-900 px-3 py-1 uppercase font-black text-emerald-500 bg-emerald-950/20">{h}</span>
@@ -1010,7 +1312,7 @@
                         ))}
                       </div>
                     </div>
-                    <div className="pt-10 grid grid-cols-2 gap-4 pb-4">
+                    <div className={`pt-10 grid grid-cols-2 gap-4 pb-4 ${declassPhase === 1 ? 'declass-field' : ''}`} style={declassPhase === 1 ? {animationDelay: '1.5s'} : {}}>
                       <button onClick={() => openEditor(selectedCreature)}
                         className="flex items-center justify-center gap-2 py-4 bg-emerald-900/10 border border-emerald-800 text-[10px] font-black uppercase hover:bg-emerald-500 hover:text-black transition-all tracking-[0.2em]">
                         <Icon name="edit" /> Modificar
@@ -1084,7 +1386,7 @@
 
             <footer className="fixed bottom-0 left-0 right-0 p-5 border-t border-emerald-950 bg-black/90 flex justify-between items-center px-10 text-[9px] font-black text-emerald-950 tracking-[0.3em] uppercase backdrop-blur-md z-[120]">
               <div className="hidden sm:block italic opacity-60">
-                Eldritch_Dossier_CEI // V4.0_29032026
+                Eldritch_Dossier_CEI // V5.1_07042026
               </div>
               <div className="animate-pulse flex items-center gap-3">
                 <div className={`w-1.5 h-1.5 rounded-full shadow-[0_0_5px_#10b981] ${creatures.length > 0 ? "bg-emerald-500" : "bg-red-600 animate-ping"}`}></div>
@@ -1116,7 +1418,6 @@
             const gain = ctx.createGain();
             const distortion = ctx.createWaveShaper();
 
-            // Distortion curve
             const samples = 256;
             const curve = new Float32Array(samples);
             for (let i = 0; i < samples; i++) {
