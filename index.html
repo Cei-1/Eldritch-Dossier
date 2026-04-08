@@ -556,7 +556,7 @@
       // --- CRIATURA DEL DÍA WIDGET ---
       const DailyCreatureWidget = ({ creature, onOpen }) => {
         const scrambledName = useScrambleText(creature.nombre, true, 2000);
-        const scrambledLabel = useScrambleText('SUJETO_DEL_DÍA', true, 1200);
+        const scrambledLabel = useScrambleText('SUJETO_DESTACADO', true, 1200);
         const scrambledId = useScrambleText(creature.id, true, 1500);
 
         return (
@@ -1170,14 +1170,14 @@
                   </div>
                   <div className="space-y-6">
                     <div>
-                      <label className="text-[9px] uppercase font-black text-emerald-900 block mb-1 tracking-widest italic">Trasfondo (HTML)</label>
+                      <label className="text-[9px] uppercase font-black text-emerald-900 block mb-1 tracking-widest italic">Trasfondo</label>
                       <textarea className="w-full h-24 bg-emerald-950/10 border border-emerald-900 p-3 text-xs text-emerald-400 outline-none resize-none focus:border-emerald-500"
                         value={formData.historia}
                         onChange={(e) => setFormData({ ...formData, historia: e.target.value })}
                       />
                     </div>
                     <div>
-                      <label className="text-[9px] uppercase font-black text-emerald-900 block mb-1 tracking-widest italic">Morfología (HTML)</label>
+                      <label className="text-[9px] uppercase font-black text-emerald-900 block mb-1 tracking-widest italic">Morfología</label>
                       <textarea className="w-full h-24 bg-emerald-950/10 border border-emerald-900 p-3 text-xs text-emerald-400 outline-none resize-none focus:border-emerald-500"
                         value={formData.descripcion_fisica}
                         onChange={(e) => setFormData({ ...formData, descripcion_fisica: e.target.value })}
