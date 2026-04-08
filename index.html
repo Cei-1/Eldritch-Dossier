@@ -555,7 +555,7 @@
 
       // --- CRIATURA DEL DÍA WIDGET ---
 const DailyCreatureWidget = ({ creature, onOpen }) => {
-        // Reducimos la duración del scramble para que cargue más rápido (ej: 800ms)
+        // Duración rápida de 800ms para el nombre
         const scrambledName = useScrambleText(creature.nombre, true, 800);
         const scrambledLabel = useScrambleText('SUJETO_DESTACADO', true, 1200);
         const scrambledId = useScrambleText(creature.id, true, 1500);
@@ -564,7 +564,7 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
           <div onClick={() => onOpen(creature)}
             className="mb-10 cursor-pointer group relative overflow-hidden border border-emerald-900/40 bg-black hover:border-emerald-500/50 transition-all">
             <div className="flex flex-col md:flex-row">
-              {/* Image */}
+              {/* Imagen con fade hacia la derecha */}
               <div className="w-full md:w-48 h-40 md:h-auto relative overflow-hidden shrink-0">
                 <img src={creature.imagen_url}
                   className="w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-80 transition-all duration-700"
@@ -573,9 +573,8 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent md:hidden"></div>
               </div>
               
-              {/* Info Area */}
+              {/* Columna de Info */}
               <div className="shrink-0 p-6 md:p-8 flex flex-col justify-center gap-2 md:w-[320px]">
-                {/* ID debajo de SUJETO_DESTACADO */}
                 <div className="flex flex-col items-start gap-1">
                   <span className="text-[8px] font-black uppercase tracking-[0.5em] text-emerald-900 border border-emerald-900/40 px-3 py-1 bg-emerald-950/20">
                     {scrambledLabel}
@@ -585,9 +584,9 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
                   </span>
                 </div>
 
-                {/* Nombre con altura fija para evitar saltos de layout */}
-                <div className="min-h-[3rem] md:min-h-[4rem] flex items-center">
-                  <h3 className="text-2xl md:text-3xl font-black uppercase italic tracking-tighter text-emerald-500 group-hover:text-white transition-colors leading-none">
+                {/* Contenedor del nombre con altura mínima para evitar saltos */}
+                <div className="min-h-[60px] md:min-h-[80px] flex items-center">
+                  <h3 className="text-2xl md:text-3xl font-black uppercase italic tracking-tighter text-emerald-500 group-hover:text-white transition-colors leading-tight">
                     {scrambledName}
                   </h3>
                 </div>
@@ -607,10 +606,10 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
                 </div>
               </div>
 
-              {/* Historia (Desktop) */}
+              {/* Historia - Sin bordes de separación y con padding ajustado */}
               {creature.historia && (
-                <div className="hidden md:flex flex-1 p-8 items-center border-l border-emerald-900/20">
-                  <p className="text-sm text-emerald-800/70 leading-relaxed line-clamp-4 italic"
+                <div className="hidden md:flex flex-1 p-8 items-center">
+                  <p className="text-sm text-emerald-800/60 leading-relaxed italic font-serif text-justify line-clamp-5 group-hover:text-emerald-700 transition-colors"
                     dangerouslySetInnerHTML={{ __html: creature.historia.replace(/<[^>]*>/g, '') }} />
                 </div>
               )}
