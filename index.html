@@ -554,8 +554,9 @@
       };
 
       // --- CRIATURA DEL DÍA WIDGET ---
-      const DailyCreatureWidget = ({ creature, onOpen }) => {
-        const scrambledName = useScrambleText(creature.nombre, true, 2000);
+const DailyCreatureWidget = ({ creature, onOpen }) => {
+        // Reducimos la duración del scramble para que cargue más rápido (ej: 800ms)
+        const scrambledName = useScrambleText(creature.nombre, true, 800);
         const scrambledLabel = useScrambleText('SUJETO_DESTACADO', true, 1200);
         const scrambledId = useScrambleText(creature.id, true, 1500);
 
@@ -571,32 +572,46 @@
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/90 md:block hidden"></div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent md:hidden"></div>
               </div>
-              {/* Info */}
-              <div className="shrink-0 p-6 md:p-8 flex flex-col justify-center gap-3 md:w-[320px]">
-                <div className="flex items-center gap-4">
+              
+              {/* Info Area */}
+              <div className="shrink-0 p-6 md:p-8 flex flex-col justify-center gap-2 md:w-[320px]">
+                {/* ID debajo de SUJETO_DESTACADO */}
+                <div className="flex flex-col items-start gap-1">
                   <span className="text-[8px] font-black uppercase tracking-[0.5em] text-emerald-900 border border-emerald-900/40 px-3 py-1 bg-emerald-950/20">
                     {scrambledLabel}
                   </span>
-                  <span className="text-[8px] font-black text-emerald-950 tracking-[0.3em]">{scrambledId}</span>
+                  <span className="text-[8px] font-black text-emerald-950 tracking-[0.3em] ml-1">
+                    {scrambledId}
+                  </span>
                 </div>
-                <h3 className="text-2xl md:text-3xl font-black uppercase italic tracking-tighter text-emerald-500 group-hover:text-white transition-colors leading-none">
-                  {scrambledName}
-                </h3>
+
+                {/* Nombre con altura fija para evitar saltos de layout */}
+                <div className="min-h-[3rem] md:min-h-[4rem] flex items-center">
+                  <h3 className="text-2xl md:text-3xl font-black uppercase italic tracking-tighter text-emerald-500 group-hover:text-white transition-colors leading-none">
+                    {scrambledName}
+                  </h3>
+                </div>
+
                 <div className="flex items-center gap-4 mt-1">
                   <DangerBadge level={creature.nivel_peligro} />
                   <span className="text-[9px] text-emerald-800 font-black uppercase tracking-widest">
-                    {(() => { const m = creature.origen?.mitologia; const c = creature.origen?.cultura; const val = Array.isArray(m) ? m[0] : m || (Array.isArray(c) ? c[0] : c); return val || "---"; })()}
+                    {(() => { 
+                      const m = creature.origen?.mitologia; 
+                      const val = Array.isArray(m) ? m[0] : m; 
+                      return val || "---"; 
+                    })()}
                   </span>
                 </div>
                 <div className="text-[9px] text-emerald-900 font-black uppercase tracking-[0.3em] mt-2 group-hover:text-emerald-600 transition-colors">
                   [ ACCEDER_DOSSIER → ]
                 </div>
               </div>
-              {/* Historia - right column, desktop only */}
+
+              {/* Historia (Desktop) */}
               {creature.historia && (
-                <div className="hidden md:flex flex-1 p-8 items-center">
-                  <p className="text-sm text-emerald-800/70 leading-relaxed"
-                    dangerouslySetInnerHTML={{ __html: creature.historia.replace(/<[^>]*>/g, '').slice(0, 500) + (creature.historia.replace(/<[^>]*>/g, '').length > 500 ? '...' : '') }} />
+                <div className="hidden md:flex flex-1 p-8 items-center border-l border-emerald-900/20">
+                  <p className="text-sm text-emerald-800/70 leading-relaxed line-clamp-4 italic"
+                    dangerouslySetInnerHTML={{ __html: creature.historia.replace(/<[^>]*>/g, '') }} />
                 </div>
               )}
             </div>
