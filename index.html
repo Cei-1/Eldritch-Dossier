@@ -173,14 +173,33 @@
         0%, 100% { box-shadow: 0 0 20px rgb(var(--c-e900) / 0.3); border-color: rgb(var(--c-e900)); }
         50% { box-shadow: 0 0 50px rgb(var(--c-e500) / 0.2); border-color: rgb(var(--c-e500)); }
       }
+      @keyframes accessGlowDanger {
+        0%, 100% { box-shadow: 0 0 20px rgba(220,38,38,0.3); border-color: #7f1d1d; }
+        50% { box-shadow: 0 0 60px rgba(220,38,38,0.4); border-color: #dc2626; }
+      }
       @keyframes accessLine {
         0% { width: 0%; }
         100% { width: 100%; }
       }
+      @keyframes dangerPulse {
+        0%, 100% { box-shadow: 0 0 0 rgba(220,38,38,0); border-color: rgba(220,38,38,0.3); }
+        50% { box-shadow: 0 0 15px rgba(220,38,38,0.3); border-color: rgba(220,38,38,0.6); }
+      }
+      @keyframes dangerPulseExtreme {
+        0%, 100% { box-shadow: 0 0 0 rgba(220,38,38,0); border-color: rgba(220,38,38,0.4); }
+        50% { box-shadow: 0 0 25px rgba(220,38,38,0.5); border-color: rgba(220,38,38,0.9); }
+      }
+      @keyframes termType {
+        from { width: 0; }
+        to { width: 100%; }
+      }
+      .card-danger-high { animation: dangerPulse 3s ease-in-out infinite; }
+      .card-danger-extreme { animation: dangerPulseExtreme 2s ease-in-out infinite; }
       .declass-scan { animation: scanReveal 1.4s ease-out both; }
       .declass-field { opacity: 0; animation: fieldReveal 0.5s ease-out both; }
       .declass-stamp { animation: stampSlam 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
       .declass-access { animation: accessGlow 1.2s ease-in-out infinite; }
+      .declass-access-danger { animation: accessGlowDanger 1s ease-in-out infinite; }
       .declass-progress { animation: accessLine 1.6s ease-in-out both; }
       .declass-stamp-fade { opacity: 0; transition: opacity 0.8s ease-out; }
     </style>
@@ -219,30 +238,32 @@
       }
 
       // --- DECLASSIFY ACCESS OVERLAY ---
-      const DeclassifyOverlay = ({ creatureId, onComplete }) => {
-        const line1 = useScrambleText('ACCEDIENDO_ARCHIVO_CLASIFICADO', true, 800);
+      const DeclassifyOverlay = ({ creatureId, dangerLevel, onComplete }) => {
+        const isDanger = ['Extremo','Absoluto','Muy Alto'].includes(dangerLevel);
+        const line1Text = isDanger ? 'ALERTA_ACCESO_RESTRINGIDO' : 'ACCEDIENDO_ARCHIVO_CLASIFICADO';
+        const line3Text = isDanger ? 'VERIFICANDO_NIVEL_AUTORIZACIÓN...' : 'VERIFICANDO_ACREDITACIÓN...';
+        const accessLabel = isDanger ? `AMENAZA_${dangerLevel?.toUpperCase().replace(' ','_')} // PROTOCOLO_ROJO` : 'CIFRADO_ELDRITCH_CEI // NIVEL_ACCESO_4';
+        const line1 = useScrambleText(line1Text, true, 800);
         const line2 = useScrambleText(creatureId || 'ED-000000-000', true, 1000);
-        const line3 = useScrambleText('VERIFICANDO_ACREDITACIÓN...', true, 1200);
-        const [progress, setProgress] = useState(0);
+        const line3 = useScrambleText(line3Text, true, 1200);
 
         useEffect(() => {
-          const timer = setTimeout(() => onComplete(), 1800);
-          const pTimer = setInterval(() => setProgress(p => Math.min(p + 2, 100)), 30);
-          return () => { clearTimeout(timer); clearInterval(pTimer); };
+          const timer = setTimeout(() => onComplete(), isDanger ? 2200 : 1800);
+          return () => clearTimeout(timer);
         }, []);
 
         return (
           <div className="absolute inset-0 z-50 bg-black flex flex-col items-center justify-center gap-4">
-            <div className="text-[10px] font-black uppercase tracking-[0.5em] text-emerald-900 animate-pulse">[ PROTOCOLO_DE_ACCESO ]</div>
-            <div className="border-2 border-emerald-900 p-8 max-w-md w-full mx-4 declass-access">
-              <div className="text-xs font-black uppercase tracking-[0.3em] text-emerald-500 mb-2">{line1}</div>
+            <div className={`text-[10px] font-black uppercase tracking-[0.5em] animate-pulse ${isDanger ? 'text-red-700' : 'text-emerald-900'}`}>[ PROTOCOLO_DE_ACCESO ]</div>
+            <div className={`border-2 p-8 max-w-md w-full mx-4 ${isDanger ? 'declass-access-danger border-red-900' : 'declass-access border-emerald-900'}`}>
+              <div className={`text-xs font-black uppercase tracking-[0.3em] mb-2 ${isDanger ? 'text-red-500' : 'text-emerald-500'}`}>{line1}</div>
               <div className="text-lg font-black uppercase tracking-[0.2em] text-white mb-3">{line2}</div>
-              <div className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-800 mb-4">{line3}</div>
-              <div className="w-full h-1 bg-emerald-950 overflow-hidden">
-                <div className="h-full bg-emerald-500 declass-progress"></div>
+              <div className={`text-[10px] font-black uppercase tracking-[0.2em] mb-4 ${isDanger ? 'text-red-800' : 'text-emerald-800'}`}>{line3}</div>
+              <div className={`w-full h-1 overflow-hidden ${isDanger ? 'bg-red-950' : 'bg-emerald-950'}`}>
+                <div className={`h-full declass-progress ${isDanger ? 'bg-red-500' : 'bg-emerald-500'}`}></div>
               </div>
-              <div className="text-[8px] text-emerald-950 font-black uppercase mt-2 tracking-[0.4em]">
-                CIFRADO_ELDRITCH_CEI // NIVEL_ACCESO_4
+              <div className={`text-[8px] font-black uppercase mt-2 tracking-[0.4em] ${isDanger ? 'text-red-950' : 'text-emerald-950'}`}>
+                {accessLabel}
               </div>
             </div>
           </div>
@@ -417,6 +438,24 @@
         throw lastError;
       }
 
+      // --- TOAST COMPONENT ---
+      const Toast = ({ message, type, onClose }) => {
+        useEffect(() => {
+          const t = setTimeout(onClose, 3000);
+          return () => clearTimeout(t);
+        }, []);
+        const colors = {
+          success: 'border-emerald-500 text-emerald-400 bg-emerald-950/40',
+          error: 'border-red-500 text-red-400 bg-red-950/40',
+          info: 'border-yellow-500 text-yellow-400 bg-yellow-950/40',
+        };
+        return (
+          <div className={`fixed top-6 right-6 z-[400] px-6 py-4 border backdrop-blur-md text-[11px] font-black uppercase tracking-widest animate-in slide-in-from-top-2 duration-300 shadow-2xl ${colors[type] || colors.info}`}>
+            {message}
+          </div>
+        );
+      };
+
       // --- COMPONENTES ---
       const DangerBadge = ({ level }) => {
         const colors = {
@@ -496,12 +535,13 @@
           </div>
         );
       };
-      // --- IMAGE ZOOM LIGHTBOX ---
+      // --- IMAGE ZOOM LIGHTBOX (PC + mobile pinch-zoom) ---
       const ImageZoom = ({ src, onClose }) => {
         const [scale, setScale] = useState(1);
         const [pos, setPos] = useState({ x: 0, y: 0 });
         const containerRef = useRef(null);
         const dragState = useRef({ active: false, startX: 0, startY: 0, origX: 0, origY: 0 });
+        const pinchState = useRef({ active: false, startDist: 0, startScale: 1 });
 
         useEffect(() => {
           const el = containerRef.current;
@@ -514,6 +554,9 @@
           return () => el.removeEventListener('wheel', onWheel);
         }, []);
 
+        const getDist = (t) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+        const getMid = (t) => ({ x: (t[0].clientX + t[1].clientX) / 2, y: (t[0].clientY + t[1].clientY) / 2 });
+
         const startDrag = (clientX, clientY) => {
           dragState.current = { active: true, startX: clientX, startY: clientY, origX: pos.x, origY: pos.y };
         };
@@ -523,21 +566,44 @@
           const dy = clientY - dragState.current.startY;
           setPos({ x: dragState.current.origX + dx, y: dragState.current.origY + dy });
         };
-        const endDrag = () => { dragState.current.active = false; };
+        const endDrag = () => { dragState.current.active = false; pinchState.current.active = false; };
+
+        const handleTouchStart = (e) => {
+          if (e.touches.length === 2) {
+            e.preventDefault();
+            pinchState.current = { active: true, startDist: getDist(e.touches), startScale: scale };
+            dragState.current.active = false;
+          } else if (e.touches.length === 1) {
+            startDrag(e.touches[0].clientX, e.touches[0].clientY);
+          }
+        };
+        const handleTouchMove = (e) => {
+          if (e.touches.length === 2 && pinchState.current.active) {
+            e.preventDefault();
+            const dist = getDist(e.touches);
+            const newScale = pinchState.current.startScale * (dist / pinchState.current.startDist);
+            setScale(Math.min(5, Math.max(0.5, newScale)));
+            const mid = getMid(e.touches);
+            if (dragState.current.active) moveDrag(mid.x, mid.y);
+          } else if (e.touches.length === 1 && !pinchState.current.active) {
+            moveDrag(e.touches[0].clientX, e.touches[0].clientY);
+          }
+        };
 
         return (
           <div ref={containerRef}
-            className="fixed inset-0 z-[300] bg-black/95 backdrop-blur-md flex items-center justify-center cursor-grab active:cursor-grabbing touch-none"
+            className="fixed inset-0 z-[300] bg-black/95 backdrop-blur-md flex items-center justify-center cursor-grab active:cursor-grabbing"
+            style={{ touchAction: 'none' }}
             onMouseDown={(e) => { if (e.button === 0) startDrag(e.clientX, e.clientY); }}
             onMouseMove={(e) => moveDrag(e.clientX, e.clientY)}
             onMouseUp={endDrag}
             onMouseLeave={endDrag}
-            onTouchStart={(e) => { const t = e.touches[0]; startDrag(t.clientX, t.clientY); }}
-            onTouchMove={(e) => { const t = e.touches[0]; moveDrag(t.clientX, t.clientY); }}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
             onTouchEnd={endDrag}>
             <img src={src}
               className="max-w-[90vw] max-h-[90vh] select-none pointer-events-none"
-              style={{ transform: `translate(${pos.x}px, ${pos.y}px) scale(${scale})`, transition: dragState.current.active ? 'none' : 'transform 0.1s' }}
+              style={{ transform: `translate(${pos.x}px, ${pos.y}px) scale(${scale})`, transition: dragState.current.active || pinchState.current.active ? 'none' : 'transform 0.15s' }}
               draggable="false" />
             <div className="absolute top-6 right-6 flex gap-3 z-10">
               <button onMouseDown={(e) => e.stopPropagation()} onClick={() => { setScale(1); setPos({x:0,y:0}); }}
@@ -552,6 +618,91 @@
           </div>
         );
       };
+
+      // --- CONFIRM DELETE MODAL ---
+      const ConfirmDeleteModal = ({ creature, onConfirm, onCancel }) => {
+        const [inputVal, setInputVal] = useState('');
+        const canDelete = inputVal.trim().toLowerCase() === (creature?.nombre || '').toLowerCase();
+        return (
+          <div className="fixed inset-0 z-[400] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/95 backdrop-blur-md" onClick={onCancel}></div>
+            <div className="relative w-full max-w-sm bg-black border-2 border-red-900 p-8 shadow-[0_0_80px_rgba(220,38,38,0.15)]">
+              <div className="text-[10px] text-red-500 font-black uppercase tracking-[0.5em] mb-4 animate-pulse text-center">[ PROTOCOLO_ELIMINACIÓN ]</div>
+              <div className="text-center mb-6">
+                <div className="text-xs text-red-800 font-black uppercase tracking-widest mb-2">Escriba el nombre del sujeto para confirmar:</div>
+                <div className="text-lg text-red-500 font-black uppercase italic tracking-tighter">{creature?.nombre}</div>
+              </div>
+              <input
+                autoFocus
+                className="w-full bg-red-950/10 border border-red-900 p-3 text-xs text-red-400 outline-none focus:border-red-500 uppercase text-center tracking-widest mb-6"
+                placeholder="ESCRIBA EL NOMBRE..."
+                value={inputVal}
+                onChange={(e) => setInputVal(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter' && canDelete) onConfirm(); }}
+              />
+              <div className="grid grid-cols-2 gap-3 text-[10px] font-black uppercase">
+                <button onClick={onCancel}
+                  className="py-3 border border-emerald-900 text-emerald-900 hover:text-emerald-500 transition-colors">
+                  Abortar
+                </button>
+                <button onClick={onConfirm} disabled={!canDelete}
+                  className="py-3 border border-red-900 text-red-500 hover:bg-red-600 hover:text-white transition-all disabled:opacity-20 disabled:cursor-not-allowed">
+                  Confirmar
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      // --- TERMINAL BOOT LOADING ---
+      const TerminalBoot = ({ onComplete }) => {
+        const lines = [
+          { text: '> INICIANDO_SISTEMA_ELDRITCH...', delay: 0 },
+          { text: '> VERIFICANDO_CIFRADO_CEI...', delay: 400 },
+          { text: '> PROTOCOLO_ACCESO_BIOMÉTRICO: OK', delay: 800 },
+          { text: '> CARGANDO_BASE_DE_DATOS...', delay: 1200 },
+          { text: '> SINCRONIZANDO_ARCHIVOS...', delay: 1700 },
+          { text: '> CONEXIÓN_ESTABLECIDA', delay: 2200 },
+        ];
+        const [visibleLines, setVisibleLines] = useState(0);
+        const [done, setDone] = useState(false);
+        useEffect(() => {
+          lines.forEach((_, i) => {
+            setTimeout(() => setVisibleLines(i + 1), lines[i].delay);
+          });
+          setTimeout(() => setDone(true), 2800);
+        }, []);
+        useEffect(() => {
+          if (done && onComplete) onComplete();
+        }, [done]);
+        return (
+          <div className={`min-h-screen bg-black flex flex-col items-center justify-center relative z-50 px-6 transition-opacity duration-500 ${done ? 'opacity-0' : 'opacity-100'}`}>
+            <div className="max-w-md w-full space-y-2 mb-8">
+              {lines.slice(0, visibleLines).map((l, i) => (
+                <div key={i} className={`text-[11px] font-black uppercase tracking-[0.2em] overflow-hidden whitespace-nowrap ${
+                  i === visibleLines - 1 ? 'text-emerald-400' : 'text-emerald-900'
+                }`} style={{ animation: `fieldReveal 0.3s ease-out both` }}>
+                  {l.text}
+                </div>
+              ))}
+            </div>
+            <div className="w-full max-w-md">
+              <div className="flex justify-between text-[8px] text-emerald-950 font-black uppercase tracking-[0.4em] mb-2">
+                <span>Cargando_Sistemas</span>
+                <span>{Math.min(100, Math.round((visibleLines / lines.length) * 100))}%</span>
+              </div>
+              <div className="w-full h-1 bg-emerald-950 overflow-hidden">
+                <div className="h-full bg-emerald-500 transition-all duration-500" style={{ width: `${(visibleLines / lines.length) * 100}%` }}></div>
+              </div>
+            </div>
+            <div className="mt-6 text-[9px] text-emerald-950 font-black uppercase tracking-[0.5em] animate-pulse">
+              Eldritch_Dossier_CEI
+            </div>
+          </div>
+        );
+      };
+
 
       // --- CRIATURA DEL DÍA WIDGET ---
 const DailyCreatureWidget = ({ creature, onOpen }) => {
@@ -622,6 +773,8 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
       function App() {
         const [creatures, setCreatures] = useState([]);
         const [loading, setLoading] = useState(true);
+        const [dataReady, setDataReady] = useState(false);
+        const [bootDone, setBootDone] = useState(false);
         const [saving, setSaving] = useState(false);
         const [error, setError] = useState(null);
         const [view, setView] = useState("explorer");
@@ -633,6 +786,13 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
         const [syncStatus, setSyncStatus] = useState("");
         const [declassPhase, setDeclassPhase] = useState(-1); // -1=none, 0=accessing, 1=revealed, 2=done(stamp faded)
         const [zoomImage, setZoomImage] = useState(null);
+        const [toast, setToast] = useState(null);
+        const [filterDanger, setFilterDanger] = useState("");
+        const [sortBy, setSortBy] = useState("nombre");
+        const [deleteConfirm, setDeleteConfirm] = useState(null);
+        const swipeRef = useRef({ startX: 0, startY: 0 });
+
+        const showToast = (message, type = 'success') => setToast({ message, type, key: Date.now() });
 
         const [config, setConfig] = useState({
           token: localStorage.getItem("gist_token") || "",
@@ -741,9 +901,13 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
           } catch (err) {
             setError(`SISTEMA_OFFLINE: ${err.message}`);
           } finally {
-            setLoading(false);
+            setDataReady(true);
           }
         }, [config]);
+
+        useEffect(() => {
+          if (dataReady && bootDone) setLoading(false);
+        }, [dataReady, bootDone]);
 
         useEffect(() => { loadData(); }, [loadData]);
 
@@ -833,8 +997,15 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
           } else {
             const now = new Date();
             const datePart = `${String(now.getDate()).padStart(2, "0")}${String(now.getMonth() + 1).padStart(2, "0")}${now.getFullYear()}`;
-            const count = allCreatures.length + 1;
-            const id = `ED-${datePart}-${String(count).padStart(3, "0")}`;
+            const prefix = `ED-${datePart}-`;
+            const maxSeq = allCreatures.reduce((max, c) => {
+              if (c.id && c.id.startsWith(prefix)) {
+                const seq = parseInt(c.id.split("-").pop(), 10);
+                return seq > max ? seq : max;
+              }
+              return max;
+            }, 0);
+            const id = `${prefix}${String(maxSeq + 1).padStart(3, "0")}`;
             const newItem = {
               ...formData,
               id,
@@ -848,12 +1019,19 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
           if (await syncAndPush(allCreatures)) {
             setView("explorer");
             setIsEditing(false);
+            showToast(isEditing ? '✅ Registro actualizado' : '✅ Nuevo registro creado');
           }
         };
 
         // --- ELIMINAR ---
-        const handleDelete = async (id) => {
-          if (!confirm("¿ESTÁ SEGURO DE MARCAR ESTE REGISTRO COMO 'ELIMINADO'?")) return;
+        const handleDelete = (id) => {
+          const creature = creatures.find(c => c.id === id);
+          setDeleteConfirm(creature);
+        };
+        const confirmDelete = async () => {
+          if (!deleteConfirm) return;
+          const id = deleteConfirm.id;
+          setDeleteConfirm(null);
           
           let allCreatures = await dbGetAll(true);
           const updated = allCreatures.map(c =>
@@ -861,7 +1039,10 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
           );
           
           const success = await syncAndPush(updated);
-          if (success) setSelectedCreature(null);
+          if (success) {
+            setSelectedCreature(null);
+            showToast('🗑️ Registro eliminado');
+          }
         };
 
         // --- ABRIR EDITOR ---
@@ -914,9 +1095,9 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
             const active = merged.filter(c => c.status !== "deleted");
             setCreatures(active);
             setSyncStatus("Enlace_Fusionado_Activo");
-            alert(`✅ ${active.length} criaturas activas sincronizadas`);
+            showToast(`✅ ${active.length} criaturas sincronizadas`);
           } catch (err) {
-            alert(`Error: ${err.message}`);
+            showToast(`Error: ${err.message}`, "error");
             setSyncStatus("Error_Sync");
           } finally {
             setSaving(false);
@@ -957,9 +1138,9 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
             const active = merged.filter(c => c.status !== "deleted");
             setCreatures(active);
             setSyncStatus("Enlace_Fusionado_Activo");
-            alert(`✅ ${active.length} criaturas subidas`);
+            showToast(`✅ ${active.length} criaturas subidas`);
           } catch (err) {
-            alert(`Error: ${err.message}`);
+            showToast(`Error: ${err.message}`, "error");
             setSyncStatus("Error_Sync");
           } finally {
             setSaving(false);
@@ -978,39 +1159,61 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
           return [...set].sort();
         }, [creatures]);
 
-        // --- FILTRO ---
-        const filtered = useMemo(() =>
-          creatures.filter(c => {
+        // --- FILTRO Y ORDENAMIENTO ---
+        const dangerOrder = { 'Bajo': 1, 'Medio': 2, 'Alto': 3, 'Muy Alto': 4, 'Extremo': 5, 'Absoluto': 6 };
+
+        const filtered = useMemo(() => {
+          let result = creatures.filter(c => {
             if (c.status === 'deleted') return false;
-            // Filter by name
             if (search && !(c.nombre || '').toLowerCase().includes(search.toLowerCase())) return false;
-            // Filter by mythology
             if (filterMito) {
               const m = c.origen?.mitologia;
               const arr = Array.isArray(m) ? m : (m ? [m] : []);
               if (!arr.some(v => v === filterMito)) return false;
             }
+            if (filterDanger && c.nivel_peligro !== filterDanger) return false;
             return true;
-          }),
-          [creatures, search, filterMito]
-        );
+          });
+          // Sort
+          result.sort((a, b) => {
+            if (sortBy === 'nombre') return (a.nombre || '').localeCompare(b.nombre || '');
+            if (sortBy === 'reciente') return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+            if (sortBy === 'antiguo') return new Date(a.created_at || 0) - new Date(b.created_at || 0);
+            if (sortBy === 'peligro_asc') return (dangerOrder[a.nivel_peligro] || 0) - (dangerOrder[b.nivel_peligro] || 0);
+            if (sortBy === 'peligro_desc') return (dangerOrder[b.nivel_peligro] || 0) - (dangerOrder[a.nivel_peligro] || 0);
+            return 0;
+          });
+          return result;
+        }, [creatures, search, filterMito, filterDanger, sortBy]);
 
         const currentItems = filtered.slice((page - 1) * itemsPerPage, page * itemsPerPage);
         const totalPages = Math.ceil(filtered.length / itemsPerPage);
 
+        // --- SWIPE NAVIGATION ---
+        const navigateCreature = (dir) => {
+          if (!selectedCreature) return;
+          const idx = filtered.findIndex(c => c.id === selectedCreature.id);
+          if (idx === -1) return;
+          const next = dir === 'next' ? filtered[(idx + 1) % filtered.length] : filtered[(idx - 1 + filtered.length) % filtered.length];
+          setDeclassPhase(0);
+          setSelectedCreature(next);
+        };
+        const handleSwipeStart = (e) => {
+          const t = e.touches[0];
+          swipeRef.current = { startX: t.clientX, startY: t.clientY };
+        };
+        const handleSwipeEnd = (e) => {
+          const t = e.changedTouches[0];
+          const dx = t.clientX - swipeRef.current.startX;
+          const dy = t.clientY - swipeRef.current.startY;
+          if (Math.abs(dx) > 80 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+            if (dx < 0) navigateCreature('next');
+            else navigateCreature('prev');
+          }
+        };
+
         // --- LOADING SCREEN ---
-        if (loading)
-          return (
-            <div className="min-h-screen bg-black flex flex-col items-center justify-center text-emerald-500 relative z-50">
-              <Icon name="loader" className="w-12 h-12 animate-spin mb-4" />
-              <div className="text-xl font-black animate-pulse tracking-[0.3em] uppercase italic">
-                Cargando_Sistemas
-              </div>
-              <div className="mt-2 text-[10px] text-emerald-900 uppercase">
-                Eldritch_Dossier_CEI // Cifrado_Activo
-              </div>
-            </div>
-          );
+        if (loading) return <TerminalBoot onComplete={() => setBootDone(true)} />;
 
         // --- RENDER ---
         return (
@@ -1050,6 +1253,9 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
             )}
 
             {/* === EXPLORER === */}
+            {/* === TOAST === */}
+            {toast && <Toast key={toast.key} message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
             {view === "explorer" ? (
               <main className="relative z-10 max-w-[95vw] xl:max-w-[90vw] mx-auto p-8 animate-in fade-in duration-500">
 
@@ -1063,21 +1269,18 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
                   return <DailyCreatureWidget creature={dailyCreature} onOpen={(c) => { setDeclassPhase(0); setSelectedCreature(c); }} />;
                 })()}
 
-                <div className="flex flex-col md:flex-row justify-between md:items-center gap-3 mb-10 border-l-2 border-emerald-500 pl-6 py-3 pr-6 bg-emerald-950/10 uppercase font-bold text-[10px]">
-                  <div className="text-emerald-600 tracking-widest text-xs shrink-0">
-                    Registros: {filtered.length}
-                  </div>
-                  <div className="flex gap-3 items-center flex-wrap">
-                    <select
-                      className="bg-black border border-emerald-900/30 py-2 px-3 text-[10px] text-emerald-500 outline-none uppercase font-bold cursor-pointer hover:border-emerald-500 transition-colors"
-                      value={filterMito}
-                      onChange={(e) => { setFilterMito(e.target.value); setPage(1); }}>
-                      <option value="">Todas las mitologías</option>
-                      {allMythologies.map(m => <option key={m} value={m}>{m}</option>)}
-                    </select>
-                    <div className="relative flex-1 md:w-48 group">
+                <div className="mb-10 border-l-2 border-emerald-500 pl-4 md:pl-6 py-3 pr-4 md:pr-6 bg-emerald-950/10 uppercase font-bold text-[10px] space-y-3">
+                  {/* Row 1: Search + count + refresh */}
+                  <div className="flex items-center gap-3">
+                    <div className="text-emerald-600 tracking-widest text-xs shrink-0 hidden md:block">
+                      Registros: {filtered.length}
+                    </div>
+                    <div className="text-emerald-600 tracking-widest text-xs shrink-0 md:hidden">
+                      [{filtered.length}]
+                    </div>
+                    <div className="relative flex-1 group">
                       <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-emerald-900 group-focus-within:text-emerald-500" />
-                      <input type="text" placeholder="BUSCAR POR NOMBRE..."
+                      <input type="text" placeholder="BUSCAR..."
                         className="w-full bg-black border border-emerald-900/30 py-2 pl-10 pr-4 text-[10px] focus:border-emerald-500 outline-none placeholder:text-emerald-950 uppercase"
                         value={search}
                         onChange={(e) => { setSearch(e.target.value); setPage(1); }}
@@ -1088,6 +1291,33 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
                       <Icon name="refresh" />
                     </button>
                   </div>
+                  {/* Row 2: Filters in a compact grid */}
+                  <div className="grid grid-cols-3 gap-2 md:flex md:gap-3">
+                    <select
+                      className="bg-black border border-emerald-900/30 py-2 px-2 md:px-3 text-[9px] md:text-[10px] text-emerald-500 outline-none uppercase font-bold cursor-pointer hover:border-emerald-500 transition-colors min-w-0 truncate"
+                      value={filterMito}
+                      onChange={(e) => { setFilterMito(e.target.value); setPage(1); }}>
+                      <option value="">Mitolog&iacute;a</option>
+                      {allMythologies.map(m => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                    <select
+                      className="bg-black border border-emerald-900/30 py-2 px-2 md:px-3 text-[9px] md:text-[10px] text-emerald-500 outline-none uppercase font-bold cursor-pointer hover:border-emerald-500 transition-colors min-w-0 truncate"
+                      value={filterDanger}
+                      onChange={(e) => { setFilterDanger(e.target.value); setPage(1); }}>
+                      <option value="">Nivel</option>
+                      {['Bajo','Medio','Alto','Muy Alto','Extremo','Absoluto'].map(d => <option key={d} value={d}>{d}</option>)}
+                    </select>
+                    <select
+                      className="bg-black border border-emerald-900/30 py-2 px-2 md:px-3 text-[9px] md:text-[10px] text-emerald-500 outline-none uppercase font-bold cursor-pointer hover:border-emerald-500 transition-colors min-w-0 truncate"
+                      value={sortBy}
+                      onChange={(e) => { setSortBy(e.target.value); setPage(1); }}>
+                      <option value="nombre">A &rarr; Z</option>
+                      <option value="reciente">Reciente</option>
+                      <option value="antiguo">Antiguo</option>
+                      <option value="peligro_desc">&uarr; Peligro</option>
+                      <option value="peligro_asc">&darr; Peligro</option>
+                    </select>
+                  </div>
                 </div>
 
                 {filtered.length === 0 ? (
@@ -1096,9 +1326,12 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {currentItems.map((c) => { const openCreature = (creature) => { setDeclassPhase(0); setSelectedCreature(creature); }; return (
+                    {currentItems.map((c) => {
+                      const openCreature = (creature) => { setDeclassPhase(0); setSelectedCreature(creature); };
+                      const dangerClass = c.nivel_peligro === 'Absoluto' || c.nivel_peligro === 'Extremo' ? 'card-danger-extreme' : c.nivel_peligro === 'Muy Alto' ? 'card-danger-high' : '';
+                      return (
                       <div key={c.id} onClick={() => openCreature(c)}
-                        className="group cursor-pointer bg-black border border-emerald-950 hover:border-emerald-500/40 transition-all p-1 shadow-lg overflow-hidden">
+                        className={`group cursor-pointer bg-black border border-emerald-950 hover:border-emerald-500/40 transition-all p-1 shadow-lg overflow-hidden ${dangerClass}`}>
                         <div className="relative h-56 overflow-hidden border border-emerald-950 bg-emerald-950/5">
                           <img src={c.imagen_url}
                             className="w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
@@ -1151,6 +1384,18 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
                         value={formData.imagen_url}
                         onChange={(e) => setFormData({ ...formData, imagen_url: e.target.value })}
                       />
+                      {formData.imagen_url && (
+                        <div className="mt-2 border border-emerald-900/30 bg-emerald-950/5 p-1 relative group">
+                          <img src={formData.imagen_url}
+                            className="w-full h-28 object-cover opacity-70 group-hover:opacity-100 transition-opacity"
+                            onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                            onLoad={(e) => { e.target.style.display = 'block'; if(e.target.nextSibling) e.target.nextSibling.style.display = 'none'; }}
+                          />
+                          <div className="w-full h-28 items-center justify-center text-[9px] text-red-500 uppercase font-black tracking-widest" style={{display:'none'}}>
+                            [ URL_Inválida ]
+                          </div>
+                        </div>
+                      )}
                     </div>
                     <ChipInput
                       items={formData.origen.cultura}
@@ -1224,16 +1469,42 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
               </main>
             )}
 
+            {/* === CONFIRM DELETE MODAL === */}
+            {deleteConfirm && (
+              <ConfirmDeleteModal
+                creature={deleteConfirm}
+                onConfirm={confirmDelete}
+                onCancel={() => setDeleteConfirm(null)}
+              />
+            )}
+
             {/* === MODAL DETALLE === */}
             {selectedCreature && (
-              <div className="fixed inset-0 z-[150] flex items-center justify-center p-0 md:p-8">
+              <div className="fixed inset-0 z-[150] flex items-center justify-center p-0 md:p-8"
+                onTouchStart={handleSwipeStart}
+                onTouchEnd={handleSwipeEnd}>
                 <div className="absolute inset-0 bg-black/95 backdrop-blur-sm" onClick={() => { setSelectedCreature(null); setDeclassPhase(-1); }}></div>
                 <div className="relative w-full max-w-5xl bg-black border-0 md:border border-emerald-500/30 shadow-2xl flex flex-col md:flex-row max-h-[100vh] md:max-h-[90vh] overflow-y-auto md:overflow-hidden">
+
+                  {/* === SWIPE INDICATORS (mobile) === */}
+                  {declassPhase !== 0 && filtered.length > 1 && (
+                    <>
+                      <button onClick={() => navigateCreature('prev')}
+                        className="hidden md:flex absolute left-[-50px] top-1/2 -translate-y-1/2 z-30 p-2 text-emerald-900 hover:text-emerald-500 transition-colors">
+                        <Icon name="left" className="w-6 h-6" />
+                      </button>
+                      <button onClick={() => navigateCreature('next')}
+                        className="hidden md:flex absolute right-[-50px] top-1/2 -translate-y-1/2 z-30 p-2 text-emerald-900 hover:text-emerald-500 transition-colors">
+                        <Icon name="right" className="w-6 h-6" />
+                      </button>
+                    </>
+                  )}
 
                   {/* === DECLASSIFICATION OVERLAY === */}
                   {declassPhase === 0 && (
                     <DeclassifyOverlay
                       creatureId={selectedCreature.id}
+                      dangerLevel={selectedCreature.nivel_peligro}
                       onComplete={() => setDeclassPhase(1)}
                     />
                   )}
