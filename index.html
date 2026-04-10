@@ -283,6 +283,109 @@
       }
       .declass-progress { animation: accessLine 1.6s ease-in-out both; }
       .declass-stamp-fade { opacity: 0; transition: opacity 0.8s ease-out; }
+
+      /* === AMBIENT AUDIO PROMPT === */
+      @keyframes audioPulse {
+        0%, 100% { box-shadow: 0 0 15px rgba(16,185,129,0.15), inset 0 0 30px rgba(16,185,129,0.05); }
+        50% { box-shadow: 0 0 40px rgba(16,185,129,0.3), inset 0 0 50px rgba(16,185,129,0.1); }
+      }
+      @keyframes audioWave {
+        0% { transform: scaleY(0.3); }
+        25% { transform: scaleY(1); }
+        50% { transform: scaleY(0.5); }
+        75% { transform: scaleY(0.8); }
+        100% { transform: scaleY(0.3); }
+      }
+      .audio-prompt-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 400;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0,0,0,0.92);
+        backdrop-filter: blur(8px);
+        animation: fade-in 0.4s ease-out;
+      }
+      .audio-prompt-box {
+        border: 2px solid rgb(var(--c-e500));
+        background: #000;
+        padding: 2.5rem;
+        max-width: 380px;
+        width: 90%;
+        text-align: center;
+        animation: audioPulse 2s ease-in-out infinite;
+      }
+      .audio-wave-bars {
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        gap: 3px;
+        height: 32px;
+        margin: 1.2rem auto;
+      }
+      .audio-wave-bars span {
+        display: block;
+        width: 3px;
+        background: rgb(var(--c-e500));
+        animation: audioWave 0.8s ease-in-out infinite;
+      }
+      .audio-wave-bars span:nth-child(1) { height: 60%; animation-delay: 0s; }
+      .audio-wave-bars span:nth-child(2) { height: 100%; animation-delay: 0.1s; }
+      .audio-wave-bars span:nth-child(3) { height: 40%; animation-delay: 0.2s; }
+      .audio-wave-bars span:nth-child(4) { height: 80%; animation-delay: 0.15s; }
+      .audio-wave-bars span:nth-child(5) { height: 55%; animation-delay: 0.25s; }
+      .audio-wave-bars span:nth-child(6) { height: 90%; animation-delay: 0.05s; }
+      .audio-wave-bars span:nth-child(7) { height: 45%; animation-delay: 0.3s; }
+
+      /* Audio toggle button in footer */
+      .audio-toggle-btn {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border: 1px solid rgb(var(--c-e900));
+        background: transparent;
+        color: rgb(var(--c-e900));
+        font-size: 9px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        font-family: inherit;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+      .audio-toggle-btn:hover {
+        border-color: rgb(var(--c-e500));
+        color: rgb(var(--c-e500));
+      }
+      .audio-toggle-btn.active {
+        border-color: rgb(var(--c-e500));
+        color: rgb(var(--c-e500));
+        background: rgb(var(--c-e500) / 0.08);
+      }
+      .audio-toggle-btn .audio-bars-mini {
+        display: flex;
+        align-items: flex-end;
+        gap: 1px;
+        height: 10px;
+      }
+      .audio-toggle-btn .audio-bars-mini span {
+        display: block;
+        width: 2px;
+        background: currentColor;
+        transition: height 0.3s;
+      }
+      .audio-toggle-btn.active .audio-bars-mini span {
+        animation: audioWave 0.8s ease-in-out infinite;
+      }
+      .audio-toggle-btn.active .audio-bars-mini span:nth-child(1) { height: 40%; animation-delay: 0s; }
+      .audio-toggle-btn.active .audio-bars-mini span:nth-child(2) { height: 100%; animation-delay: 0.1s; }
+      .audio-toggle-btn.active .audio-bars-mini span:nth-child(3) { height: 60%; animation-delay: 0.2s; }
+      .audio-toggle-btn.active .audio-bars-mini span:nth-child(4) { height: 80%; animation-delay: 0.15s; }
+      .audio-toggle-btn:not(.active) .audio-bars-mini span { height: 2px !important; animation: none !important; }
+
+      @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
     </style>
   </head>
   <body>
@@ -322,7 +425,7 @@
       const DeclassifyOverlay = ({ creatureId, dangerLevel, onComplete }) => {
         const isDanger = ['Extremo','Absoluto'].includes(dangerLevel);
         const isAbsoluto = dangerLevel === 'Absoluto';
-        const line1Text = isAbsoluto ? 'CONTENCIÓN_FALLIDA' : isDanger ? 'ALERTA_ACCESO_RESTRINGIDO' : 'ACCEDIENDO_ARCHIVO_CLASIFICADO';
+        const line1Text = isAbsoluto ? 'CONEXION_FALLIDA' : isDanger ? 'ALERTA_ACCESO_RESTRINGIDO' : 'ACCEDIENDO_ARCHIVO_CLASIFICADO';
         const line3Text = isAbsoluto ? 'INTEGRIDAD_SISTEMA_COMPROMETIDA...' : isDanger ? 'VERIFICANDO_NIVEL_AUTORIZACIÓN...' : 'VERIFICANDO_ACREDITACIÓN...';
         const accessLabel = isAbsoluto
           ? 'ANOMALÍA_NIVEL_ABSOLUTO // PELIGRO_EXISTENCIAL'
@@ -601,6 +704,9 @@
       // --- COMPONENTES ---
       const DangerBadge = ({ level }) => {
         const colors = {
+          Insignificante: "text-emerald-700 border-emerald-900 bg-emerald-950/20",
+          Inofensivo: "text-emerald-600 border-emerald-900 bg-emerald-950/25",
+          Neutral: "text-emerald-500 border-emerald-900 bg-emerald-950/30",
           Bajo: "text-green-400 border-green-900 bg-green-950/30",
           Medio: "text-yellow-400 border-yellow-900 bg-yellow-950/30",
           Alto: "text-orange-500 border-orange-900 bg-orange-950/30",
@@ -1101,6 +1207,12 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
         const [adminsData, setAdminsData] = useState(null);
         const swipeRef = useRef({ startX: 0, startY: 0 });
 
+        // --- AMBIENT AUDIO STATE ---
+        const ambientAudioRef = useRef(null);
+        const [ambientPlaying, setAmbientPlaying] = useState(false);
+        const [showAudioPrompt, setShowAudioPrompt] = useState(false);
+        const audioPromptShown = useRef(false);
+
         const showToast = (message, type = 'success') => setToast({ message, type, key: Date.now() });
 
         const [config, setConfig] = useState({
@@ -1117,7 +1229,7 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
           historia: "",
           descripcion_fisica: "",
           habilidades: [],
-          nivel_peligro: "Bajo",
+          nivel_peligro: "Insignificante",
           tags: [],
         });
 
@@ -1296,6 +1408,74 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
         }, [dataReady, bootDone]);
 
         useEffect(() => { loadData(); }, [loadData]);
+
+        // --- AMBIENT AUDIO SYSTEM ---
+        // Initializes <audio> element once and manages user preference via localStorage.
+        // On first visit: show a themed prompt. On subsequent visits: auto-play on first interaction.
+        useEffect(() => {
+          if (!ambientAudioRef.current) {
+            const audio = new Audio('./assets/audio/VHS.mp3');
+            audio.loop = true;
+            audio.volume = 0.15;
+            ambientAudioRef.current = audio;
+          }
+
+          const pref = localStorage.getItem('eldritch_ambient_audio');
+
+          if (pref === 'enabled') {
+            // User previously accepted — auto-play on first interaction
+            const autoStart = () => {
+              if (ambientAudioRef.current && ambientAudioRef.current.paused) {
+                ambientAudioRef.current.play().then(() => {
+                  setAmbientPlaying(true);
+                }).catch(() => {});
+              }
+              document.removeEventListener('click', autoStart, true);
+              document.removeEventListener('touchstart', autoStart, true);
+            };
+            document.addEventListener('click', autoStart, true);
+            document.addEventListener('touchstart', autoStart, true);
+            return () => {
+              document.removeEventListener('click', autoStart, true);
+              document.removeEventListener('touchstart', autoStart, true);
+            };
+          } else if (pref !== 'disabled' && !audioPromptShown.current) {
+            // First visit (no preference set) — show prompt after app loads
+            if (!loading) {
+              audioPromptShown.current = true;
+              setShowAudioPrompt(true);
+            }
+          }
+        }, [loading]);
+
+        const handleAudioAccept = () => {
+          localStorage.setItem('eldritch_ambient_audio', 'enabled');
+          setShowAudioPrompt(false);
+          if (ambientAudioRef.current) {
+            ambientAudioRef.current.play().then(() => {
+              setAmbientPlaying(true);
+            }).catch(() => {});
+          }
+        };
+
+        const handleAudioDecline = () => {
+          localStorage.setItem('eldritch_ambient_audio', 'disabled');
+          setShowAudioPrompt(false);
+        };
+
+        const toggleAmbientAudio = () => {
+          if (!ambientAudioRef.current) return;
+          if (ambientPlaying) {
+            ambientAudioRef.current.pause();
+            setAmbientPlaying(false);
+            localStorage.setItem('eldritch_ambient_audio', 'disabled');
+          } else {
+            ambientAudioRef.current.play().then(() => {
+              setAmbientPlaying(true);
+              localStorage.setItem('eldritch_ambient_audio', 'enabled');
+            }).catch(() => {});
+          }
+        };
 
         // --- GUARD: redirect from editor if not authed ---
         useEffect(() => {
@@ -1512,7 +1692,7 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
               historia: "",
               descripcion_fisica: "",
               habilidades: [],
-              nivel_peligro: "Bajo",
+              nivel_peligro: "Insignificante",
               tags: [],
             });
             setIsEditing(false);
@@ -1604,7 +1784,7 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
         }, [creatures]);
 
         // --- FILTRO Y ORDENAMIENTO ---
-        const dangerOrder = { 'Bajo': 1, 'Medio': 2, 'Alto': 3, 'Muy Alto': 4, 'Extremo': 5, 'Absoluto': 6 };
+        const dangerOrder = { 'Insignificante': 1, 'Inofensivo': 2, 'Neutral': 3, 'Bajo': 4, 'Medio': 5, 'Alto': 6, 'Muy Alto': 7, 'Extremo': 8, 'Absoluto': 9 };
 
         const filtered = useMemo(() => {
           let result = creatures.filter(c => {
@@ -1764,7 +1944,7 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
                       value={filterDanger}
                       onChange={(e) => { setFilterDanger(e.target.value); setPage(1); }}>
                       <option value="">Nivel</option>
-                      {['Bajo','Medio','Alto','Muy Alto','Extremo','Absoluto'].map(d => <option key={d} value={d}>{d}</option>)}
+                      {['Insignificante','Inofensivo','Neutral','Bajo','Medio','Alto','Muy Alto','Extremo','Absoluto'].map(d => <option key={d} value={d}>{d}</option>)}
                     </select>
                     <select
                       className="bg-black border border-emerald-900/30 py-2 px-2 md:px-3 text-[9px] md:text-[10px] text-emerald-500 outline-none uppercase font-bold cursor-pointer hover:border-emerald-500 transition-colors min-w-0 truncate"
@@ -1880,7 +2060,7 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
                       <select className="w-full bg-emerald-950/20 border border-emerald-900 p-3 text-xs text-emerald-400 outline-none cursor-pointer"
                         value={formData.nivel_peligro}
                         onChange={(e) => setFormData({ ...formData, nivel_peligro: e.target.value })}>
-                        {["Bajo", "Medio", "Alto", "Muy Alto", "Extremo", "Absoluto"].map(lvl =>
+                        {["Insignificante", "Inofensivo", "Neutral", "Bajo", "Medio", "Alto", "Muy Alto", "Extremo", "Absoluto"].map(lvl =>
                           <option key={lvl} value={lvl}>{lvl}</option>
                         )}
                       </select>
@@ -2188,13 +2368,49 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
               </div>
             )}
 
+            {/* === AUDIO PROMPT (first visit) === */}
+            {showAudioPrompt && (
+              <div className="audio-prompt-overlay">
+                <div className="audio-prompt-box">
+                  <div className="text-[10px] text-emerald-950 font-black uppercase tracking-[0.5em] mb-3">[ Sistema_Audio ]</div>
+                  <div className="audio-wave-bars">
+                    <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+                  </div>
+                  <h3 className="text-lg font-black uppercase tracking-tighter italic text-emerald-500 mb-2">Audio Ambiental</h3>
+                  <p className="text-[10px] text-emerald-800 font-black uppercase tracking-widest mb-6 leading-relaxed">
+                    ¿Activar audio ambiental para mejorar la experiencia de inmersión?
+                  </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button onClick={handleAudioDecline}
+                      className="py-3 border border-emerald-900 text-emerald-900 hover:text-red-500 hover:border-red-500 text-[10px] font-black uppercase tracking-widest transition-all">
+                      Silencio
+                    </button>
+                    <button onClick={handleAudioAccept}
+                      className="py-3 bg-emerald-500 text-black font-black uppercase text-[10px] tracking-[0.2em] hover:bg-white transition-all">
+                      ▶ Activar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <footer className="fixed bottom-0 left-0 right-0 p-5 border-t border-emerald-950 bg-black/90 flex justify-between items-center px-10 text-[9px] font-black text-emerald-950 tracking-[0.3em] uppercase backdrop-blur-md z-[120]">
               <div className="hidden sm:block italic opacity-60">
                 Eldritch_Dossier_CEI // V5.1_07042026
               </div>
-              <div className="animate-pulse flex items-center gap-3">
-                <div className={`w-1.5 h-1.5 rounded-full shadow-[0_0_5px_#10b981] ${creatures.length > 0 ? "bg-emerald-500" : "bg-red-600 animate-ping"}`}></div>
-                {syncStatus || (creatures.length > 0 ? "Enlace_Fusionado_Activo" : "Esperando_Acreditación")}
+              <div className="flex items-center gap-4">
+                <button onClick={toggleAmbientAudio}
+                  className={`audio-toggle-btn ${ambientPlaying ? 'active' : ''}`}
+                  title={ambientPlaying ? 'Silenciar audio ambiental' : 'Activar audio ambiental'}>
+                  <div className="audio-bars-mini">
+                    <span></span><span></span><span></span><span></span>
+                  </div>
+                  {ambientPlaying ? 'ON' : 'OFF'}
+                </button>
+                <div className="animate-pulse flex items-center gap-3">
+                  <div className={`w-1.5 h-1.5 rounded-full shadow-[0_0_5px_#10b981] ${creatures.length > 0 ? "bg-emerald-500" : "bg-red-600 animate-ping"}`}></div>
+                  {syncStatus || (creatures.length > 0 ? "Enlace_Fusionado_Activo" : "Esperando_Acreditación")}
+                </div>
               </div>
             </footer>
           </div>
@@ -2206,50 +2422,232 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
       root.render(<App />);
     </script>
 
-    <!-- Distortion Click Sound -->
+    <!-- CRT Terminal Sound System -->
     <script>
       (function() {
         let audioCtx = null;
-        function getAudioCtx() {
+        function getCtx() {
           if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          if (audioCtx.state === 'suspended') audioCtx.resume();
           return audioCtx;
         }
-        function playDistortionClick() {
+
+        // Create a noise buffer (used for static/crackle textures)
+        function createNoiseBuffer(ctx, duration) {
+          const len = ctx.sampleRate * duration;
+          const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+          const data = buf.getChannelData(0);
+          for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+          return buf;
+        }
+
+        // === PRIMARY CLICK: CRT electromagnetic relay snap ===
+        function playCRTClick() {
           try {
-            const ctx = getAudioCtx();
-            const duration = 0.06;
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            const distortion = ctx.createWaveShaper();
+            const ctx = getCtx();
+            const t = ctx.currentTime;
+            const master = ctx.createGain();
+            master.gain.setValueAtTime(0.12, t);
+            master.connect(ctx.destination);
 
-            const samples = 256;
-            const curve = new Float32Array(samples);
-            for (let i = 0; i < samples; i++) {
-              const x = (i * 2) / samples - 1;
-              curve[i] = (Math.PI + 200) * x / (Math.PI + 200 * Math.abs(x));
-            }
-            distortion.curve = curve;
-            distortion.oversample = '4x';
+            // Layer 1: Sharp transient pop (relay contact)
+            const pop = ctx.createOscillator();
+            const popGain = ctx.createGain();
+            const popFilter = ctx.createBiquadFilter();
+            pop.type = 'square';
+            pop.frequency.setValueAtTime(2200 + Math.random() * 600, t);
+            pop.frequency.exponentialRampToValueAtTime(200, t + 0.015);
+            popFilter.type = 'bandpass';
+            popFilter.frequency.setValueAtTime(1800, t);
+            popFilter.Q.setValueAtTime(2, t);
+            popGain.gain.setValueAtTime(0.6, t);
+            popGain.gain.exponentialRampToValueAtTime(0.001, t + 0.025);
+            pop.connect(popFilter);
+            popFilter.connect(popGain);
+            popGain.connect(master);
+            pop.start(t);
+            pop.stop(t + 0.03);
 
-            osc.type = 'square';
-            osc.frequency.setValueAtTime(180 + Math.random() * 80, ctx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + duration);
+            // Layer 2: Sub-bass thud (CRT degauss feel)
+            const sub = ctx.createOscillator();
+            const subGain = ctx.createGain();
+            sub.type = 'sine';
+            sub.frequency.setValueAtTime(65 + Math.random() * 20, t);
+            sub.frequency.exponentialRampToValueAtTime(30, t + 0.06);
+            subGain.gain.setValueAtTime(0.35, t);
+            subGain.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
+            sub.connect(subGain);
+            subGain.connect(master);
+            sub.start(t);
+            sub.stop(t + 0.08);
 
-            gain.gain.setValueAtTime(0.08, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+            // Layer 3: Noise crackle (static discharge)
+            const noise = ctx.createBufferSource();
+            noise.buffer = createNoiseBuffer(ctx, 0.04);
+            const noiseFilter = ctx.createBiquadFilter();
+            noiseFilter.type = 'highpass';
+            noiseFilter.frequency.setValueAtTime(3000, t);
+            const noiseGain = ctx.createGain();
+            noiseGain.gain.setValueAtTime(0.08, t);
+            noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
+            noise.connect(noiseFilter);
+            noiseFilter.connect(noiseGain);
+            noiseGain.connect(master);
+            noise.start(t);
 
-            osc.connect(distortion);
-            distortion.connect(gain);
-            gain.connect(ctx.destination);
-
-            osc.start(ctx.currentTime);
-            osc.stop(ctx.currentTime + duration);
+            // Layer 4: Resonant ring (electromagnetic whine)
+            const ring = ctx.createOscillator();
+            const ringGain = ctx.createGain();
+            ring.type = 'sine';
+            ring.frequency.setValueAtTime(4800 + Math.random() * 400, t);
+            ringGain.gain.setValueAtTime(0.02, t);
+            ringGain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+            ring.connect(ringGain);
+            ringGain.connect(master);
+            ring.start(t);
+            ring.stop(t + 0.06);
           } catch(e) {}
         }
 
+        // === GLITCH CLICK: Audio glitch for Absoluto/danger elements ===
+        // Simulates a digital signal corruption — rapid stuttering pitch shifts,
+        // buffer-corruption noise, and chaotic frequency jumps
+        function playGlitchClick() {
+          try {
+            const ctx = getCtx();
+            const t = ctx.currentTime;
+            const master = ctx.createGain();
+            master.gain.setValueAtTime(0.13, t);
+            master.connect(ctx.destination);
+
+            // Layer 1: Rapid stutter glitch — multiple short bursts at random pitches
+            const stutterCount = 3 + Math.floor(Math.random() * 3); // 3-5 stutters
+            const stutterDur = 0.018;
+            for (let s = 0; s < stutterCount; s++) {
+              const offset = s * (stutterDur + 0.005 * Math.random());
+              const osc = ctx.createOscillator();
+              const g = ctx.createGain();
+              const dist = ctx.createWaveShaper();
+              const curve = new Float32Array(256);
+              for (let i = 0; i < 256; i++) {
+                const x = (i * 2) / 256 - 1;
+                curve[i] = Math.sign(x) * Math.pow(Math.abs(x), 0.3);
+              }
+              dist.curve = curve;
+              osc.type = ['square','sawtooth'][Math.floor(Math.random()*2)];
+              // Chaotic frequency jumps
+              const baseFreq = 80 + Math.random() * 2400;
+              osc.frequency.setValueAtTime(baseFreq, t + offset);
+              osc.frequency.setValueAtTime(baseFreq * (0.3 + Math.random() * 2), t + offset + stutterDur * 0.5);
+              g.gain.setValueAtTime(0.15 + Math.random() * 0.25, t + offset);
+              g.gain.setValueAtTime(0, t + offset + stutterDur);
+              osc.connect(dist);
+              dist.connect(g);
+              g.connect(master);
+              osc.start(t + offset);
+              osc.stop(t + offset + stutterDur + 0.002);
+            }
+
+            // Layer 2: Corrupted noise burst (bitcrushed texture)
+            const totalDur = stutterCount * 0.025;
+            const noiseBuf = createNoiseBuffer(ctx, totalDur + 0.04);
+            // Corrupt the buffer data for digital artifact feel
+            const bufData = noiseBuf.getChannelData(0);
+            for (let i = 0; i < bufData.length; i++) {
+              if (Math.random() < 0.15) bufData[i] = Math.sign(bufData[i]); // bit crush random samples
+              if (Math.random() < 0.05) bufData[i] = 0; // dropout
+            }
+            const noiseSrc = ctx.createBufferSource();
+            noiseSrc.buffer = noiseBuf;
+            const nBand = ctx.createBiquadFilter();
+            nBand.type = 'bandpass';
+            nBand.frequency.setValueAtTime(1200 + Math.random() * 2000, t);
+            nBand.Q.setValueAtTime(3, t);
+            const nGain = ctx.createGain();
+            nGain.gain.setValueAtTime(0.1, t);
+            nGain.gain.exponentialRampToValueAtTime(0.001, t + totalDur + 0.03);
+            noiseSrc.connect(nBand);
+            nBand.connect(nGain);
+            nGain.connect(master);
+            noiseSrc.start(t);
+
+            // Layer 3: Sub-bass distortion thud
+            const sub = ctx.createOscillator();
+            const subG = ctx.createGain();
+            sub.type = 'sawtooth';
+            sub.frequency.setValueAtTime(50, t);
+            sub.frequency.exponentialRampToValueAtTime(20, t + 0.1);
+            subG.gain.setValueAtTime(0.3, t);
+            subG.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+            sub.connect(subG);
+            subG.connect(master);
+            sub.start(t);
+            sub.stop(t + 0.13);
+
+            // Layer 4: High-frequency interference whine (like a broken CRT)
+            const whine = ctx.createOscillator();
+            const whineG = ctx.createGain();
+            whine.type = 'sine';
+            whine.frequency.setValueAtTime(6000 + Math.random() * 2000, t);
+            whine.frequency.linearRampToValueAtTime(200 + Math.random() * 500, t + 0.08);
+            whineG.gain.setValueAtTime(0.04, t);
+            whineG.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+            whine.connect(whineG);
+            whineG.connect(master);
+            whine.start(t);
+            whine.stop(t + 0.09);
+          } catch(e) {}
+        }
+
+        // === HOVER SOUND: Subtle static hum ===
+        function playHoverHum() {
+          try {
+            const ctx = getCtx();
+            const t = ctx.currentTime;
+
+            const noise = ctx.createBufferSource();
+            noise.buffer = createNoiseBuffer(ctx, 0.06);
+            const filter = ctx.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(2000 + Math.random() * 1000, t);
+            filter.Q.setValueAtTime(5, t);
+            const gain = ctx.createGain();
+            gain.gain.setValueAtTime(0.015, t);
+            gain.gain.linearRampToValueAtTime(0.025, t + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+            noise.connect(filter);
+            filter.connect(gain);
+            gain.connect(ctx.destination);
+            noise.start(t);
+          } catch(e) {}
+        }
+
+        // --- Event listeners ---
         document.addEventListener('click', function(e) {
-          const el = e.target.closest('button, a, .cursor-pointer, [onclick]');
-          if (el) playDistortionClick();
+          const el = e.target.closest('button, a, .cursor-pointer, [onclick], select, input');
+          if (!el) return;
+
+          // Check if clicking on a danger-related element
+          const isDanger = el.closest('.card-danger-extreme, .card-danger-absolute, .declass-access-danger, .declass-access-void') ||
+                          el.textContent?.includes('Eliminar') ||
+                          el.textContent?.includes('CLASIFICADO');
+          if (isDanger) {
+            playGlitchClick();
+          } else {
+            playCRTClick();
+          }
+        }, true);
+
+        // Hover sound on interactive cards and buttons (throttled)
+        let lastHover = 0;
+        document.addEventListener('mouseenter', function(e) {
+          const now = Date.now();
+          if (now - lastHover < 80) return; // throttle
+          const el = e.target.closest('.group.cursor-pointer, .card-danger-extreme, .card-danger-absolute');
+          if (el) {
+            lastHover = now;
+            playHoverHum();
+          }
         }, true);
       })();
     </script>
