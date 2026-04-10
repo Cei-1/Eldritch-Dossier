@@ -1477,6 +1477,28 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
           }
         };
 
+        // --- PAUSE AUDIO WHEN TAB IS NOT VISIBLE ---
+        const wasPlayingBeforeHidden = useRef(false);
+        useEffect(() => {
+          const handleVisibility = () => {
+            if (!ambientAudioRef.current) return;
+            if (document.hidden) {
+              // Tab lost focus — remember state and pause
+              wasPlayingBeforeHidden.current = ambientPlaying;
+              if (!ambientAudioRef.current.paused) {
+                ambientAudioRef.current.pause();
+              }
+            } else {
+              // Tab regained focus — resume only if it was playing before
+              if (wasPlayingBeforeHidden.current) {
+                ambientAudioRef.current.play().catch(() => {});
+              }
+            }
+          };
+          document.addEventListener('visibilitychange', handleVisibility);
+          return () => document.removeEventListener('visibilitychange', handleVisibility);
+        }, [ambientPlaying]);
+
         // --- GUARD: redirect from editor if not authed ---
         useEffect(() => {
           if (!currentUser && view === 'editor') setView('explorer');
