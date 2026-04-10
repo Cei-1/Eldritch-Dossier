@@ -1095,6 +1095,7 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
         const [filterDanger, setFilterDanger] = useState("");
         const [sortBy, setSortBy] = useState("nombre");
         const [deleteConfirm, setDeleteConfirm] = useState(null);
+        const [saveConfirm, setSaveConfirm] = useState(false);
         const [currentUser, setCurrentUser] = useState(null);
         const [showAuthModal, setShowAuthModal] = useState(false);
         const [adminsData, setAdminsData] = useState(null);
@@ -1422,8 +1423,13 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
         };
 
         // --- GUARDAR CRIATURA ---
-        const handleSave = async (e) => {
+        const handleSave = (e) => {
           e.preventDefault();
+          setSaveConfirm(true);
+        };
+
+        const confirmSave = async () => {
+          setSaveConfirm(false);
           const nowIso = new Date().toISOString();
           let allCreatures = await dbGetAll(true);
 
@@ -1920,6 +1926,38 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
                   </div>
                 </form>
               </main>
+            )}
+
+            {/* === CONFIRM SAVE MODAL === */}
+            {saveConfirm && (
+              <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+                <div className="absolute inset-0 bg-black/95 backdrop-blur-md" onClick={() => setSaveConfirm(false)}></div>
+                <div className="relative bg-black border-2 border-emerald-500 p-10 max-w-md w-full shadow-[0_0_100px_rgba(16,185,129,0.15)]">
+                  <div className="text-center space-y-6">
+                    <div className="text-[10px] text-emerald-950 font-black uppercase tracking-[0.5em]">[ Confirmación ]</div>
+                    <h3 className="text-lg font-black uppercase tracking-tighter italic text-emerald-500">
+                      {isEditing ? 'ACTUALIZAR_REGISTRO' : 'CREAR_REGISTRO'}
+                    </h3>
+                    <div className="border border-emerald-900 p-4">
+                      <div className="text-[9px] text-emerald-800 font-black uppercase tracking-widest mb-2">Identidad</div>
+                      <div className="text-sm text-emerald-400 font-bold">{formData.nombre || 'Sin nombre'}</div>
+                    </div>
+                    <p className="text-[10px] text-emerald-800 font-black uppercase tracking-widest">
+                      {isEditing ? '¿Desea guardar los cambios realizados?' : '¿Desea registrar esta nueva criatura?'}
+                    </p>
+                    <div className="grid grid-cols-2 gap-4 pt-4">
+                      <button type="button" onClick={() => setSaveConfirm(false)}
+                        className="py-4 border border-emerald-900 text-emerald-900 hover:text-red-500 hover:border-red-500 text-[10px] font-black uppercase tracking-widest transition-all">
+                        Cancelar
+                      </button>
+                      <button type="button" onClick={confirmSave}
+                        className="py-4 bg-emerald-500 text-black font-black uppercase text-[10px] tracking-[0.2em] hover:bg-white transition-all flex items-center justify-center gap-2">
+                        <Icon name="save" /> Confirmar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             )}
 
             {/* === CONFIRM DELETE MODAL === */}
