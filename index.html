@@ -284,6 +284,103 @@
       .declass-progress { animation: accessLine 1.6s ease-in-out both; }
       .declass-stamp-fade { opacity: 0; transition: opacity 0.8s ease-out; }
 
+      /* === NYARLATHOTEP CORRUPTION THEME === */
+      .theme-corrupted {
+        --c-e400: 156 163 175;
+        --c-e500: 107 114 128;
+        --c-e600: 75 85 99;
+        --c-e700: 55 65 81;
+        --c-e800: 31 41 55;
+        --c-e900: 17 24 39;
+        --c-e950: 7 11 20;
+      }
+      .theme-corrupted .crt-overlay {
+        background:
+          linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.02), rgba(150, 150, 150, 0.02), rgba(100, 100, 100, 0.02));
+        background-size: 100% var(--crt-line-size), 3px 100%;
+      }
+      .theme-corrupted .scanline {
+        background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(150,150,150,0.03) 10%, rgba(0,0,0,0.1) 100%);
+      }
+
+      /* === CORRUPTION GLITCH OVERLAY === */
+      @keyframes corruptionGlitch {
+        0% { clip-path: inset(0 0 0 0); transform: translate(0); }
+        2% { clip-path: inset(80% 0 0 0); transform: translate(-10px, 5px); }
+        4% { clip-path: inset(10% 0 60% 0); transform: translate(15px, -3px); }
+        6% { clip-path: inset(40% 0 20% 0); transform: translate(-8px, 8px); }
+        8% { clip-path: inset(0 0 80% 0); transform: translate(12px, -6px); }
+        10% { clip-path: inset(60% 0 5% 0); transform: translate(-15px, 2px); }
+        12% { clip-path: inset(0 0 0 0); transform: translate(0); }
+        14% { clip-path: inset(20% 0 30% 0); transform: translate(8px, 4px) skewX(5deg); }
+        16% { clip-path: inset(50% 0 10% 0); transform: translate(-12px, -8px) skewX(-3deg); }
+        18% { clip-path: inset(5% 0 70% 0); transform: translate(6px, 10px); }
+        20%, 100% { clip-path: inset(0 0 0 0); transform: translate(0); }
+      }
+      @keyframes corruptionFlash {
+        0%, 9%, 12%, 15%, 30%, 33%, 50%, 53%, 70%, 100% { opacity: 0; }
+        10%, 11% { opacity: 1; background: white; }
+        13%, 14% { opacity: 0.7; background: rgb(107,114,128); }
+        31%, 32% { opacity: 0.5; background: white; }
+        51%, 52% { opacity: 0.8; background: rgb(55,65,81); }
+      }
+      @keyframes corruptionText {
+        0% { opacity: 0; transform: translateY(20px); filter: blur(8px); }
+        100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+      }
+      @keyframes corruptionScan {
+        0% { top: -10%; }
+        100% { top: 110%; }
+      }
+      @keyframes corruptionShake {
+        0%, 100% { transform: translate(0) rotate(0); }
+        10% { transform: translate(-5px, 3px) rotate(-0.5deg); }
+        20% { transform: translate(4px, -4px) rotate(0.5deg); }
+        30% { transform: translate(-3px, 5px) rotate(-0.3deg); }
+        40% { transform: translate(6px, -2px) rotate(0.4deg); }
+        50% { transform: translate(-4px, 4px) rotate(-0.6deg); }
+        60% { transform: translate(3px, -5px) rotate(0.3deg); }
+        70% { transform: translate(-6px, 2px) rotate(-0.4deg); }
+        80% { transform: translate(5px, 3px) rotate(0.5deg); }
+        90% { transform: translate(-3px, -3px) rotate(-0.2deg); }
+      }
+      .corruption-overlay {
+        position: fixed; inset: 0; z-index: 9999;
+        background: black;
+        display: flex; align-items: center; justify-content: center; flex-direction: column;
+      }
+      .corruption-glitch-layer {
+        position: absolute; inset: 0;
+        animation: corruptionGlitch 0.8s step-end infinite;
+        background: repeating-linear-gradient(
+          0deg,
+          transparent 0px, transparent 2px,
+          rgba(107,114,128,0.08) 2px, rgba(107,114,128,0.08) 4px
+        );
+      }
+      .corruption-flash {
+        position: absolute; inset: 0;
+        animation: corruptionFlash 2s step-end forwards;
+        pointer-events: none;
+      }
+      .corruption-scan-bar {
+        position: absolute; left: 0; right: 0; height: 4px;
+        background: rgba(107,114,128,0.6);
+        box-shadow: 0 0 30px rgba(107,114,128,0.4);
+        animation: corruptionScan 0.6s linear infinite;
+      }
+      .corruption-msg {
+        position: relative; z-index: 2;
+        text-align: center;
+        animation: corruptionShake 0.3s ease-in-out 10;
+        animation-fill-mode: forwards;
+      }
+      .corruption-msg .msg-line {
+        animation: corruptionText 4s ease-out both;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      }
+
       /* === AMBIENT AUDIO PROMPT === */
       @keyframes audioPulse {
         0%, 100% { box-shadow: 0 0 15px rgba(16,185,129,0.15), inset 0 0 30px rgba(16,185,129,0.05); }
@@ -425,7 +522,7 @@
       const DeclassifyOverlay = ({ creatureId, dangerLevel, onComplete }) => {
         const isDanger = ['Extremo','Absoluto'].includes(dangerLevel);
         const isAbsoluto = dangerLevel === 'Absoluto';
-        const line1Text = isAbsoluto ? 'CONEXION_FALLIDA' : isDanger ? 'ALERTA_ACCESO_RESTRINGIDO' : 'ACCEDIENDO_ARCHIVO_CLASIFICADO';
+        const line1Text = isAbsoluto ? 'CONEXIÓN_FALLIDA' : isDanger ? 'ALERTA_ACCESO_RESTRINGIDO' : 'ACCEDIENDO_ARCHIVO_CLASIFICADO';
         const line3Text = isAbsoluto ? 'INTEGRIDAD_SISTEMA_COMPROMETIDA...' : isDanger ? 'VERIFICANDO_NIVEL_AUTORIZACIÓN...' : 'VERIFICANDO_ACREDITACIÓN...';
         const accessLabel = isAbsoluto
           ? 'ANOMALÍA_NIVEL_ABSOLUTO // PELIGRO_EXISTENCIAL'
@@ -436,6 +533,10 @@
         const line4Warn = useScrambleText(isAbsoluto ? '[ ADVERTENCIA: LECTURA_PUEDE_CAUSAR_DAÑO_COGNITIVO ]' : '', isAbsoluto, 1500);
 
         useEffect(() => {
+          // Play Glitch.mp3 for all creatures
+          const glitchAudio = new Audio('./assets/audio/Glitch.mp3');
+          glitchAudio.volume = 0.5;
+          glitchAudio.play().catch(() => {});
           const timer = setTimeout(() => onComplete(), isAbsoluto ? 2800 : isDanger ? 2200 : 1800);
           return () => clearTimeout(timer);
         }, []);
@@ -1205,6 +1306,16 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
         const [currentUser, setCurrentUser] = useState(null);
         const [showAuthModal, setShowAuthModal] = useState(false);
         const [adminsData, setAdminsData] = useState(null);
+        const lovecraftCounter = useRef(0);
+        const [corruptionActive, setCorruptionActive] = useState(false);
+        const [themeCorrupted, setThemeCorrupted] = useState(() => {
+          const saved = localStorage.getItem('eldritch_corruption');
+          if (saved) {
+            const today = new Date().toDateString();
+            return saved === today;
+          }
+          return false;
+        });
         const swipeRef = useRef({ startX: 0, startY: 0 });
 
         // --- AMBIENT AUDIO STATE ---
@@ -1415,8 +1526,71 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
         useEffect(() => {
           if (!ambientAudioRef.current) {
             const audio = new Audio('./assets/audio/VHS.mp3');
-            audio.loop = true;
+            audio.loop = false;
             audio.volume = 0.15;
+
+            // Seamless loop via crossfade: start a clone before the track ends
+            const CROSSFADE_TIME = 2; // seconds before end to start fading
+            let crossfading = false;
+
+            audio.addEventListener('timeupdate', () => {
+              if (!crossfading && audio.duration && audio.currentTime > audio.duration - CROSSFADE_TIME) {
+                crossfading = true;
+                // Create a clone that starts from 0
+                const clone = audio.cloneNode();
+                clone.volume = 0;
+                clone.play().catch(() => {});
+
+                // Fade out current, fade in clone
+                const fadeSteps = 20;
+                const fadeInterval = (CROSSFADE_TIME * 1000) / fadeSteps;
+                let step = 0;
+                const targetVol = audio.volume;
+                const fader = setInterval(() => {
+                  step++;
+                  const progress = step / fadeSteps;
+                  clone.volume = targetVol * progress;
+                  audio.volume = targetVol * (1 - progress);
+                  if (step >= fadeSteps) {
+                    clearInterval(fader);
+                    audio.pause();
+                    audio.currentTime = 0;
+                    audio.volume = targetVol;
+                    // Swap: clone becomes the main audio
+                    ambientAudioRef.current = clone;
+                    crossfading = false;
+                    // Attach the same crossfade logic to clone
+                    let cloneCrossfading = false;
+                    clone.addEventListener('timeupdate', function cloneHandler() {
+                      if (!cloneCrossfading && clone.duration && clone.currentTime > clone.duration - CROSSFADE_TIME) {
+                        cloneCrossfading = true;
+                        clone.removeEventListener('timeupdate', cloneHandler);
+                        // Restart original
+                        audio.currentTime = 0;
+                        audio.volume = 0;
+                        audio.play().catch(() => {});
+                        let s2 = 0;
+                        const f2 = setInterval(() => {
+                          s2++;
+                          const p2 = s2 / fadeSteps;
+                          audio.volume = targetVol * p2;
+                          clone.volume = targetVol * (1 - p2);
+                          if (s2 >= fadeSteps) {
+                            clearInterval(f2);
+                            clone.pause();
+                            clone.currentTime = 0;
+                            clone.volume = targetVol;
+                            ambientAudioRef.current = audio;
+                            crossfading = false;
+                          }
+                        }, fadeInterval);
+                      }
+                    });
+                  }
+                }, fadeInterval);
+              }
+            });
+
             ambientAudioRef.current = audio;
           }
 
@@ -1858,12 +2032,71 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
           }
         };
 
+        // --- EASTER EGG: CORRUPTION OVERLAY ---
+        const CorruptionOverlay = () => {
+          const audioRef = useRef(null);
+
+          useEffect(() => {
+            const audio = new Audio('./assets/audio/Interferencia.mp3');
+            audio.volume = 0.7;
+            audioRef.current = audio;
+
+            const handleEnded = () => {
+              setCorruptionActive(false);
+              setThemeCorrupted(true);
+              localStorage.setItem('eldritch_corruption', new Date().toDateString());
+              // Open Nyarlathotep
+              const nyar = creatures.find(c => c.nombre && c.nombre.toLowerCase().includes('nyarlathotep'));
+              if (nyar) {
+                setDeclassPhase(0);
+                setSelectedCreature(nyar);
+              }
+            };
+
+            audio.addEventListener('ended', handleEnded);
+            audio.play().catch(() => {
+              // If autoplay blocked, fallback to timeout
+              setTimeout(handleEnded, 5000);
+            });
+
+            return () => {
+              audio.removeEventListener('ended', handleEnded);
+              audio.pause();
+              audio.currentTime = 0;
+            };
+          }, []);
+
+          return (
+            <div className="corruption-overlay">
+              <div className="corruption-glitch-layer"></div>
+              <div className="corruption-flash"></div>
+              <div className="corruption-scan-bar"></div>
+              <div className="corruption-msg">
+                <div className="msg-line text-[10px] text-gray-700 font-black uppercase tracking-[0.6em] mb-6" style={{animationDelay: '0.3s', animationDuration: '4.5s'}}>
+                  [ ADVERTENCIA_CRÍTICA ]
+                </div>
+                <div className="msg-line text-2xl md:text-4xl font-black uppercase italic text-gray-400 mb-4" style={{animationDelay: '0.8s', animationDuration: '3.5s'}}>
+                  ÉL TAMBIÉN TE OBSERVA
+                </div>
+                <div className="msg-line text-[10px] text-gray-600 font-black uppercase tracking-[0.4em] leading-relaxed" style={{animationDelay: '1.5s', animationDuration: '3s'}}>
+                  Has mirado demasiado tiempo al abismo...<br/>
+                  y algo ha notado tu presencia.
+                </div>
+                <div className="msg-line text-[9px] text-gray-800 font-black uppercase tracking-[0.8em] mt-8" style={{animationDelay: '2.5s', animationDuration: '2.5s'}}>
+                  El Caos Reptante sabe tu nombre.
+                </div>
+              </div>
+            </div>
+          );
+        };
+
         // --- LOADING SCREEN ---
         if (loading) return <TerminalBoot onComplete={() => setBootDone(true)} />;
 
         // --- RENDER ---
         return (
-          <div className="min-h-screen relative overflow-hidden pb-20">
+          <div className={`min-h-screen relative overflow-hidden pb-20 ${themeCorrupted ? 'theme-corrupted' : ''}`}>
+            {corruptionActive && <CorruptionOverlay />}
             <header className="relative z-10 pt-10 pb-6 border-b border-emerald-900/40 px-6 bg-black/60 backdrop-blur-md">
               <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
                 <div onClick={() => setView("explorer")} className="cursor-pointer text-center md:text-left">
@@ -1988,7 +2221,23 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {currentItems.map((c) => {
-                      const openCreature = (creature) => { setDeclassPhase(0); setSelectedCreature(creature); };
+                      const openCreature = (creature) => {
+                        // --- EASTER EGG: track consecutive Lovecraftian opens ---
+                        const toArr = (v) => Array.isArray(v) ? v : (v ? [v] : []);
+                        const mitos = toArr(creature.origen?.mitologia).map(m => m.toLowerCase());
+                        if (mitos.some(m => m.includes('lovecraftiana'))) {
+                          lovecraftCounter.current += 1;
+                          if (lovecraftCounter.current >= 3 && !themeCorrupted && !corruptionActive) {
+                            lovecraftCounter.current = 0;
+                            setCorruptionActive(true);
+                            return;
+                          }
+                        } else {
+                          lovecraftCounter.current = 0;
+                        }
+                        setDeclassPhase(0);
+                        setSelectedCreature(creature);
+                      };
                       const dangerClass = c.nivel_peligro === 'Absoluto' ? 'card-danger-absolute' : c.nivel_peligro === 'Extremo' ? 'card-danger-extreme' : '';
                       return (
                       <div key={c.id} onClick={() => openCreature(c)}
@@ -2534,41 +2783,41 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
         // === GLITCH CLICK: Audio glitch for Absoluto/danger elements ===
         // Simulates a digital signal corruption — rapid stuttering pitch shifts,
         // buffer-corruption noise, and chaotic frequency jumps
-        function playGlitchClick() {
-          try {
-            const ctx = getCtx();
-            const t = ctx.currentTime;
-            const master = ctx.createGain();
-            master.gain.setValueAtTime(0.13, t);
-            master.connect(ctx.destination);
+        // function playGlitchClick() {
+        //   try {
+        //     const ctx = getCtx();
+        //     const t = ctx.currentTime;
+        //     const master = ctx.createGain();
+        //     master.gain.setValueAtTime(0.13, t);
+        //     master.connect(ctx.destination);
 
-            // Layer 1: Rapid stutter glitch — multiple short bursts at random pitches
-            const stutterCount = 3 + Math.floor(Math.random() * 3); // 3-5 stutters
-            const stutterDur = 0.018;
-            for (let s = 0; s < stutterCount; s++) {
-              const offset = s * (stutterDur + 0.005 * Math.random());
-              const osc = ctx.createOscillator();
-              const g = ctx.createGain();
-              const dist = ctx.createWaveShaper();
-              const curve = new Float32Array(256);
-              for (let i = 0; i < 256; i++) {
-                const x = (i * 2) / 256 - 1;
-                curve[i] = Math.sign(x) * Math.pow(Math.abs(x), 0.3);
-              }
-              dist.curve = curve;
-              osc.type = ['square','sawtooth'][Math.floor(Math.random()*2)];
-              // Chaotic frequency jumps
-              const baseFreq = 80 + Math.random() * 2400;
-              osc.frequency.setValueAtTime(baseFreq, t + offset);
-              osc.frequency.setValueAtTime(baseFreq * (0.3 + Math.random() * 2), t + offset + stutterDur * 0.5);
-              g.gain.setValueAtTime(0.15 + Math.random() * 0.25, t + offset);
-              g.gain.setValueAtTime(0, t + offset + stutterDur);
-              osc.connect(dist);
-              dist.connect(g);
-              g.connect(master);
-              osc.start(t + offset);
-              osc.stop(t + offset + stutterDur + 0.002);
-            }
+        //     // Layer 1: Rapid stutter glitch — multiple short bursts at random pitches
+        //     const stutterCount = 3 + Math.floor(Math.random() * 3); // 3-5 stutters
+        //     const stutterDur = 0.018;
+        //     for (let s = 0; s < stutterCount; s++) {
+        //       const offset = s * (stutterDur + 0.005 * Math.random());
+        //       const osc = ctx.createOscillator();
+        //       const g = ctx.createGain();
+        //       const dist = ctx.createWaveShaper();
+        //       const curve = new Float32Array(256);
+        //       for (let i = 0; i < 256; i++) {
+        //         const x = (i * 2) / 256 - 1;
+        //         curve[i] = Math.sign(x) * Math.pow(Math.abs(x), 0.3);
+        //       }
+        //       dist.curve = curve;
+        //       osc.type = ['square','sawtooth'][Math.floor(Math.random()*2)];
+        //       // Chaotic frequency jumps
+        //       const baseFreq = 80 + Math.random() * 2400;
+        //       osc.frequency.setValueAtTime(baseFreq, t + offset);
+        //       osc.frequency.setValueAtTime(baseFreq * (0.3 + Math.random() * 2), t + offset + stutterDur * 0.5);
+        //       g.gain.setValueAtTime(0.15 + Math.random() * 0.25, t + offset);
+        //       g.gain.setValueAtTime(0, t + offset + stutterDur);
+        //       osc.connect(dist);
+        //       dist.connect(g);
+        //       g.connect(master);
+        //       osc.start(t + offset);
+        //       osc.stop(t + offset + stutterDur + 0.002);
+        //     }
 
             // Layer 2: Corrupted noise burst (bitcrushed texture)
             const totalDur = stutterCount * 0.025;
