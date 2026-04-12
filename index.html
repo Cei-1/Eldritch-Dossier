@@ -304,6 +304,126 @@
         background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(150,150,150,0.03) 10%, rgba(0,0,0,0.1) 100%);
       }
 
+      /* === R'LYEH ABYSSAL THEME === */
+      .theme-rlyeh {
+        --c-e400: 34 211 238;
+        --c-e500: 6 182 212;
+        --c-e600: 8 145 178;
+        --c-e700: 14 116 144;
+        --c-e800: 21 94 117;
+        --c-e900: 22 78 99;
+        --c-e950: 8 51 68;
+      }
+      .theme-rlyeh .crt-overlay {
+        background:
+          linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.12) 50%),
+          linear-gradient(90deg, rgba(0, 100, 255, 0.02), rgba(0, 200, 255, 0.02), rgba(0, 50, 150, 0.02));
+        background-size: 100% var(--crt-line-size), 3px 100%;
+      }
+      .theme-rlyeh .scanline {
+        background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(6,182,212,0.04) 10%, rgba(0,0,0,0.1) 100%);
+      }
+
+      /* === R'LYEH OVERLAY === */
+      @keyframes rlyehWaterRise {
+        0% { height: 0%; opacity: 0; }
+        20% { opacity: 1; }
+        100% { height: 100%; opacity: 1; }
+      }
+      @keyframes rlyehBubble {
+        0% { transform: translateY(0) scale(1); opacity: 0.4; }
+        100% { transform: translateY(-100vh) scale(0.2); opacity: 0; }
+      }
+      @keyframes rlyehSymbolDrift {
+        0%, 100% { opacity: 0; transform: translateY(10px) rotate(0deg); }
+        30%, 70% { opacity: 0.12; }
+        50% { opacity: 0.2; transform: translateY(-10px) rotate(5deg); }
+      }
+      @keyframes rlyehGlitch {
+        0%, 88%, 100% { transform: translate(0); filter: none; }
+        90% { transform: translate(-3px, 2px); filter: hue-rotate(90deg); }
+        92% { transform: translate(3px, -1px); filter: hue-rotate(-90deg); }
+        94% { transform: translate(-2px, -2px); filter: brightness(2); }
+        96% { transform: translate(2px, 1px); filter: hue-rotate(180deg); }
+      }
+      @keyframes rlyehEmerge {
+        0% { opacity: 0; transform: translateY(30px) scale(0.95); filter: blur(8px); }
+        100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+      }
+      @keyframes rlyehDepthPulse {
+        0%, 100% { box-shadow: inset 0 0 100px rgba(6,182,212,0.05); }
+        50% { box-shadow: inset 0 0 200px rgba(6,182,212,0.12); }
+      }
+      @keyframes rlyehSonarPing {
+        0% { transform: translate(-50%, -50%) scale(0); opacity: 0.6; border-width: 2px; }
+        100% { transform: translate(-50%, -50%) scale(4); opacity: 0; border-width: 0.5px; }
+      }
+      .rlyeh-overlay {
+        position: fixed; inset: 0; z-index: 9999;
+        background: #000;
+        display: flex; align-items: center; justify-content: center; flex-direction: column;
+        overflow: hidden;
+        animation: rlyehDepthPulse 3s ease-in-out infinite;
+      }
+      .rlyeh-water {
+        position: absolute; bottom: 0; left: 0; right: 0;
+        background: linear-gradient(0deg,
+          rgba(6,182,212,0.12) 0%,
+          rgba(8,145,178,0.06) 30%,
+          rgba(14,116,144,0.02) 60%,
+          transparent 100%);
+        animation: rlyehWaterRise 4s ease-out forwards;
+        pointer-events: none;
+      }
+      .rlyeh-sonar {
+        position: absolute;
+        top: 50%; left: 50%;
+        width: 100px; height: 100px;
+        border: 2px solid rgba(6,182,212,0.3);
+        border-radius: 50%;
+        animation: rlyehSonarPing 2s ease-out infinite;
+        pointer-events: none;
+      }
+      .rlyeh-sonar:nth-child(2) { animation-delay: 0.7s; }
+      .rlyeh-sonar:nth-child(3) { animation-delay: 1.4s; }
+      .rlyeh-symbols {
+        position: absolute; inset: 0;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 100px;
+        letter-spacing: 30px;
+        color: rgba(6,182,212,0.06);
+        animation: rlyehSymbolDrift 5s ease-in-out infinite;
+        pointer-events: none;
+        user-select: none;
+      }
+      .rlyeh-msg {
+        position: relative; z-index: 2;
+        text-align: center;
+        animation: rlyehGlitch 4s step-end infinite;
+      }
+      .rlyeh-msg .rlyeh-line {
+        animation: rlyehEmerge 1.5s ease-out both;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      }
+
+      /* Logo tap feedback */
+      @keyframes logoTapPulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.03); }
+        100% { transform: scale(1); }
+      }
+      .logo-tap-feedback {
+        animation: logoTapPulse 0.15s ease-out;
+      }
+      .logo-tap-warning {
+        animation: logoTapPulse 0.15s ease-out;
+        text-shadow: 0 0 15px rgba(6,182,212,0.4);
+      }
+      .logo-tap-critical {
+        animation: logoTapPulse 0.15s ease-out, rlyehGlitch 0.5s step-end;
+        text-shadow: 0 0 25px rgba(6,182,212,0.7), -2px 0 rgba(6,182,212,0.3), 2px 0 rgba(139,92,246,0.3);
+      }
+
       /* === CORRUPTION GLITCH OVERLAY === */
       @keyframes corruptionGlitch {
         0% { clip-path: inset(0 0 0 0); transform: translate(0); }
@@ -1316,6 +1436,18 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
           }
           return false;
         });
+        const [rlyehActive, setRlyehActive] = useState(false);
+        const [themeRlyeh, setThemeRlyeh] = useState(() => {
+          const saved = localStorage.getItem('eldritch_rlyeh');
+          if (saved) {
+            const today = new Date().toDateString();
+            return saved === today;
+          }
+          return false;
+        });
+        const logoTapCount = useRef(0);
+        const logoTapTimer = useRef(null);
+        const [logoTapFeedback, setLogoTapFeedback] = useState('');
         const swipeRef = useRef({ startX: 0, startY: 0 });
 
         // --- AMBIENT AUDIO STATE ---
@@ -1672,6 +1804,65 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
           document.addEventListener('visibilitychange', handleVisibility);
           return () => document.removeEventListener('visibilitychange', handleVisibility);
         }, [ambientPlaying]);
+
+        // --- EASTER EGG: KONAMI CODE (Desktop) ---
+        useEffect(() => {
+          const konamiSequence = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+          let konamiIndex = 0;
+          const handleKeyDown = (e) => {
+            const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+            if (key === konamiSequence[konamiIndex]) {
+              konamiIndex++;
+              if (konamiIndex === konamiSequence.length) {
+                konamiIndex = 0;
+                if (!rlyehActive) {
+                  // Deactivate corruption theme if active, R'lyeh takes over
+                  if (themeCorrupted) {
+                    setThemeCorrupted(false);
+                    localStorage.removeItem('eldritch_corruption');
+                  }
+                  setRlyehActive(true);
+                }
+              }
+            } else {
+              konamiIndex = key === konamiSequence[0] ? 1 : 0;
+            }
+          };
+          document.addEventListener('keydown', handleKeyDown);
+          return () => document.removeEventListener('keydown', handleKeyDown);
+        }, [rlyehActive, themeCorrupted]);
+
+        // --- EASTER EGG: LOGO TAP (Mobile) ---
+        const handleLogoTap = () => {
+          if (rlyehActive) return;
+          logoTapCount.current += 1;
+          clearTimeout(logoTapTimer.current);
+
+          // Visual feedback at thresholds
+          if (logoTapCount.current >= 5) {
+            setLogoTapFeedback('logo-tap-critical');
+          } else if (logoTapCount.current >= 3) {
+            setLogoTapFeedback('logo-tap-warning');
+          } else {
+            setLogoTapFeedback('logo-tap-feedback');
+          }
+          setTimeout(() => setLogoTapFeedback(''), 200);
+
+          if (logoTapCount.current >= 7) {
+            logoTapCount.current = 0;
+            // Deactivate corruption theme if active, R'lyeh takes over
+            if (themeCorrupted) {
+              setThemeCorrupted(false);
+              localStorage.removeItem('eldritch_corruption');
+            }
+            setRlyehActive(true);
+            return;
+          }
+          // Reset counter after 3 seconds of inactivity
+          logoTapTimer.current = setTimeout(() => {
+            logoTapCount.current = 0;
+          }, 3000);
+        };
 
         // --- GUARD: redirect from editor if not authed ---
         useEffect(() => {
@@ -2043,6 +2234,11 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
 
             const handleEnded = () => {
               setCorruptionActive(false);
+              // Deactivate R'lyeh theme if active, corruption takes over
+              if (themeRlyeh) {
+                setThemeRlyeh(false);
+                localStorage.removeItem('eldritch_rlyeh');
+              }
               setThemeCorrupted(true);
               localStorage.setItem('eldritch_corruption', new Date().toDateString());
               // Open Nyarlathotep
@@ -2090,16 +2286,80 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
           );
         };
 
+        // --- EASTER EGG: R'LYEH OVERLAY ---
+        const RlyehOverlay = () => {
+          const audioRef = useRef(null);
+
+          useEffect(() => {
+            // Play Tormenta.mp3 instead of Web Audio API
+            const audio = new Audio('./assets/audio/Tormenta.mp3');
+            audio.volume = 0.7;
+            audioRef.current = audio;
+
+            const handleEnded = () => {
+              setRlyehActive(false);
+              setThemeRlyeh(true);
+              localStorage.setItem('eldritch_rlyeh', new Date().toDateString());
+              // Open Cthulhu if exists
+              const cthulhu = creatures.find(c => c.nombre && c.nombre.toLowerCase().includes('cthulhu'));
+              if (cthulhu) {
+                setDeclassPhase(0);
+                setSelectedCreature(cthulhu);
+              }
+            };
+
+            audio.addEventListener('ended', handleEnded);
+            audio.play().catch(() => {
+              // If autoplay blocked, fallback to timeout
+              setTimeout(handleEnded, 5000);
+            });
+
+            return () => {
+              audio.removeEventListener('ended', handleEnded);
+              audio.pause();
+              audio.currentTime = 0;
+            };
+          }, []);
+
+          return (
+            <div className="rlyeh-overlay">
+              <div className="rlyeh-water"></div>
+              <div className="rlyeh-sonar"></div>
+              <div className="rlyeh-sonar"></div>
+              <div className="rlyeh-sonar"></div>
+              <div className="rlyeh-symbols">⍜ ⎊ ⏣ ⏥</div>
+              <div className="rlyeh-msg">
+                <div className="rlyeh-line text-[10px] text-cyan-900 font-black uppercase tracking-[0.6em] mb-6" style={{animationDelay: '0.3s'}}>
+                  [ SEÑAL_SUBMARINA_INTERCEPTADA ]
+                </div>
+                <div className="rlyeh-line text-[9px] text-cyan-700 font-black uppercase tracking-[0.4em] mb-8" style={{animationDelay: '1s'}}>
+                  Coordenadas: 47°9'S 126°43'W // Profundidad: ████ m
+                </div>
+                <div className="rlyeh-line text-xl md:text-3xl font-black uppercase italic text-cyan-400 mb-4" style={{animationDelay: '2s'}}>
+                  "Ph'nglui mglw'nafh Cthulhu<br/>R'lyeh wgah'nagl fhtagn"
+                </div>
+                <div className="rlyeh-line text-[10px] text-cyan-600 font-black uppercase tracking-[0.3em] leading-relaxed mb-6" style={{animationDelay: '3.2s'}}>
+                  "En su morada de R'lyeh, el muerto Cthulhu<br/>espera soñando."
+                </div>
+                <div className="rlyeh-line text-[9px] text-cyan-800 font-black uppercase tracking-[0.8em] mt-4" style={{animationDelay: '4.5s'}}>
+                  Algo despierta en las profundidades...
+                </div>
+              </div>
+            </div>
+          );
+        };
+
         // --- LOADING SCREEN ---
         if (loading) return <TerminalBoot onComplete={() => setBootDone(true)} />;
 
         // --- RENDER ---
         return (
-          <div className={`min-h-screen relative overflow-hidden pb-20 ${themeCorrupted ? 'theme-corrupted' : ''}`}>
+          <div className={`min-h-screen relative overflow-hidden pb-20 ${themeRlyeh ? 'theme-rlyeh' : themeCorrupted ? 'theme-corrupted' : ''}`}>
             {corruptionActive && <CorruptionOverlay />}
+            {rlyehActive && <RlyehOverlay />}
             <header className="relative z-10 pt-10 pb-6 border-b border-emerald-900/40 px-6 bg-black/60 backdrop-blur-md">
               <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
-                <div onClick={() => setView("explorer")} className="cursor-pointer text-center md:text-left">
+                <div onClick={() => { handleLogoTap(); setView("explorer"); }} className={`cursor-pointer text-center md:text-left ${logoTapFeedback}`}>
                   <h1 className="text-4xl md:text-5xl font-black tracking-tighter uppercase italic leading-none">
                     <GlitchText>ELDRITCH DOSSIER</GlitchText>
                   </h1>
@@ -2227,8 +2487,13 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
                         const mitos = toArr(creature.origen?.mitologia).map(m => m.toLowerCase());
                         if (mitos.some(m => m.includes('lovecraftiana'))) {
                           lovecraftCounter.current += 1;
-                          if (lovecraftCounter.current >= 3 && !themeCorrupted && !corruptionActive) {
+                          if (lovecraftCounter.current >= 3 && !corruptionActive) {
                             lovecraftCounter.current = 0;
+                            // Deactivate R'lyeh theme if active, corruption takes over
+                            if (themeRlyeh) {
+                              setThemeRlyeh(false);
+                              localStorage.removeItem('eldritch_rlyeh');
+                            }
                             setCorruptionActive(true);
                             return;
                           }
@@ -2779,45 +3044,6 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
             ring.stop(t + 0.06);
           } catch(e) {}
         }
-
-        // === GLITCH CLICK: Audio glitch for Absoluto/danger elements ===
-        // Simulates a digital signal corruption — rapid stuttering pitch shifts,
-        // buffer-corruption noise, and chaotic frequency jumps
-        // function playGlitchClick() {
-        //   try {
-        //     const ctx = getCtx();
-        //     const t = ctx.currentTime;
-        //     const master = ctx.createGain();
-        //     master.gain.setValueAtTime(0.13, t);
-        //     master.connect(ctx.destination);
-
-        //     // Layer 1: Rapid stutter glitch — multiple short bursts at random pitches
-        //     const stutterCount = 3 + Math.floor(Math.random() * 3); // 3-5 stutters
-        //     const stutterDur = 0.018;
-        //     for (let s = 0; s < stutterCount; s++) {
-        //       const offset = s * (stutterDur + 0.005 * Math.random());
-        //       const osc = ctx.createOscillator();
-        //       const g = ctx.createGain();
-        //       const dist = ctx.createWaveShaper();
-        //       const curve = new Float32Array(256);
-        //       for (let i = 0; i < 256; i++) {
-        //         const x = (i * 2) / 256 - 1;
-        //         curve[i] = Math.sign(x) * Math.pow(Math.abs(x), 0.3);
-        //       }
-        //       dist.curve = curve;
-        //       osc.type = ['square','sawtooth'][Math.floor(Math.random()*2)];
-        //       // Chaotic frequency jumps
-        //       const baseFreq = 80 + Math.random() * 2400;
-        //       osc.frequency.setValueAtTime(baseFreq, t + offset);
-        //       osc.frequency.setValueAtTime(baseFreq * (0.3 + Math.random() * 2), t + offset + stutterDur * 0.5);
-        //       g.gain.setValueAtTime(0.15 + Math.random() * 0.25, t + offset);
-        //       g.gain.setValueAtTime(0, t + offset + stutterDur);
-        //       osc.connect(dist);
-        //       dist.connect(g);
-        //       g.connect(master);
-        //       osc.start(t + offset);
-        //       osc.stop(t + offset + stutterDur + 0.002);
-        //     }
 
             // Layer 2: Corrupted noise burst (bitcrushed texture)
             const totalDur = stutterCount * 0.025;
