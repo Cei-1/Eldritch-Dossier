@@ -378,14 +378,15 @@
       .rlyeh-sonar {
         position: absolute;
         top: 50%; left: 50%;
+        transform: translate(-50%, -50%) scale(0);
         width: 100px; height: 100px;
         border: 2px solid rgba(6,182,212,0.3);
         border-radius: 50%;
-        animation: rlyehSonarPing 2s ease-out infinite;
+        animation: rlyehSonarPing 2s ease-out infinite backwards;
         pointer-events: none;
       }
-      .rlyeh-sonar:nth-child(2) { animation-delay: 0.7s; }
-      .rlyeh-sonar:nth-child(3) { animation-delay: 1.4s; }
+      .rlyeh-sonar:nth-child(3) { animation-delay: 0.7s; }
+      .rlyeh-sonar:nth-child(4) { animation-delay: 1.4s; }
       .rlyeh-symbols {
         position: absolute; inset: 0;
         display: flex; align-items: center; justify-content: center;
@@ -2291,12 +2292,18 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
           const audioRef = useRef(null);
 
           useEffect(() => {
-            // Play Tormenta.mp3 instead of Web Audio API
+            // Play Tormenta.mp3
             const audio = new Audio('./assets/audio/Tormenta.mp3');
             audio.volume = 0.7;
             audioRef.current = audio;
 
-            const handleEnded = () => {
+            const MIN_DISPLAY_MS = 8000; // Minimum time to keep overlay visible for reading
+            const startTime = Date.now();
+            let dismissed = false;
+
+            const handleDismiss = () => {
+              if (dismissed) return;
+              dismissed = true;
               setRlyehActive(false);
               setThemeRlyeh(true);
               localStorage.setItem('eldritch_rlyeh', new Date().toDateString());
@@ -2308,13 +2315,28 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
               }
             };
 
+            const handleEnded = () => {
+              // If audio ends before minimum display time, wait the remainder
+              const elapsed = Date.now() - startTime;
+              const remaining = MIN_DISPLAY_MS - elapsed;
+              if (remaining > 0) {
+                setTimeout(handleDismiss, remaining);
+              } else {
+                handleDismiss();
+              }
+            };
+
             audio.addEventListener('ended', handleEnded);
             audio.play().catch(() => {
-              // If autoplay blocked, fallback to timeout
-              setTimeout(handleEnded, 5000);
+              // If autoplay blocked, fallback to minimum display timeout
+              setTimeout(handleDismiss, MIN_DISPLAY_MS);
             });
 
+            // Safety fallback: always dismiss after max time
+            const safetyTimer = setTimeout(handleDismiss, 12000);
+
             return () => {
+              clearTimeout(safetyTimer);
               audio.removeEventListener('ended', handleEnded);
               audio.pause();
               audio.currentTime = 0;
