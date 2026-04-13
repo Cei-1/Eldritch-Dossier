@@ -30,6 +30,10 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
+    <!-- Supabase SDK & Client -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="./supabaseClient.js"></script>
+
     <!-- Tailwind CSS para el diseño -->
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -725,185 +729,7 @@
         );
       };
 
-      // --- CONFIGURACIÓN ---
-      const CONFIG = {
-        dbName: "EldritchArchiveDB",
-        storeName: "creatures",
-        defaultFilename: "eldritch_archive_data.json",
-      };
-
-      // --- INDEXEDDB ---
-      let dbInstance = null;
-
-      async function initDB() {
-        if (dbInstance) return dbInstance;
-        return new Promise((resolve, reject) => {
-          const request = indexedDB.open(CONFIG.dbName, 1);
-          request.onerror = () => reject(request.error);
-          request.onsuccess = () => { dbInstance = request.result; resolve(dbInstance); };
-          request.onupgradeneeded = (event) => {
-            const db = event.target.result;
-            if (!db.objectStoreNames.contains(CONFIG.storeName)) {
-              const store = db.createObjectStore(CONFIG.storeName, { keyPath: "id" });
-              store.createIndex("nombre", "nombre", { unique: false });
-              store.createIndex("mitologia", "origen.mitologia", { unique: false });
-              store.createIndex("nivel_peligro", "nivel_peligro", { unique: false });
-            }
-          };
-        });
-      }
-
-      async function dbPut(creature) {
-        const db = await initDB();
-        const now = new Date().toISOString();
-        if (!creature.created_at) creature.created_at = now;
-        if (!creature.updated_at) creature.updated_at = now;
-        if (!creature.status) creature.status = "active";
-        return new Promise((resolve, reject) => {
-          const tx = db.transaction([CONFIG.storeName], "readwrite");
-          const store = tx.objectStore(CONFIG.storeName);
-          const req = store.put(creature);
-          req.onsuccess = () => resolve(creature);
-          req.onerror = () => reject(req.error);
-        });
-      }
-
-      async function dbGetAll(includeDeleted = false) {
-        const db = await initDB();
-        return new Promise((resolve, reject) => {
-          const tx = db.transaction([CONFIG.storeName], "readonly");
-          const store = tx.objectStore(CONFIG.storeName);
-          const req = store.getAll();
-          req.onsuccess = () => {
-            let items = req.result;
-            if (!includeDeleted) items = items.filter(c => c.status !== "deleted");
-            resolve(items);
-          };
-          req.onerror = () => reject(req.error);
-        });
-      }
-
-      async function dbGet(id) {
-        const db = await initDB();
-        return new Promise((resolve, reject) => {
-          const tx = db.transaction([CONFIG.storeName], "readonly");
-          const store = tx.objectStore(CONFIG.storeName);
-          const req = store.get(id);
-          req.onsuccess = () => resolve(req.result);
-          req.onerror = () => reject(req.error);
-        });
-      }
-
-      async function dbSoftDelete(id) {
-        const creature = await dbGet(id);
-        if (!creature) throw new Error("Not found");
-        creature.status = "deleted";
-        creature.updated_at = new Date().toISOString();
-        return dbPut(creature);
-      }
-
-      async function dbClear() {
-        const db = await initDB();
-        return new Promise((resolve, reject) => {
-          const tx = db.transaction([CONFIG.storeName], "readwrite");
-          const store = tx.objectStore(CONFIG.storeName);
-          const req = store.clear();
-          req.onsuccess = () => resolve();
-          req.onerror = () => reject(req.error);
-        });
-      }
-
-      // --- MERGE ---
-      function mergeData(localArr, remoteArr) {
-        const map = new Map();
-        const migrate = (c) => {
-          const now = new Date().toISOString();
-          if (!c.created_at) c.created_at = now;
-          if (!c.updated_at) c.updated_at = now;
-          if (!c.status) c.status = "active";
-          return c;
-        };
-        localArr.forEach(c => map.set(c.id, migrate(c)));
-        remoteArr.forEach(rc => {
-          migrate(rc);
-          if (map.has(rc.id)) {
-            const lc = map.get(rc.id);
-            if (new Date(rc.updated_at) > new Date(lc.updated_at)) {
-              map.set(rc.id, rc);
-            }
-          } else {
-            map.set(rc.id, rc);
-          }
-        });
-        return Array.from(map.values());
-      }
-
-      // --- GIST API ---
-      async function gistRequest(url, token, options = {}) {
-        const headers = {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/vnd.github.v3+json",
-          ...options.headers,
-        };
-        let lastError = null;
-        for (let i = 0; i < 3; i++) {
-          try {
-            const response = await fetch(url, { ...options, mode: "cors", headers });
-            if (!response.ok) {
-              const errBody = await response.json().catch(() => ({}));
-              throw new Error(errBody.message || `HTTP_${response.status}`);
-            }
-            return await response.json();
-          } catch (err) {
-            lastError = err;
-            if (err.message.includes("HTTP_401") || err.message.includes("HTTP_403")) break;
-            await new Promise(r => setTimeout(r, 1000 * (i + 1)));
-          }
-        }
-        throw lastError;
-      }
-
-      // --- AUTH UTILITIES ---
-      const ADMINS_FILENAME = "eldritch_admins.json";
-
-      async function hashPassword(password) {
-        const encoder = new TextEncoder();
-        const data = encoder.encode(password);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-      }
-
-      async function loadAdminsFromGist(token, gistId) {
-        try {
-          const gist = await gistRequest(
-            `https://api.github.com/gists/${gistId}`,
-            token
-          );
-          if (gist.files[ADMINS_FILENAME]) {
-            return JSON.parse(gist.files[ADMINS_FILENAME].content);
-          }
-          return null;
-        } catch (err) {
-          console.warn("Failed to load admins:", err);
-          return null;
-        }
-      }
-
-      async function saveAdminsToGist(token, gistId, adminsData) {
-        await gistRequest(
-          `https://api.github.com/gists/${gistId}`,
-          token,
-          {
-            method: "PATCH",
-            body: JSON.stringify({
-              files: {
-                [ADMINS_FILENAME]: { content: JSON.stringify(adminsData, null, 2) },
-              },
-            }),
-          }
-        );
-      }
+      // --- TOAST COMPONENT ---
 
       // --- TOAST COMPONENT ---
       const Toast = ({ message, type, onClose }) => {
@@ -1125,63 +951,66 @@
         );
       };
 
-      // --- AUTH MODAL ---
-      const AuthModal = ({ adminsData, onLogin, onRegister, onClose }) => {
+      // --- AUTH MODAL (Supabase Auth) ---
+      const AuthModal = ({ onLogin, onRegister, onClose }) => {
         const [tab, setTab] = useState('login');
-        const [step, setStep] = useState(0);
-        const [inviteCode, setInviteCode] = useState('');
+        const [email, setEmail] = useState('');
         const [username, setUsername] = useState('');
         const [password, setPassword] = useState('');
         const [confirmPassword, setConfirmPassword] = useState('');
         const [error, setError] = useState('');
         const [authLoading, setAuthLoading] = useState(false);
+        const [signupSuccess, setSignupSuccess] = useState(false);
+        const [recoverSuccess, setRecoverSuccess] = useState(false);
 
         const scrambledTitle = useScrambleText(
-          tab === 'login' ? 'PROTOCOLO_IDENTIFICACIÓN' : (step === 0 ? 'CÓDIGO_DE_ACCESO' : 'CREAR_IDENTIDAD'),
+          tab === 'login' ? 'PROTOCOLO_IDENTIFICACIÓN' : tab === 'recover' ? 'RESTAURAR_ACCESO' : 'CREAR_IDENTIDAD',
           true, 800
         );
 
         const handleLogin = async (e) => {
           e.preventDefault();
-          if (!username.trim() || !password) return;
+          if (!email.trim() || !password) return;
           setAuthLoading(true);
           setError('');
-          const result = await onLogin(username.trim(), password);
+          const result = await onLogin(email.trim(), password);
           setAuthLoading(false);
           if (!result.success) setError(result.error);
-        };
-
-        const handleInviteCheck = (e) => {
-          e.preventDefault();
-          if (!inviteCode.trim()) return;
-          if (!adminsData || !adminsData.invite_code) {
-            setError('Sistema de registro no configurado');
-            return;
-          }
-          if (inviteCode.trim() !== adminsData.invite_code) {
-            setError('Código de invitación inválido');
-            return;
-          }
-          setError('');
-          setStep(1);
         };
 
         const handleRegister = async (e) => {
           e.preventDefault();
-          if (!username.trim() || !password) return;
+          if (!email.trim() || !username.trim() || !password) return;
           if (password !== confirmPassword) {
             setError('Las contraseñas no coinciden');
             return;
           }
-          if (password.length < 4) {
-            setError('Mínimo 4 caracteres');
+          if (password.length < 6) {
+            setError('Mínimo 6 caracteres');
             return;
           }
           setAuthLoading(true);
           setError('');
-          const result = await onRegister(inviteCode.trim(), username.trim(), password);
+          const result = await onRegister(email.trim(), username.trim(), password);
           setAuthLoading(false);
           if (!result.success) setError(result.error);
+          else setSignupSuccess(true);
+        };
+
+        const handleRecover = async (e) => {
+          e.preventDefault();
+          if (!email.trim()) return;
+          setAuthLoading(true);
+          setError('');
+          try {
+            await supaResetPasswordForEmail(email.trim());
+            setRecoverSuccess(true);
+          } catch (err) {
+            console.error("Recovery error:", err);
+            setError(err.message || 'Credencial no encontrada en el archivo central');
+          } finally {
+            setAuthLoading(false);
+          }
         };
 
         return (
@@ -1193,11 +1022,11 @@
                 <h3 className="text-xl font-black uppercase tracking-tighter italic text-emerald-500">{scrambledTitle}</h3>
               </div>
               <div className="grid grid-cols-2 gap-0 mb-8">
-                <button type="button" onClick={() => { setTab('login'); setStep(0); setError(''); setUsername(''); setPassword(''); setConfirmPassword(''); }}
+                <button type="button" onClick={() => { setTab('login'); setError(''); setEmail(''); setPassword(''); setSignupSuccess(false); setRecoverSuccess(false); }}
                   className={`py-3 text-[10px] font-black uppercase tracking-widest border transition-all ${tab === 'login' ? 'bg-emerald-500 text-black border-emerald-500' : 'border-emerald-900 text-emerald-900 hover:text-emerald-500'}`}>
                   Iniciar Sesión
                 </button>
-                <button type="button" onClick={() => { setTab('register'); setStep(0); setError(''); setUsername(''); setPassword(''); setConfirmPassword(''); setInviteCode(''); }}
+                <button type="button" onClick={() => { setTab('register'); setError(''); setEmail(''); setUsername(''); setPassword(''); setConfirmPassword(''); setSignupSuccess(false); setRecoverSuccess(false); }}
                   className={`py-3 text-[10px] font-black uppercase tracking-widest border border-l-0 transition-all ${tab === 'register' ? 'bg-emerald-500 text-black border-emerald-500' : 'border-emerald-900 text-emerald-900 hover:text-emerald-500'}`}>
                   Registrarse
                 </button>
@@ -1210,11 +1039,11 @@
               {tab === 'login' && (
                 <form onSubmit={handleLogin} className="space-y-6">
                   <div>
-                    <label className="text-[9px] uppercase font-black text-emerald-900 block mb-2 tracking-widest italic text-center">Nombre de Usuario</label>
-                    <input type="text" required autoFocus value={username}
-                      onChange={(e) => setUsername(e.target.value)}
+                    <label className="text-[9px] uppercase font-black text-emerald-900 block mb-2 tracking-widest italic text-center">Email</label>
+                    <input type="email" required autoFocus value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       className="w-full bg-emerald-950/10 border border-emerald-900 p-4 text-xs text-emerald-400 outline-none focus:border-emerald-500 placeholder:opacity-20 text-center"
-                      placeholder="Tu nombre..." />
+                      placeholder="usuario@email.com" />
                   </div>
                   <div>
                     <label className="text-[9px] uppercase font-black text-emerald-900 block mb-2 tracking-widest italic text-center">Contraseña</label>
@@ -1227,44 +1056,34 @@
                     className="w-full py-4 bg-emerald-500 text-black font-black uppercase text-[10px] tracking-[0.2em] hover:bg-white transition-all disabled:opacity-50">
                     {authLoading ? 'Verificando...' : 'Acceder'}
                   </button>
-                </form>
-              )}
-              {tab === 'register' && step === 0 && (
-                <form onSubmit={handleInviteCheck} className="space-y-6">
-                  <div className="text-center mb-4">
-                    <div className="text-[9px] text-emerald-800 font-black uppercase tracking-widest leading-relaxed">Ingrese el código de invitación<br/>proporcionado por el administrador</div>
-                  </div>
-                  <div>
-                    <label className="text-[9px] uppercase font-black text-emerald-900 block mb-2 tracking-widest italic text-center">Código de Invitación</label>
-                    <input type="password" required autoFocus value={inviteCode}
-                      onChange={(e) => setInviteCode(e.target.value)}
-                      className="w-full bg-emerald-950/10 border border-emerald-900 p-4 text-xs text-emerald-400 outline-none focus:border-emerald-500 placeholder:opacity-20 text-center"
-                      placeholder="••••••••" />
-                  </div>
-                  <button type="submit"
-                    className="w-full py-4 bg-emerald-500 text-black font-black uppercase text-[10px] tracking-[0.2em] hover:bg-white transition-all">
-                    Verificar Acceso
+                  <button type="button" onClick={() => { setTab('recover'); setError(''); setEmail(''); setRecoverSuccess(false); }}
+                    className="w-full mt-4 text-center text-emerald-900 hover:text-emerald-500 text-[9px] uppercase font-black tracking-widest transition-colors block">
+                    &gt; RECOVER_ACCESS
                   </button>
                 </form>
               )}
-              {tab === 'register' && step === 1 && (
+              {tab === 'register' && !signupSuccess && (
                 <form onSubmit={handleRegister} className="space-y-6">
-                  <div className="text-center mb-2">
-                    <div className="text-[9px] text-emerald-600 font-black uppercase tracking-widest">✓ Código validado — Cree su cuenta</div>
+                  <div>
+                    <label className="text-[9px] uppercase font-black text-emerald-900 block mb-2 tracking-widest italic text-center">Email</label>
+                    <input type="email" required autoFocus value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full bg-emerald-950/10 border border-emerald-900 p-4 text-xs text-emerald-400 outline-none focus:border-emerald-500 placeholder:opacity-20 text-center"
+                      placeholder="usuario@email.com" />
                   </div>
                   <div>
                     <label className="text-[9px] uppercase font-black text-emerald-900 block mb-2 tracking-widest italic text-center">Nombre de Usuario</label>
-                    <input type="text" required autoFocus value={username}
+                    <input type="text" required value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       className="w-full bg-emerald-950/10 border border-emerald-900 p-4 text-xs text-emerald-400 outline-none focus:border-emerald-500 placeholder:opacity-20 text-center"
-                      placeholder="Elige un nombre..." />
+                      placeholder="Tu nombre..." />
                   </div>
                   <div>
                     <label className="text-[9px] uppercase font-black text-emerald-900 block mb-2 tracking-widest italic text-center">Contraseña</label>
                     <input type="password" required value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       className="w-full bg-emerald-950/10 border border-emerald-900 p-4 text-xs text-emerald-400 outline-none focus:border-emerald-500 placeholder:opacity-20 text-center"
-                      placeholder="Mínimo 4 caracteres" />
+                      placeholder="Mínimo 6 caracteres" />
                   </div>
                   <div>
                     <label className="text-[9px] uppercase font-black text-emerald-900 block mb-2 tracking-widest italic text-center">Confirmar Contraseña</label>
@@ -1279,9 +1098,119 @@
                   </button>
                 </form>
               )}
+              {tab === 'register' && signupSuccess && (
+                <div className="text-center space-y-4 py-6">
+                  <div className="text-emerald-500 text-lg font-black uppercase tracking-tighter italic">✓ Cuenta Creada</div>
+                  <p className="text-[10px] text-emerald-800 font-black uppercase tracking-widest leading-relaxed">
+                    Revisa tu correo electrónico para verificar tu cuenta antes de iniciar sesión.
+                  </p>
+                </div>
+              )}
+              {tab === 'recover' && !recoverSuccess && (
+                <form onSubmit={handleRecover} className="space-y-6">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[9px] uppercase font-black text-emerald-900 block tracking-widest italic text-center">Credencial de Correo</label>
+                    <div className="relative flex items-center bg-emerald-950/10 border border-emerald-900 focus-within:border-emerald-500 transition-colors">
+                      <span className="text-[10px] text-emerald-600 font-mono font-black ml-3 shrink-0 whitespace-nowrap">[ LOGIN_SYS ] &gt;</span>
+                      <input type="email" required autoFocus value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full bg-transparent p-4 text-xs text-emerald-400 outline-none placeholder:opacity-20 flex-1 font-mono"
+                        placeholder="usuario@email.com" />
+                    </div>
+                  </div>
+                  <button type="submit" disabled={authLoading}
+                    className="w-full py-4 bg-emerald-900/20 text-emerald-500 font-black uppercase text-[10px] tracking-[0.2em] hover:bg-emerald-500 hover:text-black transition-all border border-emerald-500 disabled:opacity-50 mt-2 block">
+                    {authLoading ? '> TRANSMITIENDO...' : '> EJECUTAR_RECUPERACION'}
+                  </button>
+                </form>
+              )}
+              {tab === 'recover' && recoverSuccess && (
+                <div className="text-center space-y-4 py-6">
+                  <div className="text-emerald-500 text-[11px] font-black uppercase tracking-widest">[ OK ] Enlace de restauración enviado a la red</div>
+                </div>
+              )}
               <button type="button" onClick={onClose}
                 className="mt-6 w-full py-3 border border-emerald-900 text-emerald-900 hover:text-red-500 text-[10px] font-black uppercase tracking-widest transition-colors">
                 Cancelar
+              </button>
+            </div>
+          </div>
+        );
+      };
+
+      // --- UPDATE KEY MODAL ---
+      const UpdateKeyModal = ({ onClose, onSuccess }) => {
+        const [password, setPassword] = useState('');
+        const [confirmPassword, setConfirmPassword] = useState('');
+        const [loading, setLoading] = useState(false);
+        const [error, setError] = useState('');
+
+        const handleSubmit = async (e) => {
+          e.preventDefault();
+          if (password !== confirmPassword) {
+            setError('Las nuevas llaves no coinciden');
+            return;
+          }
+          if (password.length < 6) {
+            setError('Mínimo 6 caracteres');
+            return;
+          }
+          setLoading(true);
+          setError('');
+          try {
+            await supaUpdatePassword(password);
+            onSuccess();
+          } catch (err) {
+            setError(err.message || 'Error de actualización');
+          } finally {
+            setLoading(false);
+          }
+        };
+
+        return (
+          <div className="fixed inset-0 z-[400] flex items-center justify-center p-4 animate-in fade-in duration-300">
+            <div className="absolute inset-0 bg-black/95 backdrop-blur-md" onClick={onClose}></div>
+            <div className="relative w-full max-w-md bg-black border-2 border-emerald-500 p-10 shadow-[0_0_120px_rgba(16,185,129,0.2)]">
+              <div className="text-center mb-8 border-b border-emerald-900 pb-4">
+                <div className="text-[10px] text-emerald-950 font-black uppercase tracking-[0.5em] mb-2">[ EMERGENCIA_SISTEMA ]</div>
+                <h3 className="text-xl font-black uppercase tracking-tighter italic text-emerald-500">ACTUALIZAR_LLAVE</h3>
+              </div>
+              
+              {error && (
+                <div className="mb-6 p-3 border border-red-900 bg-red-950/20 text-red-500 text-[10px] font-black uppercase tracking-widest text-center animate-pulse">
+                  [ ERROR: {error} ]
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="flex flex-col gap-2">
+                  <label className="text-[9px] uppercase font-black text-emerald-900 block tracking-widest italic text-center">Nueva Llave de Acceso</label>
+                  <div className="relative flex items-center bg-emerald-950/10 border border-emerald-900 focus-within:border-emerald-500 transition-colors">
+                    <span className="text-[10px] text-emerald-600 font-mono font-black ml-3 shrink-0 whitespace-nowrap">[ LOGIN_SYS ] &gt;</span>
+                    <input type="password" required autoFocus value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full bg-transparent p-4 text-xs text-emerald-400 outline-none placeholder:opacity-20 flex-1 font-mono"
+                      placeholder="••••••••" />
+                  </div>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-[9px] uppercase font-black text-emerald-900 block tracking-widest italic text-center">Confirmar Llave</label>
+                  <div className="relative flex items-center bg-emerald-950/10 border border-emerald-900 focus-within:border-emerald-500 transition-colors">
+                    <span className="text-[10px] text-emerald-600 font-mono font-black ml-3 shrink-0 whitespace-nowrap">[ LOGIN_SYS ] &gt;</span>
+                    <input type="password" required value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="w-full bg-transparent p-4 text-xs text-emerald-400 outline-none placeholder:opacity-20 flex-1 font-mono"
+                      placeholder="••••••••" />
+                  </div>
+                </div>
+                <button type="submit" disabled={loading}
+                  className="w-full py-4 bg-emerald-900/20 text-emerald-500 font-black uppercase text-[10px] tracking-[0.2em] hover:bg-emerald-500 hover:text-black transition-all border border-emerald-500 disabled:opacity-50 mt-2 block">
+                  {loading ? 'MODIFICANDO...' : '> EJECUTAR_ACTUALIZACION'}
+                </button>
+              </form>
+              <button type="button" onClick={onClose}
+                className="mt-6 w-full py-3 border border-emerald-900 text-emerald-900 hover:text-red-500 text-[10px] font-black uppercase tracking-widest transition-colors">
+                Abortar
               </button>
             </div>
           </div>
@@ -1415,7 +1344,6 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
         const [filterMito, setFilterMito] = useState("");
         const [selectedCreature, setSelectedCreature] = useState(null);
         const [page, setPage] = useState(1);
-        const [showSettings, setShowSettings] = useState(false);
         const [syncStatus, setSyncStatus] = useState("");
         const [declassPhase, setDeclassPhase] = useState(-1); // -1=none, 0=accessing, 1=revealed, 2=done(stamp faded)
         const [zoomImage, setZoomImage] = useState(null);
@@ -1425,8 +1353,10 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
         const [deleteConfirm, setDeleteConfirm] = useState(null);
         const [saveConfirm, setSaveConfirm] = useState(false);
         const [currentUser, setCurrentUser] = useState(null);
+        const [userRole, setUserRole] = useState(null);
         const [showAuthModal, setShowAuthModal] = useState(false);
-        const [adminsData, setAdminsData] = useState(null);
+        const [showUpdateKeyModal, setShowUpdateKeyModal] = useState(false);
+        const [showSettingsModal, setShowSettingsModal] = useState(false);
         const lovecraftCounter = useRef(0);
         const [corruptionActive, setCorruptionActive] = useState(false);
         const [themeCorrupted, setThemeCorrupted] = useState(() => {
@@ -1459,10 +1389,7 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
 
         const showToast = (message, type = 'success') => setToast({ message, type, key: Date.now() });
 
-        const [config, setConfig] = useState({
-          token: localStorage.getItem("gist_token") || "",
-          gistId: localStorage.getItem("gist_id") || "",
-        });
+        // Config migrado a Supabase (ver supabaseClient.js)
 
         const [isEditing, setIsEditing] = useState(false);
         const [formData, setFormData] = useState({
@@ -1487,171 +1414,65 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
           }
         }, [declassPhase]);
 
-        // --- CARGAR DATOS (IndexedDB + Gist pull) ---
+        // --- CARGAR DATOS (Supabase) ---
         const loadData = useCallback(async () => {
           setLoading(true);
           setError(null);
           try {
-            await initDB();
+            setSyncStatus("Sincronizando...");
 
-            // Intentar pull desde Gist si hay config
-            if (config.token && config.gistId) {
-              try {
-                setSyncStatus("Sincronizando...");
-                const gist = await gistRequest(
-                  `https://api.github.com/gists/${config.gistId.trim()}`,
-                  config.token.trim()
-                );
-                if (gist.files[CONFIG.defaultFilename]) {
-                  const remoteData = JSON.parse(gist.files[CONFIG.defaultFilename].content);
-                  const localData = await dbGetAll(true);
-                  const merged = mergeData(localData, remoteData);
-
-                  await dbClear();
-                  for (const c of merged) await dbPut(c);
-                  setSyncStatus("Enlace_Fusionado_Activo");
-                }
-              } catch (pullErr) {
-                console.warn("Pull failed, working offline:", pullErr);
-                setSyncStatus("Modo_Offline");
-              }
-            } else {
-              setSyncStatus("Esperando_Acreditación");
-            }
-
-            // --- CARGAR ADMINS Y VERIFICAR SESIÓN ---
-            if (config.token && config.gistId) {
-              try {
-                const admins = await loadAdminsFromGist(config.token.trim(), config.gistId.trim());
-                if (admins) {
-                  setAdminsData(admins);
-                  const session = localStorage.getItem('eldritch_admin_session');
-                  if (session) {
-                    try {
-                      const { username } = JSON.parse(session);
-                      if (admins.admins && admins.admins.some(a => a.username === username)) {
-                        setCurrentUser(username);
-                      } else {
-                        localStorage.removeItem('eldritch_admin_session');
-                        setCurrentUser(null);
-                      }
-                    } catch(e) {
-                      localStorage.removeItem('eldritch_admin_session');
-                    }
-                  }
-                } else {
-                  // Admins file doesn't exist - still restore session for offline
-                  const session = localStorage.getItem('eldritch_admin_session');
-                  if (session) {
-                    try {
-                      const { username } = JSON.parse(session);
-                      if (username) setCurrentUser(username);
-                    } catch(e) {}
-                  }
-                }
-              } catch (adminErr) {
-                console.warn("Failed to load admins:", adminErr);
-                // Offline fallback - restore session
-                const session = localStorage.getItem('eldritch_admin_session');
-                if (session) {
-                  try {
-                    const { username } = JSON.parse(session);
-                    if (username) setCurrentUser(username);
-                  } catch(e) {}
-                }
-              }
-            }
-
-            // === PURGA AUTOMÁTICA DE IDs INVÁLIDOS (TEMPORAL) ===
-            // Elimina registros cuyo ID no sigue la nomenclatura ED-DDMMYYYY-XXX
-            // + IDs específicos a eliminar
-            const allData = await dbGetAll(true);
-            const validIdPattern = /^ED-\d{8}-\d+$/;
-            const blacklistedIds = ["ED-29032026-032", "ED-29032026-033"];
-            const clean = allData.filter(c => validIdPattern.test(c.id) && !blacklistedIds.includes(c.id));
-            const removed = allData.length - clean.length;
-
-            if (removed > 0) {
-              console.log(`[PURGA] Eliminando ${removed} registros con ID inválido`);
-              await dbClear();
-              for (const c of clean) await dbPut(c);
-
-              // También limpiar el Gist si hay config
-              if (config.token && config.gistId) {
-                try {
-                  await gistRequest(
-                    `https://api.github.com/gists/${config.gistId.trim()}`,
-                    config.token.trim(),
-                    {
-                      method: "PATCH",
-                      body: JSON.stringify({
-                        files: {
-                          [CONFIG.defaultFilename]: { content: JSON.stringify(clean, null, 2) },
-                        },
-                      }),
-                    }
-                  );
-                  console.log(`[PURGA] Gist limpiado. ${clean.length} registros válidos conservados.`);
-                } catch (pushErr) {
-                  console.warn("[PURGA] No se pudo limpiar el Gist:", pushErr);
-                }
-              }
-            }
-            // === FIN PURGA AUTOMÁTICA ===
-
-            // === MIGRACIÓN: asignar created_by a criaturas existentes (TEMPORAL) ===
-            const allForMigration = await dbGetAll(true);
-            let migrated = false;
-            for (const c of allForMigration) {
-              if (!c.created_by || !c.last_edited_by) {
-                if (!c.created_by) c.created_by = "Brian Aguirre";
-                if (!c.last_edited_by) c.last_edited_by = "Brian Aguirre";
-                c.updated_at = new Date().toISOString();
-                await dbPut(c);
-                migrated = true;
-              }
-            }
-            if (migrated && config.token && config.gistId) {
-              try {
-                const migratedAll = await dbGetAll(true);
-                await gistRequest(
-                  `https://api.github.com/gists/${config.gistId.trim()}`,
-                  config.token.trim(),
-                  {
-                    method: "PATCH",
-                    body: JSON.stringify({
-                      files: {
-                        [CONFIG.defaultFilename]: { content: JSON.stringify(migratedAll, null, 2) },
-                      },
-                    }),
-                  }
-                );
-                console.log(`[MIGRACIÓN] created_by asignado a criaturas existentes.`);
-              } catch (migErr) {
-                console.warn("[MIGRACIÓN] No se pudo sincronizar:", migErr);
-              }
-            }
-            // === FIN MIGRACIÓN ===
-
-            // Cargar desde IndexedDB
-            const data = await dbGetAll();
+            // 1. Cargar criaturas desde Supabase (JOINs relacionales)
+            const data = await supaLoadCreatures();
             setCreatures(data);
+            setSyncStatus("Enlace_Supabase_Activo");
 
-            if (!config.token || !config.gistId) {
-              setShowSettings(true);
+            // 2. Restaurar sesión activa de Supabase Auth
+            try {
+              const session = await supaGetSession();
+              if (session && session.user) {
+                const profile = await supaGetProfile(session.user.id);
+                if (profile) {
+                  setCurrentUser(profile.username || session.user.email);
+                  setUserRole(profile.role_id);
+                } else {
+                  setCurrentUser(session.user.email);
+                  setUserRole(3); // Default: Iniciado
+                }
+              }
+            } catch (authErr) {
+              console.warn("No hay sesión activa:", authErr);
             }
+
           } catch (err) {
-            setError(`SISTEMA_OFFLINE: ${err.message}`);
+            console.error("Error cargando datos:", err);
+            setError(`ERROR_SUPABASE: ${err.message}`);
+            setSyncStatus("Error_Conexión");
           } finally {
             setDataReady(true);
           }
-        }, [config]);
+        }, []);
 
         useEffect(() => {
           if (dataReady && bootDone) setLoading(false);
         }, [dataReady, bootDone]);
 
         useEffect(() => { loadData(); }, [loadData]);
+
+        // --- SUPABASE AUTH STATE LISTENER ---
+        useEffect(() => {
+          const { data: { subscription } } = window._supabase.auth.onAuthStateChange(
+            async (event, session) => {
+              if (event === 'SIGNED_OUT') {
+                setCurrentUser(null);
+                setUserRole(null);
+              } else if (event === 'PASSWORD_RECOVERY') {
+                // El usuario ha sido redirigido de vuelta con el token de recuperación en la URL
+                setShowUpdateKeyModal(true);
+              }
+            }
+          );
+          return () => subscription.unsubscribe();
+        }, []);
 
         // --- AMBIENT AUDIO SYSTEM ---
         // Initializes <audio> element once and manages user preference via localStorage.
@@ -1870,127 +1691,54 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
           if (!currentUser && view === 'editor') setView('explorer');
         }, [currentUser, view]);
 
-        // --- GUARDAR CONFIG ---
-        const saveSettings = (e) => {
-          e.preventDefault();
-          const token = e.target.token.value.trim();
-          const id = e.target.gistId.value.trim();
-          if (!token || !id) return;
-          localStorage.setItem("gist_token", token);
-          localStorage.setItem("gist_id", id);
-          setConfig({ token, gistId: id });
-          setShowSettings(false);
-        };
-
-        // --- AUTH HANDLERS ---
-        const handleAuthLogin = async (username, password) => {
-          if (!adminsData || !adminsData.admins) {
-            return { success: false, error: 'Sistema no configurado' };
-          }
-          const hash = await hashPassword(password);
-          const admin = adminsData.admins.find(
-            a => a.username.toLowerCase() === username.toLowerCase() && a.password_hash === hash
-          );
-          if (!admin) return { success: false, error: 'Credenciales inválidas' };
-          localStorage.setItem('eldritch_admin_session', JSON.stringify({ username: admin.username, loginTime: new Date().toISOString() }));
-          setCurrentUser(admin.username);
-          setShowAuthModal(false);
-          showToast(`✅ Bienvenido, ${admin.username}`);
-          return { success: true };
-        };
-
-        const handleAuthRegister = async (inviteCode, username, password) => {
-          if (!adminsData) return { success: false, error: 'Sistema no configurado' };
-          if (!adminsData.invite_code) return { success: false, error: 'Código de invitación no configurado' };
-          if (inviteCode !== adminsData.invite_code) return { success: false, error: 'Código de invitación inválido' };
-          if (adminsData.admins.some(a => a.username.toLowerCase() === username.toLowerCase())) {
-            return { success: false, error: 'Ese nombre ya está en uso' };
-          }
-          const hash = await hashPassword(password);
-          const newAdmin = { username, password_hash: hash, created_at: new Date().toISOString() };
-          const updated = { ...adminsData, admins: [...adminsData.admins, newAdmin] };
+        // --- AUTH HANDLERS (Supabase Auth) ---
+        const handleAuthLogin = async (email, password) => {
           try {
-            await saveAdminsToGist(config.token.trim(), config.gistId.trim(), updated);
-            setAdminsData(updated);
-            localStorage.setItem('eldritch_admin_session', JSON.stringify({ username, loginTime: new Date().toISOString() }));
-            setCurrentUser(username);
-            setShowAuthModal(false);
-            showToast(`✅ Cuenta creada: ${username}`);
+            const data = await supaLogin(email, password);
+            if (data.user) {
+              const profile = await supaGetProfile(data.user.id);
+              setCurrentUser(profile ? (profile.username || email) : email);
+              setUserRole(profile ? profile.role_id : 3);
+              setShowAuthModal(false);
+              showToast(`✅ Bienvenido, ${profile ? profile.username : email}`);
+              return { success: true };
+            }
+            return { success: false, error: 'No se pudo iniciar sesión' };
+          } catch (err) {
+            return { success: false, error: err.message || 'Credenciales inválidas' };
+          }
+        };
+
+        const handleAuthRegister = async (email, username, password) => {
+          try {
+            const data = await supaSignup(email, password, username);
+            if (data.user && !data.session) {
+              // Email confirmation required
+              return { success: true };
+            }
+            if (data.session) {
+              // Auto-confirmed (email confirmation disabled)
+              const profile = await supaGetProfile(data.user.id);
+              setCurrentUser(profile ? (profile.username || email) : username);
+              setUserRole(profile ? profile.role_id : 3);
+              setShowAuthModal(false);
+              showToast(`✅ Cuenta creada: ${username}`);
+            }
             return { success: true };
           } catch (err) {
-            return { success: false, error: 'Error al guardar: ' + err.message };
+            return { success: false, error: err.message || 'Error al registrar' };
           }
         };
 
-        const handleLogout = () => {
-          localStorage.removeItem('eldritch_admin_session');
+        const handleLogout = async () => {
+          try { await supaLogout(); } catch(e) { console.warn(e); }
           setCurrentUser(null);
+          setUserRole(null);
           if (view === 'editor') setView('explorer');
           showToast('Sesión cerrada', 'info');
         };
 
-        // --- SYNC AND PUSH ---
-        const syncAndPush = async (localChanges) => {
-          setSaving(true);
-          try {
-            // Guardar en IndexedDB
-            await dbClear();
-            for (const c of localChanges) await dbPut(c);
-
-            // Si hay config de Gist, sincronizar
-            if (config.token && config.gistId) {
-              // Pull remoto para merge
-              let remoteData = [];
-              try {
-                const gist = await gistRequest(
-                  `https://api.github.com/gists/${config.gistId.trim()}`,
-                  config.token.trim()
-                );
-                if (gist.files[CONFIG.defaultFilename]) {
-                  remoteData = JSON.parse(gist.files[CONFIG.defaultFilename].content);
-                }
-              } catch (e) { console.warn("Pull before push failed:", e); }
-
-              // Merge
-              const allLocal = await dbGetAll(true);
-              const merged = mergeData(remoteData, allLocal);
-
-              // Push
-              await gistRequest(
-                `https://api.github.com/gists/${config.gistId.trim()}`,
-                config.token.trim(),
-                {
-                  method: "PATCH",
-                  body: JSON.stringify({
-                    files: {
-                      [CONFIG.defaultFilename]: { content: JSON.stringify(merged, null, 2) },
-                    },
-                  }),
-                }
-              );
-
-              // Guardar merged en IndexedDB
-              await dbClear();
-              for (const c of merged) await dbPut(c);
-
-              const active = merged.filter(c => c.status !== "deleted");
-              setCreatures(active);
-              setSyncStatus("Enlace_Fusionado_Activo");
-            } else {
-              const active = localChanges.filter(c => c.status !== "deleted");
-              setCreatures(active);
-            }
-
-            setSaving(false);
-            return true;
-          } catch (err) {
-            alert(`ERROR_DE_SINCRONIZACIÓN: ${err.message}`);
-            setSaving(false);
-            return false;
-          }
-        };
-
-        // --- GUARDAR CRIATURA ---
+        // --- GUARDAR CRIATURA (Supabase) ---
         const handleSave = (e) => {
           e.preventDefault();
           setSaveConfirm(true);
@@ -1998,44 +1746,24 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
 
         const confirmSave = async () => {
           setSaveConfirm(false);
-          const nowIso = new Date().toISOString();
-          let allCreatures = await dbGetAll(true);
-
-          if (isEditing) {
-            allCreatures = allCreatures.map(c =>
-              c.id === formData.id ? { ...formData, updated_at: nowIso, status: c.status || "active", created_at: c.created_at, created_by: c.created_by || currentUser, last_edited_by: currentUser } : c
-            );
-          } else {
-            const now = new Date();
-            const datePart = `${String(now.getDate()).padStart(2, "0")}${String(now.getMonth() + 1).padStart(2, "0")}${now.getFullYear()}`;
-            const prefix = `ED-${datePart}-`;
-            const maxSeq = allCreatures.reduce((max, c) => {
-              if (c.id && c.id.startsWith(prefix)) {
-                const seq = parseInt(c.id.split("-").pop(), 10);
-                return seq > max ? seq : max;
-              }
-              return max;
-            }, 0);
-            const id = `${prefix}${String(maxSeq + 1).padStart(3, "0")}`;
-            const newItem = {
-              ...formData,
-              id,
-              created_at: nowIso,
-              updated_at: nowIso,
-              status: "active",
-              created_by: currentUser,
-            };
-            allCreatures = [...allCreatures, newItem];
-          }
-
-          if (await syncAndPush(allCreatures)) {
+          setSaving(true);
+          try {
+            await supaUpsertCreature(formData, isEditing, currentUser);
+            // Recargar datos desde Supabase
+            const data = await supaLoadCreatures();
+            setCreatures(data);
             setView("explorer");
             setIsEditing(false);
+            setSyncStatus("Enlace_Supabase_Activo");
             showToast(isEditing ? '✅ Registro actualizado' : '✅ Nuevo registro creado');
+          } catch (err) {
+            showToast(`Error: ${err.message}`, 'error');
+          } finally {
+            setSaving(false);
           }
         };
 
-        // --- ELIMINAR ---
+        // --- ELIMINAR (Supabase) ---
         const handleDelete = (id) => {
           const creature = creatures.find(c => c.id === id);
           setDeleteConfirm(creature);
@@ -2044,16 +1772,18 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
           if (!deleteConfirm) return;
           const id = deleteConfirm.id;
           setDeleteConfirm(null);
-          
-          let allCreatures = await dbGetAll(true);
-          const updated = allCreatures.map(c =>
-            c.id === id ? { ...c, status: "deleted", updated_at: new Date().toISOString(), last_edited_by: currentUser } : c
-          );
-          
-          const success = await syncAndPush(updated);
-          if (success) {
+          setSaving(true);
+          try {
+            await supaDeleteCreature(id);
+            const data = await supaLoadCreatures();
+            setCreatures(data);
             setSelectedCreature(null);
+            setSyncStatus("Enlace_Supabase_Activo");
             showToast('🗑️ Registro eliminado');
+          } catch (err) {
+            showToast(`Error: ${err.message}`, 'error');
+          } finally {
+            setSaving(false);
           }
         };
 
@@ -2089,71 +1819,18 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
           setSelectedCreature(null);
         };
 
-        // --- PULL / PUSH MANUALES ---
-        const manualPull = async () => {
+        // --- RECARGAR DESDE SUPABASE ---
+        const manualReload = async () => {
           setSaving(true);
-          setSyncStatus("Descargando...");
+          setSyncStatus("Recargando...");
           try {
-            const gist = await gistRequest(
-              `https://api.github.com/gists/${config.gistId.trim()}`,
-              config.token.trim()
-            );
-            if (!gist.files[CONFIG.defaultFilename]) throw new Error("FILE_NOT_FOUND");
-            const remoteData = JSON.parse(gist.files[CONFIG.defaultFilename].content);
-            const localData = await dbGetAll(true);
-            const merged = mergeData(localData, remoteData);
-            await dbClear();
-            for (const c of merged) await dbPut(c);
-            const active = merged.filter(c => c.status !== "deleted");
-            setCreatures(active);
-            setSyncStatus("Enlace_Fusionado_Activo");
-            showToast(`✅ ${active.length} criaturas sincronizadas`);
+            const data = await supaLoadCreatures();
+            setCreatures(data);
+            setSyncStatus("Enlace_Supabase_Activo");
+            showToast(`✅ ${data.length} criaturas cargadas`);
           } catch (err) {
             showToast(`Error: ${err.message}`, "error");
-            setSyncStatus("Error_Sync");
-          } finally {
-            setSaving(false);
-          }
-        };
-
-        const manualPush = async () => {
-          setSaving(true);
-          setSyncStatus("Subiendo...");
-          try {
-            const allLocal = await dbGetAll(true);
-            // Pull first
-            let remoteData = [];
-            try {
-              const gist = await gistRequest(
-                `https://api.github.com/gists/${config.gistId.trim()}`,
-                config.token.trim()
-              );
-              if (gist.files[CONFIG.defaultFilename]) {
-                remoteData = JSON.parse(gist.files[CONFIG.defaultFilename].content);
-              }
-            } catch (e) {}
-            const merged = mergeData(remoteData, allLocal);
-            await gistRequest(
-              `https://api.github.com/gists/${config.gistId.trim()}`,
-              config.token.trim(),
-              {
-                method: "PATCH",
-                body: JSON.stringify({
-                  files: {
-                    [CONFIG.defaultFilename]: { content: JSON.stringify(merged, null, 2) },
-                  },
-                }),
-              }
-            );
-            await dbClear();
-            for (const c of merged) await dbPut(c);
-            const active = merged.filter(c => c.status !== "deleted");
-            setCreatures(active);
-            setSyncStatus("Enlace_Fusionado_Activo");
-            showToast(`✅ ${active.length} criaturas subidas`);
-          } catch (err) {
-            showToast(`Error: ${err.message}`, "error");
-            setSyncStatus("Error_Sync");
+            setSyncStatus("Error_Conexión");
           } finally {
             setSaving(false);
           }
@@ -2394,19 +2071,23 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
                     className={`px-4 py-2 border text-[10px] font-bold uppercase flex items-center gap-2 transition-all ${view === "explorer" ? "bg-emerald-500 text-black border-emerald-500" : "border-emerald-900 text-emerald-900 hover:text-emerald-500"}`}>
                     <Icon name="database" /> Explorar
                   </button>
-                  {currentUser && (
+                  {currentUser && userRole && (userRole === 1 || userRole === 2) && (
                     <button onClick={() => openEditor()}
                       className={`px-4 py-2 border text-[10px] font-bold uppercase flex items-center gap-2 transition-all ${view === "editor" ? "bg-emerald-500 text-black border-emerald-500" : "border-emerald-900 text-emerald-900 hover:text-emerald-500"}`}>
                       <Icon name="plus" /> Registrar
                     </button>
                   )}
-                  <button onClick={() => setShowSettings(true)}
-                    className="p-2 border border-emerald-900 text-emerald-900 hover:text-emerald-500 hover:border-emerald-500 transition-colors">
-                    <Icon name="settings" />
+                  <button onClick={manualReload} disabled={saving}
+                    className="p-2 border border-emerald-900 text-emerald-900 hover:text-emerald-500 hover:border-emerald-500 transition-colors disabled:opacity-30">
+                    <Icon name="refresh" />
                   </button>
                   {currentUser ? (
                     <div className="flex items-center gap-2">
                       <span className="text-[9px] text-emerald-700 font-black uppercase tracking-widest hidden md:inline">{currentUser}</span>
+                      <button onClick={() => setShowSettingsModal(true)}
+                        className="p-2 border border-emerald-900/50 text-emerald-900 hover:text-emerald-500 hover:border-emerald-500 transition-all" title="Configuración de Cuenta">
+                        <Icon name="settings" className="w-[18px] h-[18px] md:w-5 md:h-5" />
+                      </button>
                       <button onClick={handleLogout}
                         className="px-3 py-2 border border-red-900/50 text-red-900 hover:text-red-500 hover:border-red-500 text-[10px] font-bold uppercase transition-all">
                         Salir
@@ -2836,16 +2517,18 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
                         ))}
                       </div>
                     </div>
-                    {currentUser && (
-                    <div className={`pt-10 grid grid-cols-2 gap-4 pb-4 ${declassPhase === 1 ? 'declass-field' : ''}`} style={declassPhase === 1 ? {animationDelay: '1.5s'} : {}}>
+                    {currentUser && userRole && (userRole === 1 || userRole === 2) && (
+                    <div className={`pt-10 grid ${userRole === 1 ? 'grid-cols-2' : 'grid-cols-1'} gap-4 pb-4 ${declassPhase === 1 ? 'declass-field' : ''}`} style={declassPhase === 1 ? {animationDelay: '1.5s'} : {}}>
                       <button onClick={() => openEditor(selectedCreature)}
                         className="flex items-center justify-center gap-2 py-4 bg-emerald-900/10 border border-emerald-800 text-[10px] font-black uppercase hover:bg-emerald-500 hover:text-black transition-all tracking-[0.2em]">
                         <Icon name="edit" /> Modificar
                       </button>
+                      {userRole === 1 && (
                       <button onClick={() => handleDelete(selectedCreature.id)}
                         className="flex items-center justify-center gap-2 py-4 bg-red-900/10 border border-red-900 text-[10px] font-black uppercase hover:bg-red-600 hover:text-white transition-all tracking-[0.2em]">
                         <Icon name="trash" /> Eliminar
                       </button>
+                      )}
                     </div>
                     )}
                   </div>
@@ -2856,75 +2539,51 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
             {/* === AUTH MODAL === */}
             {showAuthModal && (
               <AuthModal
-                adminsData={adminsData}
                 onLogin={handleAuthLogin}
                 onRegister={handleAuthRegister}
                 onClose={() => setShowAuthModal(false)}
               />
             )}
 
-            {/* === MODAL SETTINGS === */}
-            {showSettings && (
-              <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 animate-in fade-in duration-300">
-                <div className="absolute inset-0 bg-black/95 backdrop-blur-md"
-                  onClick={() => creatures.length > 0 && setShowSettings(false)}></div>
-                <form onSubmit={saveSettings}
-                  className="relative w-full max-w-md bg-black border-2 border-emerald-500 p-10 shadow-[0_0_120px_rgba(16,185,129,0.2)]">
-                  <h3 className="text-xl font-black uppercase mb-8 flex items-center gap-3 tracking-tighter italic border-b border-emerald-900 pb-4">
-                    <Icon name="settings" className="w-6 h-6" /> Protocolo de Acceso
-                  </h3>
-                  <div className="space-y-6">
-                    <div>
-                      <label className="text-[10px] uppercase font-black text-emerald-900 block mb-2 tracking-widest italic text-center">
-                        GitHub Secret Token
-                      </label>
-                      <input name="token" type="password" required defaultValue={config.token}
-                        className="w-full bg-emerald-950/10 border border-emerald-900 p-4 text-xs text-emerald-400 outline-none focus:border-emerald-500 placeholder:opacity-20"
-                        placeholder="ghp_xxxxxxxxxxxx" />
-                    </div>
-                    <div>
-                      <label className="text-[10px] uppercase font-black text-emerald-900 block mb-2 tracking-widest italic text-center">
-                        Target Archive ID (Gist ID)
-                      </label>
-                      <input name="gistId" required defaultValue={config.gistId}
-                        className="w-full bg-emerald-950/10 border border-emerald-900 p-4 text-xs text-emerald-400 outline-none focus:border-emerald-500 placeholder:opacity-20"
-                        placeholder="ID del registro..." />
-                    </div>
+            {/* === SETTINGS MODAL === */}
+            {showSettingsModal && (
+              <div className="fixed inset-0 z-[350] flex items-center justify-center p-4 animate-in fade-in duration-300">
+                <div className="absolute inset-0 bg-black/95 backdrop-blur-md" onClick={() => setShowSettingsModal(false)}></div>
+                <div className="relative w-full max-w-sm bg-black border border-emerald-500 p-8 shadow-[0_0_80px_rgba(16,185,129,0.15)]">
+                  <div className="text-center mb-8 border-b border-emerald-900 pb-4">
+                    <div className="text-[10px] text-emerald-950 font-black uppercase tracking-[0.5em] mb-2">[ ELDRITCH_DOSSIER ]</div>
+                    <h3 className="text-lg font-black uppercase tracking-tighter italic text-emerald-500">CONFIGURACIÓN</h3>
                   </div>
-
-                  {/* Botones Pull / Push */}
-                  {config.token && config.gistId && (
-                    <div className="mt-6 grid grid-cols-2 gap-3 font-black uppercase text-[10px]">
-                      <button type="button" onClick={manualPull} disabled={saving}
-                        className="py-3 border border-emerald-900 text-emerald-600 hover:bg-emerald-900/20 transition-all flex items-center justify-center gap-2 disabled:opacity-30">
-                        <Icon name="download" /> Pull
-                      </button>
-                      {currentUser ? (
-                      <button type="button" onClick={manualPush} disabled={saving}
-                        className="py-3 border border-emerald-900 text-emerald-600 hover:bg-emerald-900/20 transition-all flex items-center justify-center gap-2 disabled:opacity-30">
-                        <Icon name="upload" /> Push
-                      </button>
-                      ) : (
-                      <div className="py-3 border border-emerald-950 text-emerald-950 flex items-center justify-center gap-2 text-[9px] font-black uppercase tracking-widest cursor-not-allowed">
-                        🔒 Push
-                      </div>
-                      )}
-                    </div>
-                  )}
-
-                  <div className="mt-10 flex gap-4 font-black uppercase text-[10px]">
-                    <button type="button" onClick={() => creatures.length > 0 && setShowSettings(false)}
-                      className="flex-1 py-4 border border-emerald-900 text-emerald-900 hover:text-red-500 transition-colors uppercase">
-                      Abortar
+                  <div className="space-y-4">
+                    <button onClick={() => { setShowSettingsModal(false); setShowUpdateKeyModal(true); }}
+                      className="w-full py-4 bg-emerald-950/10 border border-emerald-900 text-emerald-500 font-black uppercase text-[10px] tracking-widest hover:bg-emerald-500 hover:text-black transition-all flex items-center justify-center gap-3">
+                      <Icon name="settings" /> Actualizar Llave de Acceso
                     </button>
-                    <button type="submit"
-                      className="flex-1 py-4 bg-emerald-500 text-black hover:bg-white transition-all tracking-[0.2em] font-black uppercase">
-                      Vincular
+                    <button type="button" onClick={() => setShowSettingsModal(false)}
+                      className="mt-4 w-full py-3 border border-emerald-900 text-emerald-900 hover:text-red-500 text-[10px] font-black uppercase tracking-widest transition-colors">
+                      Cerrar
                     </button>
                   </div>
-                </form>
+                </div>
               </div>
             )}
+
+            {/* === UPDATE KEY MODAL === */}
+            {showUpdateKeyModal && (
+              <UpdateKeyModal
+                onClose={() => setShowUpdateKeyModal(false)}
+                onSuccess={() => {
+                  setShowUpdateKeyModal(false);
+                  showToast('CREDENCIAL ACTUALIZADA', 'success');
+                  // Timeout para asegurar que UpdateUser finish (Supabase JS auto-signs out in some edge cases on update, but here we force sign-out for aesthetic)
+                  setTimeout(() => {
+                    handleLogout();
+                  }, 1500);
+                }}
+              />
+            )}
+
+            {/* Settings modal removed — Supabase config is in supabaseClient.js */}
 
             {/* === AUDIO PROMPT (first visit) === */}
             {showAudioPrompt && (
@@ -2954,7 +2613,7 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
 
             <footer className="fixed bottom-0 left-0 right-0 p-5 border-t border-emerald-950 bg-black/90 flex justify-between items-center px-10 text-[9px] font-black text-emerald-950 tracking-[0.3em] uppercase backdrop-blur-md z-[120]">
               <div className="hidden sm:block italic opacity-60">
-                Eldritch_Dossier_CEI // V5.1_07042026
+                Eldritch_Dossier_CEI // V6.0_Supabase
               </div>
               <div className="flex items-center gap-4">
                 <button onClick={toggleAmbientAudio}
@@ -2967,7 +2626,7 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
                 </button>
                 <div className="animate-pulse flex items-center gap-3">
                   <div className={`w-1.5 h-1.5 rounded-full shadow-[0_0_5px_#10b981] ${creatures.length > 0 ? "bg-emerald-500" : "bg-red-600 animate-ping"}`}></div>
-                  {syncStatus || (creatures.length > 0 ? "Enlace_Fusionado_Activo" : "Esperando_Acreditación")}
+                  {syncStatus || (creatures.length > 0 ? "Enlace_Supabase_Activo" : "Conectando...")}
                 </div>
               </div>
             </footer>
