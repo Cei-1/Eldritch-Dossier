@@ -1741,6 +1741,10 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
         // --- GUARDAR CRIATURA (Supabase) ---
         const handleSave = (e) => {
           e.preventDefault();
+          if (!navigator.onLine) {
+            showToast('FUNCIONES DESHABILITADAS POR FALTA DE CONEXIÓN', 'error');
+            return;
+          }
           setSaveConfirm(true);
         };
 
@@ -1765,6 +1769,10 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
 
         // --- ELIMINAR (Supabase) ---
         const handleDelete = (id) => {
+          if (!navigator.onLine) {
+            showToast('FUNCIONES DESHABILITADAS POR FALTA DE CONEXIÓN', 'error');
+            return;
+          }
           const creature = creatures.find(c => c.id === id);
           setDeleteConfirm(creature);
         };
