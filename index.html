@@ -312,13 +312,13 @@
 
       /* === NYARLATHOTEP CORRUPTION THEME === */
       .theme-corrupted {
-        --c-e400: 156 163 175;
-        --c-e500: 107 114 128;
-        --c-e600: 75 85 99;
-        --c-e700: 55 65 81;
-        --c-e800: 31 41 55;
-        --c-e900: 17 24 39;
-        --c-e950: 7 11 20;
+        --c-e400: 243 244 246; /* gray-100 */
+        --c-e500: 229 231 235; /* gray-200 (texto principal suave y legible) */
+        --c-e600: 156 163 175; /* gray-400 */
+        --c-e700: 107 114 128; /* gray-500 */
+        --c-e800: 75 85 99;    /* gray-600 */
+        --c-e900: 55 65 81;    /* gray-700 */
+        --c-e950: 31 41 55;    /* gray-800 */
       }
       .theme-corrupted .crt-overlay {
         background:
@@ -1296,7 +1296,7 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
         const scrambledId = useScrambleText(creature.id, true, 1500);
 
         return (
-          <div onClick={() => onOpen(creature)}
+          <div onClick={() => onOpen(creature)} data-nosnippet
             className="mb-10 cursor-pointer group relative overflow-hidden border border-emerald-900/40 bg-black hover:border-emerald-500/50 transition-all">
             <div className="flex flex-col md:flex-row">
               {/* Imagen con fade hacia la derecha */}
@@ -2212,7 +2212,7 @@ const DailyCreatureWidget = ({ creature, onOpen }) => {
                     No hay registros recuperados
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  <div data-nosnippet className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {currentItems.map((c) => {
                       const openCreature = (creature) => {
                         // --- EASTER EGG: track consecutive Lovecraftian opens ---
