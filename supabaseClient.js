@@ -88,6 +88,12 @@ async function supaLoadCreatures() {
 
   if (result.error) throw result.error;
 
+  // DEBUG: ver datos crudos de Supabase (eliminar después de confirmar)
+  if (result.data && result.data.length > 0) {
+    console.log('[DEBUG] Primer criatura raw:', JSON.stringify(result.data[0], null, 2));
+    console.log('[DEBUG] tb_creaturemythologies:', result.data[0].tb_creaturemythologies);
+  }
+
   // Transform each row into the legacy frontend shape
   return (result.data || []).map(function (c) {
     return {
@@ -135,6 +141,15 @@ async function supaLoadDangerLevels() {
     .order('risk_score');
   if (result.error) throw result.error;
   return result.data || [];
+}
+
+async function supaLoadMythologies() {
+  var result = await window._supabase
+    .from('ctl_mythologies')
+    .select('id, name')
+    .order('name');
+  if (result.error) throw result.error;
+  return (result.data || []).map(function (m) { return m.name; });
 }
 
 // ============================================================
