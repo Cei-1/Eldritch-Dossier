@@ -1,5 +1,5 @@
-const CACHE_NAME = 'eldritch-shell-v15';
-const RUNTIME_CACHE = 'eldritch-runtime-v15';
+const CACHE_NAME = 'eldritch-shell-v16';
+const RUNTIME_CACHE = 'eldritch-runtime-v16';
 
 const APP_SHELL = [
   './',
