@@ -1,52 +1,62 @@
-# 🌌 Eldritch Dossier — Compendio Enciclopédico
+# Eldritch Dossier
 
-> **"Lo más misericordioso del mundo es la incapacidad de la mente humana para relacionar todos sus contenidos."** — *Inspirado en el horror cósmico de H.P. Lovecraft.*
+Aplicación web progresiva para consultar y administrar expedientes de criaturas
+mitológicas con una interfaz inspirada en terminales CRT.
 
-**Eldritch Dossier** es una Aplicación Web Progresiva (PWA) de vanguardia diseñada para investigadores de lo oculto y entusiastas de la mitología. Permite catalogar y gestionar descubrimientos sobre criaturas ancestrales mediante una interfaz inmersiva que fusiona la estética de manuscritos antiguos con tecnología web de última generación.
+## Funciones
 
-![Texto ALT de la imagen que utilices para mostrar el proyecto](https://raw.githubusercontent.com/Cei-1/Eldritch-Dossier/refs/heads/main/assets/img/Eldritch-Dossier-logo.jpg)
+- Consulta pública de expedientes activos.
+- Búsqueda, filtros, clasificación y navegación paginada.
+- Registro e inicio de sesión mediante Supabase Auth.
+- Roles: Archivista (administración), Erudito (creación y edición) e Iniciado
+  (lectura).
+- Catálogos relacionales de culturas, mitologías, etiquetas, habilidades y
+  niveles de peligro.
+- PWA instalable con acceso offline de solo lectura a recursos previamente
+  visitados.
+- Interfaz adaptable a móvil y preferencias de movimiento reducido.
 
-## ✨ Características Principales
+## Arquitectura
 
-### 💾 Arquitectura Offline-First
-Desarrollada para funcionar en la oscuridad total. Utiliza **IndexedDB** para el almacenamiento local, garantizando acceso a tus investigaciones incluso sin conexión a la red.
+- Frontend: React 18, JSX, Tailwind CSS y estilos propios.
+- Backend: Supabase Auth, Postgres y Row Level Security.
+- PWA: Web App Manifest y Service Worker.
 
-### ☁️ Sincronización en la Nube
-Integración nativa con la **API de GitHub Gists**. Persiste y sincroniza tu base de datos personal entre múltiples dispositivos utilizando tokens de acceso seguro.
+La clave incluida en `supabaseClient.js` es una clave pública/publishable. La
+protección de los datos depende de las políticas RLS; nunca se debe colocar una
+clave `service_role` en el frontend.
 
-### 👁️ Interfaz Inmersiva
-Experiencia de usuario basada en **Glassmorphism**. Incluye:
-* Animaciones de partículas en **Canvas 2D**.
-* Efectos de profundidad con **Parallax**.
-* Tipografía clásica seleccionada (`Cinzel` y `Crimson Text`) para una lectura atmosférica.
+## Preparación de Supabase
 
-### 📝 Gestión Completa (CRUD)
-Control total sobre los registros de criaturas, incluyendo:
-* Origen (Cultura, Mitología y Período).
-* Descripción física e historia detallada.
-* Niveles de peligro dinámicos y etiquetas personalizadas.
+1. Crea las tablas y catálogos base.
+2. Ejecuta `database/migrations/001_secure_schema.sql` en Supabase SQL Editor.
+3. Comprueba que los usuarios nuevos reciben el rol `Iniciado`.
+4. Asigna manualmente el rol `Archivista` o `Erudito` únicamente a usuarios de
+   confianza.
 
-### 📱 PWA Ready
-Totalmente instalable en dispositivos móviles y de escritorio gracias a su soporte para **Service Workers** y manifiesto de aplicación.
+La migración corrige las políticas solapadas, habilita lectura de relaciones y
+añade `save_creature`, una función transaccional que evita expedientes
+parcialmente guardados. Mientras no se aplique, el frontend conserva un flujo
+heredado de compatibilidad, pero no ofrece las mismas garantías.
 
----
+## Desarrollo local
 
-## 🛠️ Stack Tecnológico
+El Service Worker requiere HTTP; abrir directamente `index.html` mediante
+`file://` no permite probar correctamente la PWA.
 
-| Componente | Tecnologías |
-| :--- | :--- |
-| **Frontend** | HTML5, CSS3 (Variables dinámicas, Grid/Flexbox), JavaScript (ES6+) |
-| **Base de Datos** | IndexedDB (Local) & GitHub Gist API (Cloud Sync) |
-| **Gráficos** | HTML5 Canvas (Particle Engine) & Animaciones CSS3 |
+```powershell
+python -m http.server 4173 --bind 127.0.0.1
+```
 
----
+Después abre `http://127.0.0.1:4173`.
 
-## 🚀 Instalación y Uso
+## Permisos
 
-1.  Clona el repositorio.
-2.  Abre `index.html` en tu navegador o levanta un servidor local.
-3.  Configura tu **GitHub Token** y **Gist ID** en el panel de configuración ⚙️ para activar la sincronización.
+| Operación | Público/Iniciado | Erudito | Archivista |
+| --- | ---: | ---: | ---: |
+| Ver expedientes activos | Sí | Sí | Sí |
+| Crear y editar | No | Sí | Sí |
+| Eliminar | No | No | Sí |
 
----
-
-**Desarrollado por [Brian Aguirre]** *Explorando los límites de la web y el horror cósmico.*
+El modo offline es deliberadamente de solo lectura. Las escrituras requieren
+conexión para que Supabase valide la sesión y las políticas RLS.

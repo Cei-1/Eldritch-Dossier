@@ -218,15 +218,22 @@
             const canvas = document.getElementById(`canvas${size}`);
             const ctx = canvas.getContext('2d');
             
-            // Clear canvas
+            // Limpiar fondo (sin color, transparente)
             ctx.clearRect(0, 0, size, size);
             
-            // Draw image centered and scaled to fit
-            const scale = Math.min(size / originalImage.width, size / originalImage.height);
-            const x = (size - originalImage.width * scale) / 2;
-            const y = (size - originalImage.height * scale) / 2;
+            // Añadimos un "padding" (margen) del 25% para que Android no recorte el logo
+            const paddingScale = 0.75; 
+            const targetSize = size * paddingScale;
+
+            // Draw image centered and scaled to fit within the padded area
+            const scale = Math.min(targetSize / originalImage.width, targetSize / originalImage.height);
+            const drawWidth = originalImage.width * scale;
+            const drawHeight = originalImage.height * scale;
             
-            ctx.drawImage(originalImage, x, y, originalImage.width * scale, originalImage.height * scale);
+            const x = (size - drawWidth) / 2;
+            const y = (size - drawHeight) / 2;
+            
+            ctx.drawImage(originalImage, x, y, drawWidth, drawHeight);
         }
 
         function downloadIcon(size) {

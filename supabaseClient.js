@@ -10,7 +10,24 @@ var SUPABASE_URL = 'https://cbcmcdqhtxbefsvyzszw.supabase.co';
 var SUPABASE_ANON_KEY = 'sb_publishable_AjrJpf-3UPIOh8T-wlIAjQ_Ibi7yVyn';
 
 // Singleton client — attached to window for global access
-window._supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+window._supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true
+  }
+});
+
+function supaFriendlyError(error) {
+  if (!error) return new Error('Ocurrió un error desconocido.');
+  var messages = {
+    'Invalid login credentials': 'Correo o contraseña incorrectos.',
+    'Email not confirmed': 'Confirma tu correo antes de iniciar sesión.',
+    'User already registered': 'Ya existe una cuenta con ese correo.',
+    'Failed to fetch': 'No se pudo conectar con el servidor. Revisa tu conexión.'
+  };
+  return new Error(messages[error.message] || error.message || 'Error de conexión con Supabase.');
+}
 
 // ============================================================
 //  AUTH
@@ -88,12 +105,6 @@ async function supaLoadCreatures() {
 
   if (result.error) throw result.error;
 
-  // DEBUG: ver datos crudos de Supabase (eliminar después de confirmar)
-  if (result.data && result.data.length > 0) {
-    console.log('[DEBUG] Primer criatura raw:', JSON.stringify(result.data[0], null, 2));
-    console.log('[DEBUG] tb_creaturemythologies:', result.data[0].tb_creaturemythologies);
-  }
-
   // Transform each row into the legacy frontend shape
   return (result.data || []).map(function (c) {
     return {
@@ -157,6 +168,18 @@ async function supaLoadMythologies() {
 // ============================================================
 
 async function supaUpsertCreature(creatureData, isEditing, currentUsername) {
+  var rpcResult = await window._supabase.rpc('save_creature', {
+    payload: creatureData,
+    editing: Boolean(isEditing)
+  });
+  if (!rpcResult.error) return rpcResult.data;
+
+  var rpcUnavailable =
+    rpcResult.error.code === 'PGRST202' ||
+    /save_creature|schema cache/i.test(rpcResult.error.message || '');
+  if (!rpcUnavailable) throw supaFriendlyError(rpcResult.error);
+
+  console.warn('[Supabase] Aplica database/migrations/001_secure_schema.sql para habilitar guardado atómico.');
   var nowIso = new Date().toISOString();
 
   // 1. Resolve danger_level_id from the human-readable name
