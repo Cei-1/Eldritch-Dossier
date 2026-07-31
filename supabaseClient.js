@@ -83,6 +83,29 @@ async function supaUpdatePassword(newPassword) {
   if (result.error) throw result.error;
 }
 
+async function supaChangePassword(currentPassword, newPassword) {
+  var session = await supaGetSession();
+  var email = session && session.user && session.user.email;
+
+  if (!email) {
+    throw new Error('Tu sesión expiró. Inicia sesión nuevamente.');
+  }
+
+  var verification = await window._supabase.auth.signInWithPassword({
+    email: email,
+    password: currentPassword
+  });
+
+  if (verification.error) {
+    if (verification.error.message === 'Invalid login credentials') {
+      throw new Error('La contraseña actual es incorrecta.');
+    }
+    throw supaFriendlyError(verification.error);
+  }
+
+  await supaUpdatePassword(newPassword);
+}
+
 // ============================================================
 //  LOAD CREATURES  (relational JOINs)
 // ============================================================

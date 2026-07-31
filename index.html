@@ -2729,8 +2729,9 @@
         );
       };
 
-      // --- UPDATE KEY MODAL ---
+      // --- CHANGE PASSWORD MODAL (Supabase Auth) ---
       const UpdateKeyModal = ({ onClose, onSuccess }) => {
+        const [currentPassword, setCurrentPassword] = useState("");
         const [password, setPassword] = useState("");
         const [confirmPassword, setConfirmPassword] = useState("");
         const [loading, setLoading] = useState(false);
@@ -2738,18 +2739,26 @@
 
         const handleSubmit = async (e) => {
           e.preventDefault();
+          if (!currentPassword) {
+            setError("Ingresa tu contraseña actual");
+            return;
+          }
           if (password !== confirmPassword) {
-            setError("Las nuevas llaves no coinciden");
+            setError("Las contraseñas no coinciden");
             return;
           }
           if (password.length < 6) {
             setError("Mínimo 6 caracteres");
             return;
           }
+          if (currentPassword === password) {
+            setError("La nueva contraseña debe ser diferente");
+            return;
+          }
           setLoading(true);
           setError("");
           try {
-            await supaUpdatePassword(password);
+            await supaChangePassword(currentPassword, password);
             onSuccess();
           } catch (err) {
             setError(err.message || "Error de actualización");
@@ -2767,10 +2776,10 @@
             <div className="relative w-full max-w-md bg-black border-2 border-emerald-500 p-10 shadow-[0_0_120px_rgba(16,185,129,0.2)]">
               <div className="text-center mb-8 border-b border-emerald-900 pb-4">
                 <div className="text-[10px] text-emerald-950 font-black uppercase tracking-[0.5em] mb-2">
-                  [ EMERGENCIA_SISTEMA ]
+                  [ SEGURIDAD_DE_CUENTA ]
                 </div>
                 <h3 className="text-xl font-black uppercase tracking-tighter italic text-emerald-500">
-                  ACTUALIZAR_LLAVE
+                  CAMBIAR CONTRASEÑA
                 </h3>
               </div>
 
@@ -2783,7 +2792,27 @@
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="flex flex-col gap-2">
                   <label className="text-[9px] uppercase font-black text-emerald-900 block tracking-widest italic text-center">
-                    Nueva Llave de Acceso
+                    Contraseña actual
+                  </label>
+                  <div className="relative flex items-center bg-emerald-950/10 border border-emerald-900 focus-within:border-emerald-500 transition-colors">
+                    <span className="text-[10px] text-emerald-600 font-mono font-black ml-3 shrink-0 whitespace-nowrap">
+                      [ VERIFY ] &gt;
+                    </span>
+                    <input
+                      type="password"
+                      required
+                      autoFocus
+                      autoComplete="current-password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      className="w-full bg-transparent p-4 text-xs text-emerald-400 outline-none placeholder:opacity-20 flex-1 font-mono"
+                      placeholder="••••••••"
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-[9px] uppercase font-black text-emerald-900 block tracking-widest italic text-center">
+                    Nueva contraseña
                   </label>
                   <div className="relative flex items-center bg-emerald-950/10 border border-emerald-900 focus-within:border-emerald-500 transition-colors">
                     <span className="text-[10px] text-emerald-600 font-mono font-black ml-3 shrink-0 whitespace-nowrap">
@@ -2792,7 +2821,7 @@
                     <input
                       type="password"
                       required
-                      autoFocus
+                      autoComplete="new-password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       className="w-full bg-transparent p-4 text-xs text-emerald-400 outline-none placeholder:opacity-20 flex-1 font-mono"
@@ -2802,7 +2831,7 @@
                 </div>
                 <div className="flex flex-col gap-2">
                   <label className="text-[9px] uppercase font-black text-emerald-900 block tracking-widest italic text-center">
-                    Confirmar Llave
+                    Confirmar contraseña
                   </label>
                   <div className="relative flex items-center bg-emerald-950/10 border border-emerald-900 focus-within:border-emerald-500 transition-colors">
                     <span className="text-[10px] text-emerald-600 font-mono font-black ml-3 shrink-0 whitespace-nowrap">
@@ -2811,6 +2840,7 @@
                     <input
                       type="password"
                       required
+                      autoComplete="new-password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       className="w-full bg-transparent p-4 text-xs text-emerald-400 outline-none placeholder:opacity-20 flex-1 font-mono"
@@ -2823,7 +2853,7 @@
                   disabled={loading}
                   className="w-full py-4 bg-emerald-900/20 text-emerald-500 font-black uppercase text-[10px] tracking-[0.2em] hover:bg-emerald-500 hover:text-black transition-all border border-emerald-500 disabled:opacity-50 mt-2 block"
                 >
-                  {loading ? "MODIFICANDO..." : "> EJECUTAR_ACTUALIZACION"}
+                  {loading ? "ACTUALIZANDO..." : "GUARDAR CONTRASEÑA"}
                 </button>
               </form>
               <button
@@ -2831,7 +2861,7 @@
                 onClick={onClose}
                 className="mt-6 w-full py-3 border border-emerald-900 text-emerald-900 hover:text-red-500 text-[10px] font-black uppercase tracking-widest transition-colors"
               >
-                Abortar
+                Cancelar
               </button>
             </div>
           </div>
@@ -4905,15 +4935,17 @@
                       <div className="text-[8px] text-emerald-900 uppercase font-black tracking-[0.25em] mb-2">
                         Usuario autenticado
                       </div>
-                      <div className="text-sm text-emerald-400 font-black break-all">
-                        {currentUser}
-                      </div>
-                      <div className="mt-3 inline-flex border border-emerald-900 px-2 py-1 text-[8px] text-emerald-600 uppercase font-black tracking-widest">
-                        {userRole === 1
-                          ? "Archivista"
-                          : userRole === 2
-                            ? "Erudito"
-                            : "Iniciado"}
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="text-sm text-emerald-400 font-black break-all min-w-0">
+                          {currentUser}
+                        </div>
+                        <div className="shrink-0 inline-flex border border-emerald-900 px-2 py-1 text-[8px] text-emerald-600 uppercase font-black tracking-widest">
+                          {userRole === 1
+                            ? "Archivista"
+                            : userRole === 2
+                              ? "Erudito"
+                              : "Iniciado"}
+                        </div>
                       </div>
                     </div>
 
@@ -4943,6 +4975,18 @@
                         </button>
                       </div>
                     </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowSettingsModal(false);
+                        setShowLogoutConfirm(false);
+                        setShowUpdateKeyModal(true);
+                      }}
+                      className="w-full py-4 bg-emerald-950/10 border border-emerald-900 text-emerald-500 font-black uppercase text-[10px] tracking-widest hover:bg-emerald-500 hover:text-black transition-all flex items-center justify-center gap-3"
+                    >
+                      <Icon name="settings" /> Cambiar contraseña
+                    </button>
 
                     {!showLogoutConfirm ? (
                       <button
@@ -4993,11 +5037,7 @@
                 onClose={() => setShowUpdateKeyModal(false)}
                 onSuccess={() => {
                   setShowUpdateKeyModal(false);
-                  showToast("CREDENCIAL ACTUALIZADA", "success");
-                  // Timeout para asegurar que UpdateUser finish (Supabase JS auto-signs out in some edge cases on update, but here we force sign-out for aesthetic)
-                  setTimeout(() => {
-                    handleLogout();
-                  }, 1500);
+                  showToast("CONTRASEÑA ACTUALIZADA", "success");
                 }}
               />
             )}
