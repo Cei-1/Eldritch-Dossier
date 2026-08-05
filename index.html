@@ -74,6 +74,7 @@
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <!-- Supabase SDK & Client -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
@@ -1917,6 +1918,13 @@
         outline: none;
       }
 
+      .rich-text-toolbar button.is-active {
+        border-color: rgb(var(--c-e500));
+        color: rgb(var(--c-e300));
+        background: rgb(var(--c-e500) / 0.18);
+        box-shadow: inset 0 -2px 0 rgb(var(--c-e400));
+      }
+
       .rich-text-surface {
         min-height: 132px;
         max-height: 320px;
@@ -1950,7 +1958,9 @@
       .rich-text-surface a,
       .rich-text-content a { color: rgb(var(--c-e400)); text-decoration: underline; }
       .rich-text-surface p,
-      .rich-text-content p { margin: 0.45rem 0; }
+      .rich-text-content p,
+      .rich-text-surface div,
+      .rich-text-content div { margin: 0.45rem 0; }
 
       @media (max-width: 767px) {
         .rich-text-toolbar { gap: 2px; padding: 5px; }
@@ -2213,7 +2223,7 @@
 
         const documentFragment = new DOMParser().parseFromString(value, "text/html");
         const allowedTags = new Set([
-          "P", "BR", "STRONG", "B", "EM", "I", "U", "S", "DEL",
+          "P", "DIV", "BR", "STRONG", "B", "EM", "I", "U", "S", "DEL",
           "UL", "OL", "LI", "BLOCKQUOTE", "A"
         ]);
 
@@ -2249,6 +2259,7 @@
 
       const RichTextEditor = ({ value, onChange, placeholder, labelledBy }) => {
         const editorRef = useRef(null);
+        const [activeFormats, setActiveFormats] = useState({});
 
         useEffect(() => {
           const editor = editorRef.current;
@@ -2264,10 +2275,33 @@
           onChange(sanitizedValue);
         };
 
+        const syncActiveFormats = () => {
+          const editor = editorRef.current;
+          const selection = window.getSelection();
+          if (!editor || !selection?.anchorNode || !editor.contains(selection.anchorNode)) {
+            setActiveFormats({});
+            return;
+          }
+
+          const formatBlock = String(document.queryCommandValue("formatBlock") || "")
+            .replace(/[<>]/g, "")
+            .toLowerCase();
+          setActiveFormats({
+            bold: document.queryCommandState("bold"),
+            italic: document.queryCommandState("italic"),
+            underline: document.queryCommandState("underline"),
+            strikeThrough: document.queryCommandState("strikeThrough"),
+            insertUnorderedList: document.queryCommandState("insertUnorderedList"),
+            insertOrderedList: document.queryCommandState("insertOrderedList"),
+            formatBlock: formatBlock === "blockquote",
+          });
+        };
+
         const runCommand = (command, commandValue = null) => {
           editorRef.current?.focus();
           document.execCommand(command, false, commandValue);
           emitChange();
+          syncActiveFormats();
         };
 
         const addLink = () => {
@@ -2299,6 +2333,8 @@
                   type="button"
                   title={title}
                   aria-label={title}
+                  aria-pressed={Boolean(activeFormats[command])}
+                  className={activeFormats[command] ? "is-active" : ""}
                   onMouseDown={(event) => event.preventDefault()}
                   onClick={() => runCommand(command, commandValue)}
                 >
@@ -2332,8 +2368,17 @@
               aria-multiline="true"
               aria-labelledby={labelledBy}
               data-placeholder={placeholder}
-              onInput={emitChange}
-              onBlur={emitChange}
+              onFocus={syncActiveFormats}
+              onInput={() => {
+                emitChange();
+                syncActiveFormats();
+              }}
+              onKeyUp={syncActiveFormats}
+              onMouseUp={syncActiveFormats}
+              onBlur={() => {
+                emitChange();
+                setActiveFormats({});
+              }}
               onPaste={(event) => {
                 event.preventDefault();
                 const plainText = event.clipboardData.getData("text/plain");
@@ -3250,10 +3295,12 @@
         const [dataReady, setDataReady] = useState(false);
         const [bootDone, setBootDone] = useState(false);
         const [saving, setSaving] = useState(false);
+        const [exportingReport, setExportingReport] = useState(false);
         const [error, setError] = useState(null);
         const [view, setView] = useState("explorer");
         const [search, setSearch] = useState("");
         const [filterMito, setFilterMito] = useState("");
+        const [filterAbility, setFilterAbility] = useState("");
         const [selectedCreature, setSelectedCreature] = useState(null);
         const [page, setPage] = useState(1);
         const [syncStatus, setSyncStatus] = useState("");
@@ -3902,6 +3949,224 @@
           return [...set].sort();
         }, [creatures, mythologyCatalog]);
 
+        const allAbilities = useMemo(() => {
+          const abilities = new Set();
+          creatures.forEach((creature) => {
+            (creature.habilidades || []).forEach((ability) => {
+              if (ability) abilities.add(ability);
+            });
+          });
+          return [...abilities].sort((a, b) => a.localeCompare(b));
+        }, [creatures]);
+
+        const exportCreatureReport = async (creature) => {
+          if (!window.jspdf?.jsPDF) {
+            showToast("El generador de PDF no está disponible. Recarga la aplicación.", "error");
+            return;
+          }
+
+          setExportingReport(true);
+          try {
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({ unit: "mm", format: "a4" });
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            const margin = 16;
+            let pageNumber = 1;
+            let y = 32;
+
+            const toArray = (value) => (Array.isArray(value) ? value : value ? [value] : []);
+            const richTextBlocks = (value) => {
+              const documentFragment = new DOMParser().parseFromString(
+                sanitizeRichText(value || ""),
+                "text/html",
+              );
+              const textWithBreaks = (node) => {
+                if (node.nodeType === Node.TEXT_NODE) return node.nodeValue || "";
+                if (node.nodeName === "BR") return "\n";
+                return Array.from(node.childNodes).map(textWithBreaks).join("");
+              };
+              const blocks = [];
+              Array.from(documentFragment.body.childNodes).forEach((node) => {
+                if (node.nodeType === Node.TEXT_NODE) {
+                  textWithBreaks(node).split(/\n+/).forEach((text) => {
+                    if (text.trim()) blocks.push({ text: text.trim() });
+                  });
+                  return;
+                }
+                if (node.nodeName === "UL" || node.nodeName === "OL") {
+                  Array.from(node.children).forEach((item, index) => {
+                    const text = textWithBreaks(item).trim();
+                    if (text) blocks.push({ text, prefix: node.nodeName === "OL" ? `${index + 1}. ` : "• " });
+                  });
+                  return;
+                }
+                const text = textWithBreaks(node).trim();
+                if (text) blocks.push({ text, prefix: node.nodeName === "BLOCKQUOTE" ? "> " : "" });
+              });
+              return blocks.length ? blocks : [{ text: "Sin datos registrados." }];
+            };
+            const loadReportImage = async (source) => {
+              if (!source) return null;
+              try {
+                const response = await fetch(source);
+                if (!response.ok) return null;
+                const blob = await response.blob();
+                if (!/^image\/(png|jpeg|jpg)$/i.test(blob.type)) return null;
+                const dataUrl = await new Promise((resolve, reject) => {
+                  const reader = new FileReader();
+                  reader.onload = () => resolve(reader.result);
+                  reader.onerror = reject;
+                  reader.readAsDataURL(blob);
+                });
+                const dimensions = await new Promise((resolve, reject) => {
+                  const image = new Image();
+                  image.onload = () => resolve({ width: image.naturalWidth, height: image.naturalHeight });
+                  image.onerror = reject;
+                  image.src = dataUrl;
+                });
+                return {
+                  dataUrl,
+                  format: /png/i.test(blob.type) ? "PNG" : "JPEG",
+                  ...dimensions,
+                };
+              } catch (_error) {
+                return null;
+              }
+            };
+            const reportImage = await loadReportImage(creature.imagen_url);
+            const drawFrame = () => {
+              pdf.setFillColor(2, 9, 7);
+              pdf.rect(0, 0, pageWidth, pageHeight, "F");
+              pdf.setDrawColor(16, 185, 129);
+              pdf.setLineWidth(0.4);
+              pdf.rect(7, 7, pageWidth - 14, pageHeight - 14);
+              pdf.setFillColor(4, 43, 34);
+              pdf.rect(7, 7, pageWidth - 14, 18, "F");
+              pdf.setTextColor(110, 231, 183);
+              pdf.setFont("courier", "bold");
+              pdf.setFontSize(9);
+              pdf.text("ELDRITCH DOSSIER // ARCHIVO CLASIFICADO", margin, 18);
+              pdf.setFontSize(7);
+              pdf.text(`EXPEDIENTE: ${creature.id || "S/N"}`, pageWidth - margin, 14, { align: "right" });
+              pdf.text(`PÁGINA ${pageNumber}`, pageWidth - margin, pageHeight - 12, { align: "right" });
+              pdf.setTextColor(52, 211, 153);
+              pdf.text("ACCESO RESTRINGIDO - COPIA DE CONSULTA", margin, pageHeight - 12);
+            };
+            const nextPage = () => {
+              pdf.addPage();
+              pageNumber += 1;
+              drawFrame();
+              y = 34;
+            };
+            const ensureSpace = (height) => {
+              if (y + height > pageHeight - 22) nextPage();
+            };
+            const startSection = (title) => {
+              ensureSpace(13);
+              pdf.setTextColor(52, 211, 153);
+              pdf.setFont("courier", "bold");
+              pdf.setFontSize(8);
+              pdf.text(title.toUpperCase(), margin, y);
+              y += 5;
+              pdf.setDrawColor(6, 95, 70);
+              pdf.line(margin, y, pageWidth - margin, y);
+              y += 5;
+            };
+            const addParagraph = (text, prefix = "") => {
+              pdf.setFont("courier", "normal");
+              pdf.setFontSize(8.5);
+              pdf.setTextColor(209, 250, 229);
+              const indentation = prefix ? 5 : 0;
+              const lines = pdf.splitTextToSize(text, pageWidth - margin * 2 - indentation);
+              lines.forEach((line, index) => {
+                ensureSpace(5);
+                pdf.text(`${index === 0 ? prefix : ""}${line}`, margin + (index > 0 ? indentation : 0), y);
+                y += 4.7;
+              });
+              y += 2.5;
+            };
+            const addSection = (title, value) => {
+              startSection(title);
+              addParagraph(value);
+              y += 2.5;
+            };
+            const addRichTextSection = (title, blocks) => {
+              startSection(title);
+              blocks.forEach(({ text, prefix = "" }) => addParagraph(text, prefix));
+              y += 5;
+            };
+
+            drawFrame();
+            pdf.setTextColor(255, 255, 255);
+            pdf.setFont("courier", "bold");
+            pdf.setFontSize(reportImage ? 30 : 26);
+            const imageWidth = 78;
+            const imageY = 32;
+            const imageHeight = reportImage
+              ? Math.min(78, Math.max(50, imageWidth * reportImage.height / reportImage.width))
+              : 0;
+            const titleWidth = reportImage ? pageWidth - margin * 2 - imageWidth - 10 : pageWidth - margin * 2;
+            const titleLines = pdf.splitTextToSize(
+              (creature.nombre || "ENTIDAD SIN IDENTIFICAR").toUpperCase(),
+              titleWidth,
+            );
+            const titleLineHeight = 10;
+            const titleY = reportImage
+              ? imageY + Math.max(7, (imageHeight - titleLines.length * titleLineHeight) / 2 + 7)
+              : y;
+            pdf.text(titleLines, margin, titleY);
+            y = titleY + titleLines.length * titleLineHeight + 4;
+            if (reportImage) {
+              pdf.addImage(
+                reportImage.dataUrl,
+                reportImage.format,
+                pageWidth - margin - imageWidth,
+                imageY,
+                imageWidth,
+                imageHeight,
+              );
+              y = Math.max(y, imageY + imageHeight + 9);
+            }
+            pdf.setFillColor(16, 185, 129);
+            pdf.rect(margin, y, pageWidth - margin * 2, 7, "F");
+            pdf.setTextColor(0, 0, 0);
+            pdf.setFontSize(8);
+            pdf.text(`NIVEL DE PELIGRO: ${(creature.nivel_peligro || "NO CLASIFICADO").toUpperCase()}`, margin + 3, y + 4.7);
+            y += 16;
+
+            addSection("Ficha de clasificación", [
+              `Cultura: ${toArray(creature.origen?.cultura).join(", ") || "Sin datos"}`,
+              `Mitología: ${toArray(creature.origen?.mitologia).join(", ") || "Sin datos"}`,
+              `Período: ${creature.origen?.periodo || "Sin datos"}`,
+              `Generado: ${new Date().toLocaleString("es-MX")}`,
+            ].join("\n"));
+            addRichTextSection("Bitácora de origen", richTextBlocks(creature.historia));
+            addRichTextSection("Análisis morfológico", richTextBlocks(creature.descripcion_fisica));
+            addRichTextSection(
+              "Habilidades registradas",
+              toArray(creature.habilidades).length
+                ? toArray(creature.habilidades).map((ability) => ({ text: ability, prefix: "• " }))
+                : [{ text: "Sin habilidades registradas." }],
+            );
+            addSection("Etiquetas", toArray(creature.tags).map((tag) => `#${tag}`).join(" ") || "Sin etiquetas registradas.");
+
+            const safeName = (creature.nombre || creature.id || "expediente")
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "")
+              .replace(/[^a-z0-9]+/gi, "-")
+              .replace(/(^-|-$)/g, "")
+              .toLowerCase();
+            pdf.save(`expediente-clasificado-${safeName}.pdf`);
+            showToast("Informe PDF generado", "success");
+          } catch (error) {
+            console.error("No se pudo generar el informe PDF", error);
+            showToast("No se pudo generar el informe PDF", "error");
+          } finally {
+            setExportingReport(false);
+          }
+        };
+
         // --- FILTRO Y ORDENAMIENTO ---
         const dangerOrder = {
           Insignificante: 1,
@@ -3918,17 +4183,32 @@
         const filtered = useMemo(() => {
           let result = creatures.filter((c) => {
             if (c.status === "deleted") return false;
-            if (
-              search &&
-              !(c.nombre || "").toLowerCase().includes(search.toLowerCase())
-            )
-              return false;
+            if (search) {
+              const m = c.origen?.mitologia;
+              const mythologies = Array.isArray(m) ? m : m ? [m] : [];
+              const searchableContent = [
+                c.id,
+                c.nombre,
+                ...mythologies,
+                ...(c.habilidades || []),
+                ...(c.tags || []),
+              ]
+                .filter(Boolean)
+                .join(" ")
+                .toLowerCase();
+              if (!searchableContent.includes(search.trim().toLowerCase())) return false;
+            }
             if (filterMito) {
               const m = c.origen?.mitologia;
               const arr = Array.isArray(m) ? m : m ? [m] : [];
               if (!arr.some((v) => v === filterMito)) return false;
             }
             if (filterDanger && c.nivel_peligro !== filterDanger) return false;
+            if (
+              filterAbility &&
+              !(c.habilidades || []).some((ability) => ability === filterAbility)
+            )
+              return false;
             return true;
           });
           // Sort
@@ -3952,7 +4232,7 @@
             return 0;
           });
           return result;
-        }, [creatures, search, filterMito, filterDanger, sortBy]);
+        }, [creatures, search, filterMito, filterDanger, filterAbility, sortBy]);
 
         const currentItems = filtered.slice(
           (page - 1) * itemsPerPage,
@@ -4349,7 +4629,7 @@
                     </button>
                   </div>
                   {/* Row 2: Filters in a compact grid */}
-                  <div className="grid grid-cols-3 gap-2 md:flex md:gap-3">
+                  <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-3">
                     <select
                       className="bg-black border border-emerald-900/30 py-2 px-2 md:px-3 text-[9px] md:text-[10px] text-emerald-500 outline-none uppercase font-bold cursor-pointer hover:border-emerald-500 transition-colors min-w-0 truncate"
                       value={filterMito}
@@ -4392,6 +4672,21 @@
                     </select>
                     <select
                       className="bg-black border border-emerald-900/30 py-2 px-2 md:px-3 text-[9px] md:text-[10px] text-emerald-500 outline-none uppercase font-bold cursor-pointer hover:border-emerald-500 transition-colors min-w-0 truncate"
+                      value={filterAbility}
+                      onChange={(e) => {
+                        setFilterAbility(e.target.value);
+                        setPage(1);
+                      }}
+                    >
+                      <option value="">Habilidad</option>
+                      {allAbilities.map((ability) => (
+                        <option key={ability} value={ability}>
+                          {ability}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      className="bg-black border border-emerald-900/30 py-2 px-2 md:px-3 text-[9px] md:text-[10px] text-emerald-500 outline-none uppercase font-bold cursor-pointer hover:border-emerald-500 transition-colors min-w-0 truncate"
                       value={sortBy}
                       onChange={(e) => {
                         setSortBy(e.target.value);
@@ -4405,6 +4700,19 @@
                       <option value="peligro_asc">&darr; Peligro</option>
                     </select>
                   </div>
+                  {(filterMito || filterDanger || filterAbility) && (
+                    <button
+                      onClick={() => {
+                        setFilterMito("");
+                        setFilterDanger("");
+                        setFilterAbility("");
+                        setPage(1);
+                      }}
+                      className="text-[8px] text-emerald-800 hover:text-emerald-400 uppercase tracking-[0.2em] w-fit"
+                    >
+                      Limpiar filtros
+                    </button>
+                  )}
                 </div>
 
                 {filtered.length === 0 ? (
@@ -4969,15 +5277,26 @@
                         </h2>
                         <DangerBadge level={selectedCreature.nivel_peligro} />
                       </div>
-                      <button
-                        onClick={() => {
-                          setSelectedCreature(null);
-                          setDeclassPhase(-1);
-                        }}
-                        className="hidden md:block p-2 text-emerald-900 hover:text-red-500 transition-colors"
-                      >
-                        <Icon name="x" className="w-8 h-8" />
-                      </button>
+                      <div className="hidden md:flex items-center gap-2">
+                        <button
+                          onClick={() => exportCreatureReport(selectedCreature)}
+                          disabled={exportingReport}
+                          className="flex items-center gap-2 px-3 py-2 border border-emerald-800 text-emerald-500 text-[8px] font-black uppercase tracking-widest hover:bg-emerald-500 hover:text-black transition-all disabled:opacity-40"
+                        >
+                          <Icon name={exportingReport ? "loader" : "download"} className={exportingReport ? "w-4 h-4 animate-spin" : "w-4 h-4"} />
+                          {exportingReport ? "Generando" : "PDF"}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedCreature(null);
+                            setDeclassPhase(-1);
+                          }}
+                          className="p-2 text-emerald-900 hover:text-red-500 transition-colors"
+                          aria-label="Cerrar expediente"
+                        >
+                          <Icon name="x" className="w-8 h-8" />
+                        </button>
+                      </div>
                     </div>
                     <div
                       className={`grid grid-cols-3 gap-6 border-y border-emerald-900/30 py-6 text-[9px] uppercase font-black tracking-widest leading-tight ${declassPhase === 1 ? "declass-field" : ""}`}
@@ -5104,6 +5423,14 @@
                         ))}
                       </div>
                     </div>
+                    <button
+                      onClick={() => exportCreatureReport(selectedCreature)}
+                      disabled={exportingReport}
+                      className="md:hidden flex items-center justify-center gap-2 py-3 border border-emerald-800 text-emerald-500 text-[9px] font-black uppercase tracking-[0.18em] hover:bg-emerald-500 hover:text-black transition-all disabled:opacity-40"
+                    >
+                      <Icon name={exportingReport ? "loader" : "download"} className={exportingReport ? "w-4 h-4 animate-spin" : "w-4 h-4"} />
+                      {exportingReport ? "Generando informe" : "Descargar informe PDF"}
+                    </button>
                     {currentUser &&
                       userRole &&
                       (userRole === 1 || userRole === 2) && (
@@ -5371,7 +5698,7 @@
                       </button>
                     )}
                   </div>
-                  <div className="grid grid-cols-3 gap-2 mt-3">
+                  <div className="grid grid-cols-2 gap-2 mt-3">
                     <select
                       className="mobile-filter-select"
                       aria-label="Filtrar por mitología"
@@ -5416,6 +5743,22 @@
                     </select>
                     <select
                       className="mobile-filter-select"
+                      aria-label="Filtrar por habilidad"
+                      value={filterAbility}
+                      onChange={(e) => {
+                        setFilterAbility(e.target.value);
+                        setPage(1);
+                      }}
+                    >
+                      <option value="">Habilidad</option>
+                      {allAbilities.map((ability) => (
+                        <option key={ability} value={ability}>
+                          {ability}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      className="mobile-filter-select"
                       aria-label="Ordenar expedientes"
                       value={sortBy}
                       onChange={(e) => {
@@ -5433,12 +5776,14 @@
                   {(search ||
                     filterMito ||
                     filterDanger ||
+                    filterAbility ||
                     sortBy !== "nombre") && (
                     <button
                       onClick={() => {
                         setSearch("");
                         setFilterMito("");
                         setFilterDanger("");
+                        setFilterAbility("");
                         setSortBy("nombre");
                         setPage(1);
                       }}
