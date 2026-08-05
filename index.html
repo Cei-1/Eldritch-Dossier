@@ -1876,6 +1876,87 @@
           }
         }
       }
+
+      .rich-text-editor {
+        border: 1px solid rgb(var(--c-e900));
+        background: rgb(var(--c-e950) / 0.1);
+        transition: border-color 160ms ease, box-shadow 160ms ease;
+      }
+
+      .rich-text-editor:focus-within {
+        border-color: rgb(var(--c-e500));
+        box-shadow: 0 0 0 2px rgb(var(--c-e500) / 0.08);
+      }
+
+      .rich-text-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 3px;
+        padding: 6px;
+        border-bottom: 1px solid rgb(var(--c-e900) / 0.75);
+        background: rgb(0 0 0 / 0.58);
+      }
+
+      .rich-text-toolbar button {
+        min-width: 32px;
+        min-height: 32px;
+        padding: 0 8px;
+        border: 1px solid transparent;
+        color: rgb(var(--c-e700));
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 11px;
+        font-weight: 900;
+        transition: 150ms ease;
+      }
+
+      .rich-text-toolbar button:hover,
+      .rich-text-toolbar button:focus-visible {
+        border-color: rgb(var(--c-e800));
+        color: rgb(var(--c-e400));
+        background: rgb(var(--c-e950) / 0.45);
+        outline: none;
+      }
+
+      .rich-text-surface {
+        min-height: 132px;
+        max-height: 320px;
+        overflow-y: auto;
+        padding: 14px;
+        color: rgb(var(--c-e400));
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12px;
+        line-height: 1.7;
+        outline: none;
+        white-space: normal;
+      }
+
+      .rich-text-surface:empty::before {
+        content: attr(data-placeholder);
+        color: rgb(var(--c-e900));
+        pointer-events: none;
+      }
+
+      .rich-text-surface ul,
+      .rich-text-content ul { list-style: square; padding-left: 1.5rem; }
+      .rich-text-surface ol,
+      .rich-text-content ol { list-style: decimal; padding-left: 1.5rem; }
+      .rich-text-surface blockquote,
+      .rich-text-content blockquote {
+        margin: 0.65rem 0;
+        padding-left: 0.8rem;
+        border-left: 2px solid rgb(var(--c-e700));
+        opacity: 0.88;
+      }
+      .rich-text-surface a,
+      .rich-text-content a { color: rgb(var(--c-e400)); text-decoration: underline; }
+      .rich-text-surface p,
+      .rich-text-content p { margin: 0.45rem 0; }
+
+      @media (max-width: 767px) {
+        .rich-text-toolbar { gap: 2px; padding: 5px; }
+        .rich-text-toolbar button { min-width: 38px; min-height: 38px; }
+        .rich-text-surface { min-height: 180px; max-height: 420px; font-size: 13px; }
+      }
     </style>
   </head>
 
@@ -2113,6 +2194,154 @@
           >
             {icons[name]}
           </svg>
+        );
+      };
+
+      const escapeRichText = (value = "") =>
+        value
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+
+      const sanitizeRichText = (value = "") => {
+        if (!value) return "";
+        if (!/<[a-z][\s\S]*>/i.test(value)) {
+          return escapeRichText(value).replace(/\r?\n/g, "<br>");
+        }
+
+        const documentFragment = new DOMParser().parseFromString(value, "text/html");
+        const allowedTags = new Set([
+          "P", "BR", "STRONG", "B", "EM", "I", "U", "S", "DEL",
+          "UL", "OL", "LI", "BLOCKQUOTE", "A"
+        ]);
+
+        const cleanNode = (node) => {
+          Array.from(node.children).forEach(cleanNode);
+          if (!allowedTags.has(node.tagName)) {
+            node.replaceWith(...node.childNodes);
+            return;
+          }
+
+          Array.from(node.attributes).forEach((attribute) => {
+            if (node.tagName !== "A" || attribute.name.toLowerCase() !== "href") {
+              node.removeAttribute(attribute.name);
+            }
+          });
+
+          if (node.tagName === "A") {
+            const href = node.getAttribute("href") || "";
+            if (!/^(https?:|mailto:)/i.test(href)) {
+              node.removeAttribute("href");
+            } else {
+              node.setAttribute("target", "_blank");
+              node.setAttribute("rel", "noopener noreferrer");
+            }
+          }
+        };
+
+        Array.from(documentFragment.body.children).forEach(cleanNode);
+        const sanitizedValue = documentFragment.body.innerHTML;
+        const visibleText = documentFragment.body.textContent.replace(/[\s\u200B\uFEFF]/g, "");
+        return visibleText ? sanitizedValue : "";
+      };
+
+      const RichTextEditor = ({ value, onChange, placeholder, labelledBy }) => {
+        const editorRef = useRef(null);
+
+        useEffect(() => {
+          const editor = editorRef.current;
+          if (!editor || document.activeElement === editor) return;
+          const nextValue = sanitizeRichText(value || "");
+          if (editor.innerHTML !== nextValue) editor.innerHTML = nextValue;
+        }, [value]);
+
+        const emitChange = () => {
+          if (!editorRef.current) return;
+          const sanitizedValue = sanitizeRichText(editorRef.current.innerHTML);
+          if (!sanitizedValue) editorRef.current.innerHTML = "";
+          onChange(sanitizedValue);
+        };
+
+        const runCommand = (command, commandValue = null) => {
+          editorRef.current?.focus();
+          document.execCommand(command, false, commandValue);
+          emitChange();
+        };
+
+        const addLink = () => {
+          const url = window.prompt("URL del enlace (https://...)");
+          if (!url) return;
+          if (!/^https?:\/\//i.test(url) && !/^mailto:/i.test(url)) {
+            window.alert("Utiliza una URL que comience con https://");
+            return;
+          }
+          runCommand("createLink", url);
+        };
+
+        const toolbar = [
+          ["bold", null, "B", "Negrita"],
+          ["italic", null, "I", "Cursiva"],
+          ["underline", null, "U", "Subrayado"],
+          ["strikeThrough", null, "S", "Tachado"],
+          ["insertUnorderedList", null, "• Lista", "Lista con viñetas"],
+          ["insertOrderedList", null, "1. Lista", "Lista numerada"],
+          ["formatBlock", "blockquote", "❯ Cita", "Cita"],
+        ];
+
+        return (
+          <div className="rich-text-editor">
+            <div className="rich-text-toolbar" role="toolbar" aria-label="Formato de texto">
+              {toolbar.map(([command, commandValue, label, title]) => (
+                <button
+                  key={command}
+                  type="button"
+                  title={title}
+                  aria-label={title}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => runCommand(command, commandValue)}
+                >
+                  {label}
+                </button>
+              ))}
+              <button
+                type="button"
+                title="Insertar enlace"
+                aria-label="Insertar enlace"
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={addLink}
+              >
+                🔗
+              </button>
+              <button
+                type="button"
+                title="Quitar formato"
+                aria-label="Quitar formato"
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => runCommand("removeFormat")}
+              >
+                Tx
+              </button>
+            </div>
+            <div
+              ref={editorRef}
+              className="rich-text-surface"
+              contentEditable
+              role="textbox"
+              aria-multiline="true"
+              aria-labelledby={labelledBy}
+              data-placeholder={placeholder}
+              onInput={emitChange}
+              onBlur={emitChange}
+              onPaste={(event) => {
+                event.preventDefault();
+                const plainText = event.clipboardData.getData("text/plain");
+                document.execCommand("insertText", false, plainText);
+              }}
+              suppressContentEditableWarning
+            />
+          </div>
         );
       };
 
@@ -4440,30 +4669,32 @@
                   </div>
                   <div className="space-y-6">
                     <div>
-                      <label className="text-[9px] uppercase font-black text-emerald-900 block mb-1 tracking-widest italic">
+                      <label id="historia-label" className="text-[9px] uppercase font-black text-emerald-900 block mb-1 tracking-widest italic">
                         Trasfondo
                       </label>
-                      <textarea
-                        className="w-full h-24 bg-emerald-950/10 border border-emerald-900 p-3 text-xs text-emerald-400 outline-none resize-none focus:border-emerald-500"
+                      <RichTextEditor
                         value={formData.historia}
-                        onChange={(e) =>
-                          setFormData({ ...formData, historia: e.target.value })
+                        onChange={(historia) =>
+                          setFormData((current) => ({ ...current, historia }))
                         }
+                        placeholder="Escribe el trasfondo de la criatura..."
+                        labelledBy="historia-label"
                       />
                     </div>
                     <div>
-                      <label className="text-[9px] uppercase font-black text-emerald-900 block mb-1 tracking-widest italic">
+                      <label id="descripcion-fisica-label" className="text-[9px] uppercase font-black text-emerald-900 block mb-1 tracking-widest italic">
                         Morfología
                       </label>
-                      <textarea
-                        className="w-full h-24 bg-emerald-950/10 border border-emerald-900 p-3 text-xs text-emerald-400 outline-none resize-none focus:border-emerald-500"
+                      <RichTextEditor
                         value={formData.descripcion_fisica}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            descripcion_fisica: e.target.value,
-                          })
+                        onChange={(descripcion_fisica) =>
+                          setFormData((current) => ({
+                            ...current,
+                            descripcion_fisica,
+                          }))
                         }
+                        placeholder="Describe la morfología observada..."
+                        labelledBy="descripcion-fisica-label"
                       />
                     </div>
                     {/* CHIP INPUTS */}
@@ -4823,10 +5054,10 @@
                         >
                           <Icon name="book" /> Bitácora de Origen
                         </h4>
-                        <p
-                          className={`text-xs leading-relaxed italic font-serif text-justify ${selectedCreature.nivel_peligro === "Absoluto" ? "text-purple-300/70" : "text-emerald-600"}`}
+                        <div
+                          className={`rich-text-content text-xs leading-relaxed font-serif ${selectedCreature.nivel_peligro === "Absoluto" ? "text-purple-300/70" : "text-emerald-600"}`}
                           dangerouslySetInnerHTML={{
-                            __html: selectedCreature.historia || "S/N",
+                            __html: sanitizeRichText(selectedCreature.historia || "S/N"),
                           }}
                         />
                       </div>
@@ -4836,11 +5067,12 @@
                         >
                           <Icon name="eye" /> Análisis Morfológico
                         </h4>
-                        <p
-                          className={`text-xs leading-relaxed italic font-serif text-justify ${selectedCreature.nivel_peligro === "Absoluto" ? "text-purple-300/70" : "text-emerald-600"}`}
+                        <div
+                          className={`rich-text-content text-xs leading-relaxed font-serif ${selectedCreature.nivel_peligro === "Absoluto" ? "text-purple-300/70" : "text-emerald-600"}`}
                           dangerouslySetInnerHTML={{
-                            __html:
+                            __html: sanitizeRichText(
                               selectedCreature.descripcion_fisica || "S/N",
+                            ),
                           }}
                         />
                       </div>
