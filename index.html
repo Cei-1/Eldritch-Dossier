@@ -4008,33 +4008,45 @@
             };
             const loadReportImage = async (source) => {
               if (!source) return null;
-              try {
-                const response = await fetch(source);
-                if (!response.ok) return null;
-                const blob = await response.blob();
-                if (!/^image\/(png|jpeg|jpg)$/i.test(blob.type)) return null;
-                const dataUrl = await new Promise((resolve, reject) => {
-                  const reader = new FileReader();
-                  reader.onload = () => resolve(reader.result);
-                  reader.onerror = reject;
-                  reader.readAsDataURL(blob);
-                });
-                const dimensions = await new Promise((resolve, reject) => {
-                  const image = new Image();
-                  image.onload = () => resolve({ width: image.naturalWidth, height: image.naturalHeight });
-                  image.onerror = reject;
-                  image.src = dataUrl;
-                });
-                return {
-                  dataUrl,
-                  format: /png/i.test(blob.type) ? "PNG" : "JPEG",
-                  ...dimensions,
-                };
-              } catch (_error) {
-                return null;
+              const imageSources = [source];
+              if (/^https?:\/\//i.test(source)) {
+                const remotePath = source.replace(/^https?:\/\//i, "");
+                imageSources.push(
+                  `https://images.weserv.nl/?url=${encodeURIComponent(remotePath)}&output=jpg&q=90`,
+                );
               }
+
+              for (const imageSource of imageSources) {
+                try {
+                  const response = await fetch(imageSource);
+                  if (!response.ok) continue;
+                  const blob = await response.blob();
+                  if (!/^image\/(png|jpeg|jpg)$/i.test(blob.type)) continue;
+                  const dataUrl = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                  });
+                  const dimensions = await new Promise((resolve, reject) => {
+                    const image = new Image();
+                    image.onload = () => resolve({ width: image.naturalWidth, height: image.naturalHeight });
+                    image.onerror = reject;
+                    image.src = dataUrl;
+                  });
+                  return {
+                    dataUrl,
+                    format: /png/i.test(blob.type) ? "PNG" : "JPEG",
+                    ...dimensions,
+                  };
+                } catch (_error) {
+                  // Probar la siguiente fuente, incluido el proxy de imágenes.
+                }
+              }
+              return null;
             };
             const reportImage = await loadReportImage(creature.imagen_url);
+            const imageWasUnavailable = Boolean(creature.imagen_url) && !reportImage;
             const drawFrame = () => {
               pdf.setFillColor(2, 9, 7);
               pdf.rect(0, 0, pageWidth, pageHeight, "F");
@@ -4158,7 +4170,12 @@
               .replace(/(^-|-$)/g, "")
               .toLowerCase();
             pdf.save(`expediente-clasificado-${safeName}.pdf`);
-            showToast("Informe PDF generado", "success");
+            showToast(
+              imageWasUnavailable
+                ? "Informe generado sin imagen: la URL no permite su descarga."
+                : "Informe PDF generado",
+              imageWasUnavailable ? "info" : "success",
+            );
           } catch (error) {
             console.error("No se pudo generar el informe PDF", error);
             showToast("No se pudo generar el informe PDF", "error");
