@@ -69,12 +69,23 @@
     <link rel="icon" type="image/png" sizes="192x192" href="./logo.png" />
     <link rel="icon" type="image/png" sizes="512x512" href="./logo.png" />
     <link rel="apple-touch-icon" href="./logo.png" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
 
     <!-- Librerías base: React, ReactDOM y Babel para procesar JSX -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
 
     <!-- Supabase SDK & Client -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
@@ -1766,13 +1777,13 @@
 
         .mobile-command-bar {
           display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
+          grid-template-columns: repeat(4, minmax(0, 1fr));
           width: 100%;
           gap: 6px;
         }
 
         .mobile-command-bar.has-register {
-          grid-template-columns: repeat(4, minmax(0, 1fr));
+          grid-template-columns: repeat(5, minmax(0, 1fr));
         }
 
         .mobile-command-bar button {
@@ -1944,6 +1955,40 @@
         pointer-events: none;
       }
 
+      .atlas-map {
+        height: min(68vh, 680px);
+        min-height: 420px;
+        border: 1px solid rgb(var(--c-e800));
+        background: #020806;
+        z-index: 1;
+      }
+
+      .atlas-map .leaflet-control-zoom a,
+      .atlas-map .leaflet-popup-content-wrapper,
+      .atlas-map .leaflet-popup-tip {
+        border-radius: 0;
+        border: 1px solid rgb(var(--c-e700));
+        background: #020806;
+        color: rgb(var(--c-e400));
+        box-shadow: none;
+      }
+
+      .atlas-map .leaflet-popup-content { margin: 14px; }
+      .atlas-map .leaflet-control-attribution {
+        background: rgb(0 0 0 / 0.72);
+        color: rgb(var(--c-e800));
+      }
+      .atlas-map .leaflet-control-attribution a { color: rgb(var(--c-e600)); }
+      .atlas-map .atlas-reset-control {
+        width: 30px;
+        height: 30px;
+        border: 0;
+        background: #020806;
+        color: rgb(var(--c-e400));
+        font: 900 18px/30px ui-monospace, monospace;
+        cursor: pointer;
+      }
+
       .rich-text-surface ul,
       .rich-text-content ul { list-style: square; padding-left: 1.5rem; }
       .rich-text-surface ol,
@@ -1966,6 +2011,11 @@
         .rich-text-toolbar { gap: 2px; padding: 5px; }
         .rich-text-toolbar button { min-width: 38px; min-height: 38px; }
         .rich-text-surface { min-height: 180px; max-height: 420px; font-size: 13px; }
+        .atlas-map { height: 56vh; min-height: 360px; }
+        .atlas-shell { padding: 1.5rem 1rem 6rem; }
+        .atlas-heading { font-size: 1.7rem; }
+        .atlas-filters input,
+        .atlas-filters select { min-height: 46px; font-size: 9px; }
       }
     </style>
   </head>
@@ -2147,6 +2197,9 @@
           plus: <path d="M12 4v16m8-8H4" />,
           database: (
             <path d="M4 7v10c0 1.1.9 2 2 2h12a2 2 0 002-2V7M4 7c0 1.1.9 2 2 2h12a2 2 0 002-2M4 7c0-1.1.9-2 2-2h12a2 2 0 012 2m-16 5c0 1.1.9 2 2 2h12a2 2 0 002-2m-16 5c0 1.1.9 2 2 2h12a2 2 0 002-2" />
+          ),
+          map: (
+            <path d="M9 18l-6 3V6l6-3 6 3 6-3v15l-6 3-6-3z M9 3v15m6-12v15" />
           ),
           save: (
             <path d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
@@ -3287,6 +3340,163 @@
         );
       };
 
+      const atlasRegions = [
+        { name: "Mesoamérica", lat: 19.43, lng: -99.13, keywords: ["mesoamericana", "mictlan", "prehispanica", "quiche", "inframundo"], cultureKeywords: ["mexico", "mexica", "tolteca", "maya", "mesoamericana", "guatemalteca"] },
+        { name: "Sur de Chile", lat: -42.8, lng: -73.1, keywords: ["folclore del sur de chile"], cultureKeywords: ["chilota"] },
+        { name: "Andes", lat: -15.6, lng: -70.0, keywords: [], cultureKeywords: ["andina", "noroeste argentino"] },
+        { name: "Colombia y los Llanos", lat: 4.7, lng: -74.1, keywords: [], cultureKeywords: ["colombiana", "llanos colombo-venezolanos"] },
+        { name: "Islas Británicas", lat: 56.2, lng: -4.3, keywords: [], cultureKeywords: ["escocesa", "celta"] },
+        { name: "Escandinavia", lat: 60.2, lng: 15.4, keywords: ["vikinga"], cultureKeywords: ["escandinava", "nordica"] },
+        { name: "Europa Central", lat: 50.1, lng: 14.4, keywords: ["folclore de europa central", "folclore"], cultureKeywords: ["alpina", "austriaca", "europa central", "europea", "germanica", "alquimia medieval"] },
+        { name: "Norteamérica", lat: 39.8, lng: -98.6, keywords: ["nativa americana"], cultureKeywords: ["algonquina"] },
+        { name: "Providence / Archivo Cósmico", lat: 41.82, lng: -71.41, keywords: ["lovecraftiana", "cosmica", "hiperborea", "ocultista"], cultureKeywords: ["mitos de cthulhu"] },
+        { name: "Levante", lat: 31.8, lng: 34.7, keywords: ["filistea"], cultureKeywords: [] },
+        { name: "Archivo de Leyendas", lat: 20.0, lng: -102.0, keywords: ["leyenda urbana", "leyenda"], cultureKeywords: ["hispanoamericana"] },
+      ];
+
+      const getAtlasRegion = (creature) => {
+        const latitude = Number(creature.ubicacion?.latitud);
+        const longitude = Number(creature.ubicacion?.longitud);
+        if (
+          creature.ubicacion?.latitud !== "" &&
+          creature.ubicacion?.longitud !== "" &&
+          Number.isFinite(latitude) &&
+          Number.isFinite(longitude)
+        ) {
+          return {
+            name: creature.ubicacion?.lugar || creature.ubicacion?.region || creature.ubicacion?.pais || "Ubicación registrada",
+            lat: latitude,
+            lng: longitude,
+            exact: true,
+          };
+        }
+        const cultures = (Array.isArray(creature.origen?.cultura)
+          ? creature.origen.cultura
+          : creature.origen?.cultura ? [creature.origen.cultura] : [])
+          .map((value) => String(value).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase());
+        const cultureRegion = atlasRegions.find((region) =>
+          cultures.some((culture) => (region.cultureKeywords || []).some((keyword) => culture.includes(keyword))),
+        );
+        if (cultureRegion) return cultureRegion;
+        const mythologies = (Array.isArray(creature.origen?.mitologia)
+          ? creature.origen.mitologia
+          : creature.origen?.mitologia ? [creature.origen.mitologia] : [])
+          .map((value) => String(value).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase());
+        return atlasRegions.find((region) =>
+          mythologies.some((mythology) => region.keywords.some((keyword) => mythology.includes(keyword))),
+        ) || atlasRegions[7];
+      };
+
+      const CulturalAtlas = ({ creatures, onOpen }) => {
+        const mapContainerRef = useRef(null);
+        const mapRef = useRef(null);
+        const layerRef = useRef(null);
+
+        useEffect(() => {
+          if (!mapContainerRef.current || !window.L || mapRef.current) return;
+          // La proyección Web Mercator llega hasta ±85.0511°. Horizontalmente el mundo se repite.
+          const atlasBounds = window.L.latLngBounds([[-85.0511, -1000000], [85.0511, 1000000]]);
+          const map = window.L.map(mapContainerRef.current, {
+            scrollWheelZoom: false,
+            minZoom: 2,
+            maxZoom: 8,
+            maxBounds: atlasBounds,
+            maxBoundsViscosity: 1,
+            worldCopyJump: true,
+          }).setView([21, -15], 2);
+          window.L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+            attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+            maxZoom: 19,
+            noWrap: false,
+          }).addTo(map);
+          const resetControl = window.L.control({ position: "topleft" });
+          resetControl.onAdd = () => {
+            const button = window.L.DomUtil.create("button", "atlas-reset-control");
+            button.type = "button";
+            button.title = "Recentrar atlas";
+            button.setAttribute("aria-label", "Recentrar atlas");
+            button.textContent = "⌖";
+            window.L.DomEvent.on(button, "click", (event) => {
+              window.L.DomEvent.stop(event);
+              map.setView([21, -15], 2);
+            });
+            return button;
+          };
+          resetControl.addTo(map);
+          mapRef.current = map;
+          layerRef.current = window.L.layerGroup().addTo(map);
+          requestAnimationFrame(() => map.invalidateSize());
+          return () => {
+            map.remove();
+            mapRef.current = null;
+          };
+        }, []);
+
+        useEffect(() => {
+          const map = mapRef.current;
+          const layer = layerRef.current;
+          if (!map || !layer || !window.L) return;
+          layer.clearLayers();
+          const visibleRegions = new Map();
+
+          creatures.forEach((creature) => {
+            const region = getAtlasRegion(creature);
+            if (!region.exact) visibleRegions.set(region.name, region);
+          });
+          visibleRegions.forEach((region) => {
+            window.L.circle([region.lat, region.lng], {
+              radius: 650000,
+              color: "#10b981",
+              weight: 1,
+              fillColor: "#065f46",
+              fillOpacity: 0.14,
+              interactive: false,
+            }).bindTooltip(region.name, { direction: "top", opacity: 0.85 }).addTo(layer);
+          });
+
+          const offsets = {};
+          creatures.forEach((creature) => {
+            const region = getAtlasRegion(creature);
+            const locationKey = region.exact
+              ? `${region.lat.toFixed(6)},${region.lng.toFixed(6)}`
+              : region.name;
+            const index = offsets[locationKey] || 0;
+            offsets[locationKey] = index + 1;
+            const angle = index * 2.4;
+            const distance = index === 0 ? 0 : 0.7 + Math.floor((index - 1) / 6) * 0.45;
+            const lat = region.lat + Math.sin(angle) * distance;
+            const lng = region.lng + Math.cos(angle) * distance;
+            const extreme = ["Extremo", "Absoluto"].includes(creature.nivel_peligro);
+            const marker = window.L.circleMarker([lat, lng], {
+              radius: extreme ? 9 : 7,
+              color: extreme ? "#ef4444" : "#34d399",
+              weight: 2,
+              fillColor: extreme ? "#7f1d1d" : "#064e3b",
+              fillOpacity: 0.95,
+            }).addTo(layer);
+            const popup = document.createElement("div");
+            popup.className = "font-mono min-w-[170px]";
+            const title = document.createElement("div");
+            title.className = "text-[11px] font-black uppercase leading-tight";
+            title.textContent = creature.nombre;
+            const meta = document.createElement("div");
+            meta.className = "text-[8px] mt-2 text-emerald-700 uppercase tracking-widest";
+            meta.textContent = `${region.name} // ${creature.nivel_peligro || "SIN NIVEL"}`;
+            const button = document.createElement("button");
+            button.className = "mt-3 w-full border border-emerald-700 py-2 text-[8px] font-black uppercase text-emerald-400 hover:bg-emerald-500 hover:text-black";
+            button.textContent = "Abrir expediente";
+            button.onclick = () => onOpen(creature);
+            popup.append(title, meta, button);
+            marker.bindPopup(popup);
+          });
+        }, [creatures, onOpen]);
+
+        if (!window.L) {
+          return <div className="atlas-map flex items-center justify-center text-[10px] uppercase tracking-widest text-emerald-700">Cargando cartografía...</div>;
+        }
+        return <div ref={mapContainerRef} className="atlas-map" aria-label="Mapa interactivo de procedencia cultural" />;
+      };
+
       // --- APP PRINCIPAL ---
       function App() {
         const [creatures, setCreatures] = useState([]);
@@ -3360,6 +3570,7 @@
           nombre: "",
           imagen_url: "",
           origen: { cultura: [], mitologia: [], periodo: "" },
+          ubicacion: { tipo: "cultural_origin", pais: "", region: "", lugar: "", latitud: "", longitud: "" },
           historia: "",
           descripcion_fisica: "",
           habilidades: [],
@@ -3896,6 +4107,14 @@
                 mitologia: toArr(creature.origen?.mitologia),
                 periodo: creature.origen?.periodo || "",
               },
+              ubicacion: {
+                tipo: creature.ubicacion?.tipo || "cultural_origin",
+                pais: creature.ubicacion?.pais || "",
+                region: creature.ubicacion?.region || "",
+                lugar: creature.ubicacion?.lugar || "",
+                latitud: creature.ubicacion?.latitud ?? "",
+                longitud: creature.ubicacion?.longitud ?? "",
+              },
               habilidades: creature.habilidades || [],
               tags: creature.tags || [],
             });
@@ -3905,6 +4124,7 @@
               nombre: "",
               imagen_url: "",
               origen: { cultura: [], mitologia: [], periodo: "" },
+              ubicacion: { tipo: "cultural_origin", pais: "", region: "", lugar: "", latitud: "", longitud: "" },
               historia: "",
               descripcion_fisica: "",
               habilidades: [],
@@ -4151,6 +4371,7 @@
               `Cultura: ${toArray(creature.origen?.cultura).join(", ") || "Sin datos"}`,
               `Mitología: ${toArray(creature.origen?.mitologia).join(", ") || "Sin datos"}`,
               `Período: ${creature.origen?.periodo || "Sin datos"}`,
+              `Ubicación: ${[creature.ubicacion?.lugar, creature.ubicacion?.region, creature.ubicacion?.pais].filter(Boolean).join(", ") || "Sin datos"}`,
               `Generado: ${new Date().toLocaleString("es-MX")}`,
             ].join("\n"));
             addRichTextSection("Bitácora de origen", richTextBlocks(creature.historia));
@@ -4269,6 +4490,10 @@
           setDeclassPhase(0);
           setSelectedCreature(next);
         };
+        const openAtlasCreature = useCallback((creature) => {
+          setDeclassPhase(0);
+          setSelectedCreature(creature);
+        }, []);
         const handleSwipeStart = (e) => {
           const t = e.touches[0];
           swipeRef.current = { startX: t.clientX, startY: t.clientY };
@@ -4516,6 +4741,12 @@
                     className={`px-4 py-2 border text-[10px] font-bold uppercase flex items-center gap-2 transition-all ${view === "explorer" ? "bg-emerald-500 text-black border-emerald-500" : "border-emerald-900 text-emerald-900 hover:text-emerald-500"}`}
                   >
                     <Icon name="database" /> Explorar
+                  </button>
+                  <button
+                    onClick={() => setView("atlas")}
+                    className={`px-4 py-2 border text-[10px] font-bold uppercase flex items-center gap-2 transition-all ${view === "atlas" ? "bg-emerald-500 text-black border-emerald-500" : "border-emerald-900 text-emerald-900 hover:text-emerald-500"}`}
+                  >
+                    <Icon name="map" /> Atlas
                   </button>
                   {currentUser &&
                     userRole &&
@@ -4846,6 +5077,41 @@
                   </div>
                 )}
               </main>
+            ) : view === "atlas" ? (
+              <main className="app-shell relative z-10 mx-auto animate-in fade-in duration-500">
+                <section className="atlas-shell max-w-6xl mx-auto px-6 py-10">
+                  <div className="flex flex-col gap-5 mb-7">
+                    <div>
+                      <div className="text-[9px] text-emerald-800 font-black uppercase tracking-[0.35em] mb-2">Cartografía de procedencia</div>
+                      <h2 className="atlas-heading text-3xl md:text-4xl text-emerald-400 font-black uppercase italic tracking-tighter">Atlas paranormal</h2>
+                      <p className="text-[10px] text-emerald-700 uppercase tracking-widest mt-2">Zonas culturales aproximadas y {filtered.length} expediente{filtered.length === 1 ? "" : "s"} localizados</p>
+                    </div>
+                  </div>
+                  <div className="atlas-filters hidden md:grid grid-cols-2 lg:grid-cols-4 gap-2 mb-5">
+                    <input
+                      type="search"
+                      value={search}
+                      placeholder="Buscar expediente..."
+                      className="col-span-2 lg:col-span-1 bg-black border border-emerald-900/40 py-3 px-3 text-[10px] text-emerald-400 outline-none focus:border-emerald-500 uppercase"
+                      onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                    />
+                    <select className="bg-black border border-emerald-900/40 py-3 px-3 text-[10px] text-emerald-500 outline-none uppercase" value={filterMito} onChange={(e) => { setFilterMito(e.target.value); setPage(1); }}>
+                      <option value="">Mitología</option>
+                      {allMythologies.map((mythology) => <option key={mythology} value={mythology}>{mythology}</option>)}
+                    </select>
+                    <select className="bg-black border border-emerald-900/40 py-3 px-3 text-[10px] text-emerald-500 outline-none uppercase" value={filterDanger} onChange={(e) => { setFilterDanger(e.target.value); setPage(1); }}>
+                      <option value="">Nivel de peligro</option>
+                      {Object.keys(dangerOrder).map((danger) => <option key={danger} value={danger}>{danger}</option>)}
+                    </select>
+                    <select className="bg-black border border-emerald-900/40 py-3 px-3 text-[10px] text-emerald-500 outline-none uppercase" value={filterAbility} onChange={(e) => { setFilterAbility(e.target.value); setPage(1); }}>
+                      <option value="">Habilidad</option>
+                      {allAbilities.map((ability) => <option key={ability} value={ability}>{ability}</option>)}
+                    </select>
+                  </div>
+                  <CulturalAtlas creatures={filtered} onOpen={openAtlasCreature} />
+                  <p className="mt-3 text-[8px] text-emerald-800 uppercase tracking-widest leading-relaxed">Las zonas indican áreas de influencia cultural aproximadas; los marcadores representan expedientes y avistamientos documentados.</p>
+                </section>
+              </main>
             ) : (
               /* === EDITOR === */
               <main className="editor-shell relative z-10 mx-auto animate-in slide-in-from-bottom-4 duration-500">
@@ -4880,6 +5146,31 @@
                         }
                       />
                     </div>
+                    <fieldset className="border border-emerald-900/40 p-4 space-y-3">
+                      <legend className="px-2 text-[9px] uppercase font-black text-emerald-700 tracking-widest italic">
+                        Ubicación cartográfica
+                      </legend>
+                      <select
+                        className="w-full bg-emerald-950/20 border border-emerald-900 p-3 text-xs text-emerald-400 outline-none cursor-pointer"
+                        value={formData.ubicacion.tipo}
+                        onChange={(e) => setFormData({ ...formData, ubicacion: { ...formData.ubicacion, tipo: e.target.value } })}
+                      >
+                        <option value="cultural_origin">Origen cultural</option>
+                        <option value="sighting">Avistamiento</option>
+                        <option value="fictional">Ubicación ficticia</option>
+                        <option value="unknown">Sin ubicación precisa</option>
+                      </select>
+                      <div className="grid grid-cols-2 gap-3">
+                        <input placeholder="País" className="bg-black border border-emerald-900 p-3 text-xs text-emerald-400 outline-none focus:border-emerald-500" value={formData.ubicacion.pais} onChange={(e) => setFormData({ ...formData, ubicacion: { ...formData.ubicacion, pais: e.target.value } })} />
+                        <input placeholder="Estado / región" className="bg-black border border-emerald-900 p-3 text-xs text-emerald-400 outline-none focus:border-emerald-500" value={formData.ubicacion.region} onChange={(e) => setFormData({ ...formData, ubicacion: { ...formData.ubicacion, region: e.target.value } })} />
+                      </div>
+                      <input placeholder="Ciudad, zona o cuerpo de agua" className="w-full bg-black border border-emerald-900 p-3 text-xs text-emerald-400 outline-none focus:border-emerald-500" value={formData.ubicacion.lugar} onChange={(e) => setFormData({ ...formData, ubicacion: { ...formData.ubicacion, lugar: e.target.value } })} />
+                      <div className="grid grid-cols-2 gap-3">
+                        <input type="number" step="any" min="-90" max="90" placeholder="Latitud (ej. 19.4326)" className="bg-black border border-emerald-900 p-3 text-xs text-emerald-400 outline-none focus:border-emerald-500" value={formData.ubicacion.latitud} onChange={(e) => setFormData({ ...formData, ubicacion: { ...formData.ubicacion, latitud: e.target.value } })} />
+                        <input type="number" step="any" min="-180" max="180" placeholder="Longitud (ej. -99.1332)" className="bg-black border border-emerald-900 p-3 text-xs text-emerald-400 outline-none focus:border-emerald-500" value={formData.ubicacion.longitud} onChange={(e) => setFormData({ ...formData, ubicacion: { ...formData.ubicacion, longitud: e.target.value } })} />
+                      </div>
+                      <p className="text-[8px] text-emerald-800 uppercase leading-relaxed">Las coordenadas son opcionales, pero colocan el marcador exactamente en el atlas.</p>
+                    </fieldset>
                     <div>
                       <label className="text-[9px] uppercase font-black text-emerald-900 block mb-1 tracking-widest italic">
                         Captura Visual (URL)
@@ -5670,12 +5961,12 @@
                 />
                 <section
                   className="mobile-search-sheet sm:hidden"
-                  aria-label="Búsqueda rápida"
+                  aria-label={view === "atlas" ? "Filtros rápidos del atlas" : "Búsqueda rápida"}
                 >
                   <div className="flex items-center justify-between mt-2 mb-3">
                     <div>
                       <div className="text-[8px] text-emerald-800 font-black tracking-[0.28em] uppercase">
-                        Consulta rápida
+                        {view === "atlas" ? "Consulta del atlas" : "Consulta rápida"}
                       </div>
                       <div className="text-[11px] text-emerald-400 font-black uppercase mt-1">
                         {filtered.length} expediente
@@ -5833,12 +6124,25 @@
                 <button
                   className={showMobileSearch ? "active" : ""}
                   onClick={() => {
+                    if (view === "atlas") {
+                      setShowMobileSearch((open) => !open);
+                      return;
+                    }
                     setView("explorer");
                     setShowMobileSearch((open) => !open);
                   }}
                   aria-expanded={showMobileSearch}
                 >
                   <Icon name="search" /> Buscar
+                </button>
+                <button
+                  className={view === "atlas" ? "active" : ""}
+                  onClick={() => {
+                    setView("atlas");
+                    setShowMobileSearch(false);
+                  }}
+                >
+                  <Icon name="map" /> Atlas
                 </button>
                 {currentUser && (userRole === 1 || userRole === 2) && (
                   <button
@@ -6142,6 +6446,7 @@
           navigator.serviceWorker
             .register("./sw.js")
             .then((registration) => {
+              registration.update();
               console.log("✅ Service Worker registered:", registration.scope);
             })
             .catch((error) => {

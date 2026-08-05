@@ -115,6 +115,7 @@ async function supaLoadCreatures() {
     .from('tb_creatures')
     .select([
       'id', 'nombre', 'imagen_url', 'historia', 'descripcion_fisica', 'periodo',
+      'location_kind', 'location_country', 'location_region', 'location_place', 'latitude', 'longitude',
       'status', 'created_at', 'updated_at', 'created_by', 'last_edited_by',
       'danger_level_id',
       'ctl_dangerlevels ( id, name )',
@@ -138,6 +139,14 @@ async function supaLoadCreatures() {
         cultura: (c.tb_creaturecultures || []).map(function (r) { return r.ctl_cultures ? r.ctl_cultures.name : null; }).filter(Boolean),
         mitologia: (c.tb_creaturemythologies || []).map(function (r) { return r.ctl_mythologies ? r.ctl_mythologies.name : null; }).filter(Boolean),
         periodo: c.periodo || ''
+      },
+      ubicacion: {
+        tipo: c.location_kind || 'cultural_origin',
+        pais: c.location_country || '',
+        region: c.location_region || '',
+        lugar: c.location_place || '',
+        latitud: c.latitude == null ? '' : c.latitude,
+        longitud: c.longitude == null ? '' : c.longitude
       },
       historia: c.historia,
       descripcion_fisica: c.descripcion_fisica,
@@ -242,6 +251,12 @@ async function supaUpsertCreature(creatureData, isEditing, currentUsername) {
     descripcion_fisica: creatureData.descripcion_fisica || '',
     danger_level_id: dl.id,
     periodo: (creatureData.origen && creatureData.origen.periodo) ? creatureData.origen.periodo : '',
+    location_kind: (creatureData.ubicacion && creatureData.ubicacion.tipo) || 'cultural_origin',
+    location_country: (creatureData.ubicacion && creatureData.ubicacion.pais) || null,
+    location_region: (creatureData.ubicacion && creatureData.ubicacion.region) || null,
+    location_place: (creatureData.ubicacion && creatureData.ubicacion.lugar) || null,
+    latitude: creatureData.ubicacion && creatureData.ubicacion.latitud != null && creatureData.ubicacion.latitud !== '' ? creatureData.ubicacion.latitud : null,
+    longitude: creatureData.ubicacion && creatureData.ubicacion.longitud != null && creatureData.ubicacion.longitud !== '' ? creatureData.ubicacion.longitud : null,
     status: 'active',
     updated_at: nowIso,
     last_edited_by: currentUsername

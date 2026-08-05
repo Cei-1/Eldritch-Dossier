@@ -1,5 +1,5 @@
-const CACHE_NAME = 'eldritch-shell-v27';
-const RUNTIME_CACHE = 'eldritch-runtime-v27';
+const CACHE_NAME = 'eldritch-shell-v36';
+const RUNTIME_CACHE = 'eldritch-runtime-v36';
 
 const APP_SHELL = [
   './',
@@ -81,6 +81,13 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (request.mode === 'navigate') {
+    event.respondWith(networkFirst(request));
+    return;
+  }
+
+  // El cliente de Supabase define la forma de los expedientes. Debe cargarse
+  // primero desde red para que las nuevas columnas estén disponibles de inmediato.
+  if (url.pathname.endsWith('/supabaseClient.js')) {
     event.respondWith(networkFirst(request));
     return;
   }

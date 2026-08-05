@@ -36,8 +36,9 @@ clave `service_role` en el frontend.
 
 1. Crea las tablas y catálogos base.
 2. Ejecuta `database/migrations/001_secure_schema.sql` en Supabase SQL Editor.
-3. Comprueba que los usuarios nuevos reciben el rol `Iniciado`.
-4. Asigna manualmente el rol `Archivista` o `Erudito` únicamente a usuarios de
+3. Ejecuta `database/migrations/002_creature_locations.sql` para habilitar el atlas con ubicaciones precisas.
+4. Comprueba que los usuarios nuevos reciben el rol `Iniciado`.
+5. Asigna manualmente el rol `Archivista` o `Erudito` únicamente a usuarios de
    confianza.
 
 La migración corrige las políticas solapadas, habilita lectura de relaciones y
