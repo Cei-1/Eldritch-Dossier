@@ -1,5 +1,5 @@
-const CACHE_NAME = 'eldritch-shell-v37';
-const RUNTIME_CACHE = 'eldritch-runtime-v37';
+const CACHE_NAME = 'eldritch-shell-v38';
+const RUNTIME_CACHE = 'eldritch-runtime-v38';
 
 const APP_SHELL = [
   './',
@@ -76,6 +76,14 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
   if (isSupabaseRequest(url)) {
+    event.respondWith(fetch(request));
+    return;
+  }
+
+  // Los reproductores móviles solicitan MP3 por fragmentos (Range). Responder
+  // esos fragmentos desde Cache Storage puede devolver un 200 completo en vez
+  // de un 206 parcial y Safari/Chrome móvil rechaza la reproducción.
+  if (url.pathname.includes('/assets/audio/') || request.headers.has('range')) {
     event.respondWith(fetch(request));
     return;
   }
