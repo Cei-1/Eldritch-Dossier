@@ -3562,6 +3562,7 @@
         const [ambientPlaying, setAmbientPlaying] = useState(false);
         const [showAudioPrompt, setShowAudioPrompt] = useState(false);
         const audioPromptShown = useRef(false);
+        const [showExitConfirm, setShowExitConfirm] = useState(false);
 
         const showToast = (message, type = "success") =>
           setToast({ message, type, key: Date.now() });
@@ -3706,6 +3707,64 @@
             window.removeEventListener("offline", goOffline);
           };
         }, []);
+
+        // --- PWA BACK BUTTON (HISTORY API) ---
+        // Mantiene una entrada ficticia en el historial para interceptar el gesto
+        // "atrás" del sistema y cerrar modales en lugar de salir de la app.
+        const backGuardPushed = useRef(false);
+        useEffect(() => {
+          // Push una sola entrada centinela al montar la app
+          if (!backGuardPushed.current) {
+            history.pushState({ eldritchGuard: true }, "");
+            backGuardPushed.current = true;
+          }
+        }, []);
+
+        useEffect(() => {
+          const onPopState = (e) => {
+            // Determinar qué cerrar (prioridad: overlay más "encima")
+            if (zoomImage) {
+              setZoomImage(null);
+            } else if (showExitConfirm) {
+              setShowExitConfirm(false);
+            } else if (deleteConfirm) {
+              setDeleteConfirm(null);
+            } else if (saveConfirm) {
+              setSaveConfirm(false);
+            } else if (showLogoutConfirm) {
+              setShowLogoutConfirm(false);
+            } else if (showUpdateKeyModal) {
+              setShowUpdateKeyModal(false);
+            } else if (showAuthModal) {
+              setShowAuthModal(false);
+            } else if (showSettingsModal) {
+              setShowSettingsModal(false);
+              setShowLogoutConfirm(false);
+            } else if (showAudioPrompt) {
+              setShowAudioPrompt(false);
+            } else if (showMobileSearch) {
+              setShowMobileSearch(false);
+            } else if (selectedCreature) {
+              setSelectedCreature(null);
+              setDeclassPhase(-1);
+            } else if (view === "editor" || view === "atlas") {
+              setView("explorer");
+              setShowMobileSearch(false);
+            } else {
+              // Nada abierto → mostrar diálogo de salida
+              setShowExitConfirm(true);
+            }
+            // Re-push la entrada centinela para mantener la guardia activa
+            history.pushState({ eldritchGuard: true }, "");
+          };
+          window.addEventListener("popstate", onPopState);
+          return () => window.removeEventListener("popstate", onPopState);
+        }, [
+          zoomImage, showExitConfirm, deleteConfirm, saveConfirm,
+          showLogoutConfirm, showUpdateKeyModal, showAuthModal,
+          showSettingsModal, showAudioPrompt, showMobileSearch,
+          selectedCreature, view,
+        ]);
 
         // --- SUPABASE AUTH STATE LISTENER ---
         useEffect(() => {
@@ -6113,6 +6172,47 @@
                   )}
                 </section>
               </>
+            )}
+
+            {/* === EXIT CONFIRM DIALOG (PWA back button) === */}
+            {showExitConfirm && (
+              <div className="fixed inset-0 z-[500] flex items-center justify-center p-4 animate-in fade-in duration-300">
+                <div
+                  className="absolute inset-0 bg-black/95 backdrop-blur-md"
+                  onClick={() => setShowExitConfirm(false)}
+                ></div>
+                <div className="relative w-full max-w-xs bg-black border border-emerald-500 p-8 shadow-[0_0_80px_rgba(16,185,129,0.15)]">
+                  <div className="text-center mb-6 border-b border-emerald-900 pb-4">
+                    <div className="text-[10px] text-emerald-950 font-black uppercase tracking-[0.5em] mb-2">
+                      [ SISTEMA ]
+                    </div>
+                    <h3 className="text-lg font-black uppercase tracking-tighter italic text-emerald-500">
+                      DESCONEXIÓN
+                    </h3>
+                  </div>
+                  <p className="text-[10px] text-emerald-700 font-black uppercase tracking-widest mb-6 leading-relaxed text-center">
+                    ¿Abandonar la terminal clasificada?
+                  </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={() => setShowExitConfirm(false)}
+                      className="py-3 border border-emerald-900 text-emerald-600 hover:text-emerald-400 hover:border-emerald-500 text-[10px] font-black uppercase tracking-widest transition-all"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowExitConfirm(false);
+                        // Navegar atrás de verdad (sale de la app)
+                        history.go(-1);
+                      }}
+                      className="py-3 border border-red-700 bg-red-700/20 text-red-400 text-[10px] font-black uppercase hover:bg-red-600 hover:text-white transition-all"
+                    >
+                      Salir
+                    </button>
+                  </div>
+                </div>
+              </div>
             )}
 
             <footer className="app-footer fixed bottom-0 left-0 right-0 p-5 border-t border-emerald-950 bg-black/90 flex justify-between items-center px-10 text-[9px] font-black text-emerald-950 tracking-[0.3em] uppercase backdrop-blur-md z-[120]">
